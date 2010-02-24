@@ -1,0 +1,4 @@
+$(DELPHI)\lib;
+$(DELPHI)\projects\bpl;
+$(DELPHI)\bin;
+
