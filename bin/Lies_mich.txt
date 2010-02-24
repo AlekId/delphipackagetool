@@ -1,0 +1,58 @@
+Delphi Package Tool
+*******************
+
+Wieso dieses Tool ?
+
+Dieses Tool hilft beim compilieren/installieren von sogenannten Packet/Projekt Gruppen. (.bpg-Dateien)
+Projekt Gruppen kommen meistens bei grösseren Projekten zum Einsatz.
+Die Delphi IDE hat seit Jahren einen Fehler.
+Wenn man eine Projektgruppe in der IDE öffnet, alle Projekte neu erzeugt (Rebuild All), dann wird
+aus irgend einem Grund der Speicher nicht freigegeben.
+Bei unseren grossen Projekten muss man deshalb jedesmal nach so einem (Rebuild All) die Delphi IDE schliessen und
+wieder öffnen.
+Das DelphiPackageTool arbeitet direkt mit dem Compiler zusammen. Delphi muss also gar nicht erst geöffnet werden.
+Ein weiteres Ärgernis der Delphi IDE ist die Installation von Komponenten.
+Man muss manuell auf jedes Packet klicken und <Installieren> aufrufen.
+
+
+Features:
+- kompiliert alle .dpr,.dpk Projekte einer Projekt/Packet Gruppe.
+- installiert Designtime Packete automatisch in der Delphi IDE. 
+- kann mit Kommandozeilen Parametern gesteuert werden. (enorm nützlich für automatischen rebuild)
+- kann für den rebuild von Packeten in mehreren Delphi Versionen verwendet werden.
+
+Lizenz:
+Diese Anwendung ist Freeware und darf somit beliebig genutzt und weiter verbreitet werden.
+Dieses Tool wird auf eigene Verantwortung verwendet! 
+
+Autor:
+Samuel Herzog, sam_herzog@yahoo.com
+
+
+Kommandozeilen Beispiele:
+Das Tool gibt bei erfolgreichem Abschluss eine 0 zurück.
+Schlägt der rebuild eines Projektes oder Packetes fehl, wird 1 zurückgegeben.
+Zudem wird eine Log-Datei mit wichtigen Meldungen erstellt.
+
+Beispiel 1:
+Die folgende Zeile erzeugt alle meine Projekte und Komponenten Sammlungen neu.
+
+DelphiPackageTool.exe –o”myComponents.ini” –rebuild
+
+Das Tool erledigt dabei folgende Aufgaben automatisch:
+
+1. Registry Einträge löschen. (Komponenten aus der IDE entfernen)
+2. bpl/dcp Dateien löschen.
+3. bpl/dcp Dateien neu erzeugen.
+4. Registry Einträge wieder schreiben. (Komponenten wieder in der IDE installieren)
+
+Beispiel 2:
+Die folgende Zeile installiert das Package in der IDE.
+
+DelphiPackageTool -p"C:\Projects\Packages\OwnComp\Package1.dpk" -install
+
+
+*************************************************************************************************************
+WICHTIG: Komponenten Packete können natürlich nur dann automatisch installiert/deinstalliert werden, wenn die
+         Delphi IDE geschlossen ist!
+*************************************************************************************************************
