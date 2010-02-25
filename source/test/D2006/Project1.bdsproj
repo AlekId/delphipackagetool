@@ -116,7 +116,7 @@
       <Linker Name="MinStackSize">16384</Linker>
       <Linker Name="MaxStackSize">1048576</Linker>
       <Linker Name="ImageBase">4194304</Linker>
-      <Linker Name="ExeDescription">AmpliLink Extended VCL Components</Linker>
+      <Linker Name="ExeDescription"></Linker>
     </Linker>
     <Directories>
       <Directories Name="OutputDir">MyOutputDir</Directories>
@@ -124,7 +124,7 @@
       <Directories Name="PackageDLLOutputDir">MyPackageOutputDir</Directories>
       <Directories Name="PackageDCPOutputDir">MyDcpOutputDir</Directories>
       <Directories Name="SearchPath">MySearchPath</Directories>
-      <Directories Name="Packages">vclx;vcl;rtl;dbrtl;vcldb;adortl;dbxcds;dbexpress;vclib;ibxpress;xmlrtl;vclie;inet;inetdbbde;inetdbxpress;IndyCore;IndySystem;dclOfficeXP;soaprtl;dsnap;IndyProtocols;bdertl;teeui;teedb;tee;vcldbx;vclactnband;dclZipForged10;vclZipForged10;IBO40FTS_D2006;IBO40VRT_D2006;IBO40TRT_D2006;IBO40CRT_D2006;IBO40RPL_D2006;QR5RunD2006;VclSmp;ALExtDevExpress_dr100;ALExtVCL_r100;dxGDIPlusD10;dxComnD10;dxPSCoreD10;cxExportD10;cxExtEditorsD10;cxPageControlD10;cxGridD10;cxDataD10;cxEditorsD10;dxThemeD10;cxLibraryD10;ALExtOrpheus_dr100;O406_r100;ALRacks_dr100;TraceComponents_dr100;ALExtDevExpressCore_dr100;ALDataStore_r100;Jcl;InstrumentAccess_dr100;InstrumentControl_dr100;CPortLib10;InstrumentService_dr100;IBO40XRT_D2006;ALArtifacts_r100;TaqMan48_dr100;ResourceManagerClient_r100;TaqManCalculation_r100;TaqMan_r100;TaqMan48Service_dr100;vclshlctrls;dxPSLnksD10;dxPScxCommonD10;dxPScxGrid6LnkD10;TaqMan48Diagnostic_dr100;InstrumentDiagnostic_r100;TaqMan96_dr100;TaqMan96Service_dr100;TaqMan96Diagnostic_dr100;AmpliPrep_dr100;AmpliPrepService_dr100;AmpliPrepDiagnostic_dr100;Amplicor_dr100;AmplicorService_dr100;AmplicorDiagnostic_dr100;O406br100;IBO40FRT_D2006;TeeQR;dxmdsD10;dxPScxPCProdD10;dxPSTeeChartD10;dxPScxExtCommonD10;dxPSDBTeeChartD10</Directories>
+      <Directories Name="Packages"></Directories>
       <Directories Name="Conditionals">MyConditionalDefines</Directories>
       <Directories Name="DebugSourceDirs">MyDebugSearchPath</Directories>
       <Directories Name="UsePackages">False</Directories>

@@ -22,7 +22,7 @@ package Package1;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'AmpliLink Extended VCL Components'}
+{$DESCRIPTION ''}
 {$IMPLICITBUILD OFF}
 {$DEFINE MyConditionalDefines}
 
