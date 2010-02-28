@@ -687,7 +687,9 @@ end;
   Date:      12-Mrz-2008
   Arguments: _backupfilename: string;_Lines:TStrings
   Result:    None
-  Description:
+  Description: create a backup file by analyzing the compiler-output.
+  //TODO make this work with external 7z. I don't want to compile zip-components
+  into this project anymore.
 -----------------------------------------------------------------------------}
 procedure TDMMain.SaveBackup(_backupfilename: string;_Lines:TStrings);
 var
@@ -725,6 +727,7 @@ begin
       writelog('Saved zip-file to <%s>.',[_BackupZip.Filename]);
 {$else}
       _FileList.SaveToFile('FileList_to_Backup.txt');
+      writelog('Saved filelist to <%s>.',['FileList_to_Backup.txt']);
 {$endif}
       if not ApplicationSettings.BoolValue('Application/SilentMode',5) then ShowFolder(extractfilepath(_backupfilename));
     finally

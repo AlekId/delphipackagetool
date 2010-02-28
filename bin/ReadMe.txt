@@ -1,6 +1,5 @@
-Delphi Package Tool
-*******************
-NOTE: THIS TOOL DOES NOT CHANGE ANY SOURCE FILES OF YOUR PROJECT!
+Delphi Package Tool (DPT)
+*************************
 
 Who can use this Tool ?
 ***********************
@@ -26,7 +25,7 @@ DelphiPackageTool compiles and installes all packages listed in the bpg-file.
 
 
 Features:
-- compile all .dpr,.dpk projects of a Delphi Package Group.(bpg)
+- compile all .dpr,.dpk projects of a Delphi Package Group.(bpg/bdsgroup)
 - installs Designtime Packages automatically into the Delphi IDE. 
 - can also be used as command line tool. ( for automatic rebuild of your projects).
 - can rebuild projects from several different delphi versions.
@@ -34,9 +33,10 @@ Features:
 Licence:
 The DelphiPackageTool is Freeware!
 You use this Tool at your own Responsibility!
-SOURCECODE IS NOT AVAILABLE.
+SOURCECODE is available at sourceforge. http://sourceforge.net/projects/delphipackageto/
+To compile the project, open delphipackagetool.dpr with your favorite delphi IDE. ( there is no need to install addtional components )
 
-Autor:
+Author:
 Samuel Herzog, sam_herzog@yahoo.com
 
 

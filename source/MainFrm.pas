@@ -1351,14 +1351,17 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actShowCFGFileExecute(Sender: TObject);
+var
+_filename:string;
 begin
+  _filename:='';
   case DMMain.CurrentDelphiVersion of
-    5,6,7,8:DMMain.ShowFile(changeFileExt(DMMain.CurrentProjectFilename,'.cfg'),0);
-    else begin
-      if fileexists(changeFileExt(DMMain.CurrentProjectFilename,'.bdsproj')) then DMMain.ShowFile(changeFileExt(DMMain.CurrentProjectFilename,'.bdsproj'),0)
-      else  DMMain.ShowFile(changeFileExt(DMMain.CurrentProjectFilename,'.cfg'),0);
-    end;
+    5,6,7,8:   _filename:=changeFileExt(DMMain.CurrentProjectFilename,'.cfg');
+    9,10,11,12:_filename:=changeFileExt(DMMain.CurrentProjectFilename,'.bdsproj');
+    else       _filename:=changeFileExt(DMMain.CurrentProjectFilename,'.dproj');
   end;
+  if not fileexists(_filename) then exit;
+  DMMain.ShowFile(_filename,0);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1540,7 +1543,7 @@ begin
   if not fileexists(_filename) then begin
     _pos:=Pos('&',_filename);
     if _pos<>0 then Delete(_filename,_pos,1);
-  end;  
+  end;
   LoadBPG(_filename);
 end;
 
@@ -1613,6 +1616,14 @@ begin
   PrepareRecentFiles;
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: mitRecentFilesClick
+  Author:    sam
+  Date:      28-Feb-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.mitRecentFilesClick(Sender: TObject);
 begin
   OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile',19));
@@ -1678,7 +1689,7 @@ end;
   Date:      09-Jun-2007
   Arguments: None
   Result:    None
-  Description:
+  Description: prepare hint for the current porject.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.PrepareHint;
 begin
