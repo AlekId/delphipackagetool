@@ -567,9 +567,9 @@ begin
   FCurrentDCUOutputPath:='';
   FApplicationIniFilename:=changefileext(application.ExeName,'.ini');
   if not fileexists(FApplicationIniFilename) then begin  // on the first start, ask if the filetypes shall be registered.
-    if Application.MessageBox(pchar(cRegisterBPG), pchar(cConfirm),MB_ICONQUESTION or MB_YesNo)            = IdYes then RegisterFileType('.bpg','Borland Package Group');
-    if Application.MessageBox(pchar(cRegisterBDSGroup), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo)      = IdYes then RegisterFileType('.bdsgroup','Borland Studio Group');
-    if Application.MessageBox(pchar(cRegisterBDSGroupProj), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo)  = IdYes then RegisterFileType('.groupproj','Project Group');
+    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)            = IdYes then RegisterFileType('bpg'      ,Application.ExeName);
+    if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName);
+    if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName);
   end;
 // prepare trace file
 {$ifdef withTrace}
