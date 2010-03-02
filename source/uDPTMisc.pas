@@ -33,7 +33,8 @@ type
   TNVBTraceProcedure=function(_level:byte;_msg:String;_params:Array of Const):boolean of object;
   TNVBSendTrace     =function (_to:string='';_subject:string='';_attachementFilename:string=''):boolean of object;
 
-procedure RegisterFileType(const _FileExtension:string;const _Description:string);
+procedure RegisterFileType(ExtName:String; AppName:String) ;
+//procedure RegisterFileType(const _FileExtension:string;const _Description:string);
 function GetWindowsPath:String;  // returns the windows directory name
 function IsFilenameValid(_filename:string):boolean; // check if the given name <_filename> can be used as filename.
 procedure Trace(const _level:byte;const _msg:String;const _params:array of const);
@@ -201,6 +202,30 @@ begin
   end;
 end;
 
+procedure RegisterFileType(ExtName:String; AppName:String) ;
+var
+  reg:TRegistry;
+begin
+  reg := TRegistry.Create;
+  try
+    reg.RootKey:=HKEY_CLASSES_ROOT;
+    reg.OpenKey('.' + ExtName, True) ;
+    reg.WriteString('', ExtName + 'file') ;
+    reg.CloseKey;
+    reg.CreateKey(ExtName + 'file') ;
+    reg.OpenKey(ExtName + 'file\DefaultIcon', True) ;
+    reg.WriteString('', AppName + ',0') ;
+    reg.CloseKey;
+    reg.OpenKey(ExtName + 'file\shell\open\command', True) ;
+    reg.WriteString('',AppName+' "%1"') ;
+    reg.CloseKey;
+  finally
+    reg.Free;
+  end;
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil) ;
+end;
+
+
 {-----------------------------------------------------------------------------
   Procedure: RegisterFileType
   Author:    sam
@@ -212,7 +237,7 @@ end;
 
   Example:  RegisterFileType('.trc','Trace-File');
 -----------------------------------------------------------------------------}
-procedure RegisterFileType(const _FileExtension:string;const _Description:string);
+{procedure RegisterFileType(const _FileExtension:string;const _Description:string);
 var
   _Reg: TRegistry;
   _FileType:string;
@@ -265,7 +290,7 @@ begin
   finally
     _Reg.Free;
   end;
-end;
+end;}
 
 {-----------------------------------------------------------------------------
   Procedure: IsFilenameValid
