@@ -966,7 +966,6 @@ begin
   StringToFloat(cbxDelphiVersions.Text,_fDelphiVersion);
   _iDelphiVersion:=trunc(_fDelphiVersion);
   DMMain.CurrentDelphiVersion:=_iDelphiVersion;
-  DMMain.ApplicationSettings.SetString('Application/PathNameFile', 8, 'DelphiPackageToolPathD' + inttostr(DMMain.CurrentDelphiVersion) + '.txt');
 end;
 
 {-----------------------------------------------------------------------------
@@ -1168,7 +1167,8 @@ begin
   _itemIndex:=cbxDelphiVersions.Items.IndexOf(_sDelphiVersion);
   if _ItemIndex>-1 then begin
     cbxDelphiVersions.ItemIndex:=_ItemIndex;
-    cbxDelphiVersions.Hint:=VersionNoToIDEName(_DelphiVersion);
+    cbxDelphiVersions.Hint:='IDE: '+VersionNoToIDEName(_DelphiVersion)+#10+#13+
+                            'Compiler: '+DMMain.Compiler;
   end
   else begin
     if cbxDelphiVersions.Items.Count>0 then begin
@@ -1789,6 +1789,7 @@ end;
 procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersion: integer);
 begin
   SetDelphiVersionCombobox(_DelphiVersion);
+  if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1952,6 +1953,14 @@ begin
   LoadBPG(edtPackageBPGFile.Text);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: ShowProjectGroup1Click
+  Author:    s.herzog
+  Date:      24-Feb-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: 
+-----------------------------------------------------------------------------}
 procedure TFrmMain.ShowProjectGroup1Click(Sender: TObject);
 begin
   OpenBPGFileInEditor;;

@@ -143,6 +143,7 @@ type
     procedure CloseBPG;
     procedure AbortCompile;
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
+    property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
     property  CurrentProjectOutputFilename:string read FCurrentProjectOutputFilename;
@@ -781,6 +782,7 @@ begin
     FCurrentDelphiVersion:=LatestIDEVersion;
   end
   else FCurrentDelphiVersion := Value;
+  ApplicationSettings.SetString('Application/PathNameFile', 8, 'DelphiPackageToolPathD' + inttostr(FCurrentDelphiVersion) + '.txt');
   trace(3,'Set current delphi version to <%d>.',[FCurrentDelphiVersion]);
   FDelphiRootDirectory:=GetDelphiRootDir(FCurrentDelphiVersion);
   trace(3,'Set the Compiler Root Directory to <%s>.',[FDelphiRootDirectory]);
