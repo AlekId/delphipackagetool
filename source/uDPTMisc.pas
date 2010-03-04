@@ -25,9 +25,10 @@ const
 {$H+}
 type
 
-  TSystemPath = (Desktop, StartMenu,Programs, Startup, Personal, AppData,Fonts, SendTo, Recent, Favorites, Cache,
-    Cookies, History, NetHood, PrintHood,Templates, LocADat, WindRoot, WindSys,TempPath, RootDir, ProgFiles, ComFiles,
-    ConfigPath, DevicePath, MediaPath, WallPaper,CommonDocs);
+  TSystemPath = (spDesktop, spStartMenu, spPrograms, spStartup, spPersonal, spAppData, spFonts, spSendTo,
+    spRecent, spFavorites, spCache, spCookies, spHistory, spNetHood, spPrintHood, spTemplates, spLocADat,
+    spWindRoot, spWindSys, spTempPath, spRootDir, spProgFiles, spComFiles, spConfigPath, spDevicePath,
+    spMediaPath, spWallPaper, spCommonDocs);
 
 
   TNVBTraceProcedure=function(_level:byte;_msg:String;_params:Array of Const):boolean of object;
@@ -323,81 +324,133 @@ end;
   Description: read system path settings
 -----------------------------------------------------------------------------}
 function GetSystemPath(SystemPath: TSystemPath): string;
+const
+  CSIDL_DESKTOP              = $0000;
+  CSIDL_STARTMENU            = $000B;
+  CSIDL_PROGRAMS             = $0002;
+  CSIDL_STARTUP              = $0007;
+  CSIDL_PERSONAL             = $0005;
+  CSIDL_APPDATA              = $001A;
+  CSIDL_FONTS                = $0014;
+  CSIDL_SENDTO               = $0009;
+  CSIDL_RECENT               = $0008;
+  CSIDL_FAVORITES            = $0006;
+  CSIDL_COOKIES              = $0021;
+  CSIDL_HISTORY              = $0022;
+  CSIDL_NETHOOD              = $0013;
+  CSIDL_PRINTHOOD            = $001B;
+  CSIDL_TEMPLATES            = $0015;
+  CSIDL_LOCAL_APPDATA        = $001C;
+  CSIDL_WINDOWS              = $0024;
+  CSIDL_SYSTEM               = $0025;
+  CSIDL_PROGRAM_FILES        = $0026;
+  CSIDL_PROGRAM_FILES_COMMON = $002B;
+  CSIDL_COMMON_DOCUMENTS     = $002E; // All Users\Documents
 var
+  Path: array[0..MAX_PATH] of Char;
   ph: PChar;
+  CSIDL: Integer;
+  Reg: TRegistry;
 begin
-  with TRegistry.Create do
-    try
-      RootKey := HKEY_CURRENT_USER;
-      OpenKeyReadOnly('\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders');
-      case SystemPath of
-        Desktop: Result   := ReadString('Desktop');
-        StartMenu: Result := ReadString('Start Menu');
-        Programs: Result  := ReadString('Programs');
-        Startup: Result   := ReadString('Startup');
-        Personal: Result  := ReadString('Personal');
-        AppData: Result   := ReadString('AppData');
-        Fonts: Result     := ReadString('Fonts');
-        SendTo: Result    := ReadString('SendTo');
-        Recent: Result    := ReadString('Recent');
-        Favorites: Result := ReadString('Favorites');
-        Cache: Result     := ReadString('Cache');
-        Cookies: Result   := ReadString('Cookies');
-        History: Result   := ReadString('History');
-        NetHood: Result   := ReadString('NetHood');
-        PrintHood: Result := ReadString('PrintHood');
-        Templates: Result := ReadString('Templates');
-        LocADat: Result   := ReadString('Local AppData');
-        WindRoot:
-          begin
-            GetMem(ph, 255);
-            GetWindowsDirectory(ph, 254);
-            Result := Strpas(ph);
-            Freemem(ph);
+  CSIDL := -1;
+  Reg := TRegistry.Create;
+  try
+    case SystemPath of
+      spDesktop:   CSIDL := CSIDL_DESKTOP;
+      spStartMenu: CSIDL := CSIDL_STARTMENU;
+      spPrograms:  CSIDL := CSIDL_PROGRAMS;
+      spStartup:   CSIDL := CSIDL_STARTUP;
+      spPersonal:  CSIDL := CSIDL_PERSONAL;
+      spAppData:   CSIDL := CSIDL_APPDATA;
+      spFonts:     CSIDL := CSIDL_FONTS;
+      spSendTo:    CSIDL := CSIDL_SENDTO;
+      spRecent:    CSIDL := CSIDL_RECENT;
+      spFavorites: CSIDL := CSIDL_FAVORITES;
+      spCache:
+        begin
+          Reg.RootKey := HKEY_CURRENT_USER;
+          Reg.OpenKeyReadOnly('\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders');
+          try
+            Result := Reg.ReadString('Cache');
+          finally
+            Reg.CloseKey;
           end;
-        WindSys:
-          begin
-            GetMem(ph, 255);
-            GetSystemDirectory(ph, 254);
-            Result := Strpas(ph);
-            Freemem(ph);
+        end;
+      spCookies:   CSIDL := CSIDL_COOKIES;
+      spHistory:   CSIDL := CSIDL_HISTORY;
+      spNetHood:   CSIDL := CSIDL_NETHOOD;
+      spPrintHood: CSIDL := CSIDL_PRINTHOOD;
+      spTemplates: CSIDL := CSIDL_TEMPLATES;
+      spLocADat:   CSIDL := CSIDL_LOCAL_APPDATA;
+      spWindRoot:  CSIDL := CSIDL_WINDOWS;
+      spWindSys:   CSIDL := CSIDL_SYSTEM;
+      spTempPath:
+        begin
+          GetMem(ph, 255);
+          GetTempPath(254, ph);
+          Result := Strpas(ph);
+          Freemem(ph);
+        end;
+      spRootDir:
+        begin
+          GetMem(ph, 255);
+          GetSystemDirectory(ph, 254);
+          Result := (Copy(Strpas(ph), 1, 2));
+          Freemem(ph);
+        end;
+      spProgFiles: CSIDL := CSIDL_PROGRAM_FILES;
+      spComFiles:  CSIDL := CSIDL_PROGRAM_FILES_COMMON;
+      spConfigPath:
+        begin
+          Reg.RootKey := HKEY_LOCAL_MACHINE;
+          Reg.OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion');
+          try
+            Result := Reg.ReadString('ConfigPath');
+          finally
+            Reg.CloseKey;
           end;
-        TempPath:
-          begin
-            GetMem(ph, 255);
-            GetTempPath(254, ph);
-            Result := Strpas(ph);
-            Freemem(ph);
+        end;
+      spDevicePath:
+        begin
+          Reg.RootKey := HKEY_LOCAL_MACHINE;
+          Reg.OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion');
+          try
+            Result := Reg.ReadString('DevicePath');
+          finally
+            Reg.CloseKey;
           end;
-        RootDir:
-          begin
-            GetMem(ph, 255);
-            GetSystemDirectory(ph, 254);
-            Result := (Copy(Strpas(ph), 1, 2));
-            Freemem(ph);
+        end;
+      spMediaPath:
+        begin
+          Reg.RootKey := HKEY_LOCAL_MACHINE;
+          Reg.OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion');
+          try
+            Result := Reg.ReadString('MediaPath');
+          finally
+            Reg.CloseKey;
           end;
-      end;
-      RootKey := HKEY_LOCAL_MACHINE;
-      OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion');
-      case SystemPath of
-        ProgFiles: Result := ReadString('ProgramFilesDir');
-        ComFiles: Result := ReadString('CommonFilesDir');
-        ConfigPath: Result := ReadString('ConfigPath');
-        DevicePath: Result := ReadString('DevicePath');
-        MediaPath: Result := ReadString('MediaPath');
-        WallPaper: Result := ReadString('WallPaperDir');
-        CommonDocs:Result:= ReadString('Common Documents');
-      end;
-      OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders');
-      case SystemPath of
-        CommonDocs:Result:= ReadString('Common Documents');
-      end;
-    finally
-      CloseKey;
-      Free;
+        end;
+      spWallPaper:
+        begin
+          Reg.RootKey := HKEY_LOCAL_MACHINE;
+          Reg.OpenKeyReadOnly('\SOFTWARE\Microsoft\Windows\CurrentVersion');
+          try
+            Result := Reg.ReadString('WallPaperDir');
+          finally
+            Reg.CloseKey;
+          end;
+        end;
+      spCommonDocs: CSIDL := CSIDL_COMMON_DOCUMENTS;
     end;
-  if (Result <> '') and (Result[Length(Result)] <> '\') then
-    Result := Result + '\';
+    if CSIDL > -1 then begin
+      SHGetSpecialFolderPath(GetActiveWindow, Path, CSIDL_COMMON_DOCUMENTS, False);
+      Result := Path;
+    end;
+  finally
+    Reg.Free;
+  end;
+  if (Result <> '') then
+    Result := IncludeTrailingPathDelimiter(Result);
 end;
 
 //*****************************************************

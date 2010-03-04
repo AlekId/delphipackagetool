@@ -173,6 +173,11 @@ object frmAbout: TfrmAbout
       Cursor = crArrow
       Anchors = [akLeft, akTop, akRight, akBottom]
       Enabled = False
+      Lines.Strings = (
+        'The source code is available at sourceforge.net.'
+        ''
+        'Thanks to:'
+        'It contains some portions of JCL code.')
       ReadOnly = True
       TabOrder = 0
     end

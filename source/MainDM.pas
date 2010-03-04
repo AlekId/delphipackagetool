@@ -446,7 +446,7 @@ begin
   result:=_libsuffix;
   if _ProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
   if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then exit;  // if changing of files is not allowed, then we can not change the suffix.
-  if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBAutomaticTag) then result:=VersionNoToShortName(FCurrentDelphiVersion)
+  if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FCurrentDelphiVersion].ShortName
   else if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBNoneTag) then result:=''
   else result:=ProjectSettings.StringValue('Application/LibSuffix',10);
 end;
@@ -904,7 +904,7 @@ cRebuiltAllProjects='Rebuilt all projects successfully.';
 cSomeProjectsCouldNotBeRebuilt='Some projects could not be rebuilt.' + #13 + #10 + 'See the Log file and add the path in the Options Dialog if ' + #13 + #10 + 'needed.';
 var
 i: integer;
-_CompiledProjects: Cardinal;
+_CompiledProjects: Integer;
 _start:cardinal;
 _end:cardinal;
 _batchfilename:string;
@@ -1166,7 +1166,7 @@ cRebuiltAllProjectsSuccessfully='Rebuilt all projects successfully.';
 cSomeProjectsCouldNotBeRebuilt='Some projects could not be rebuilt.' + #13 + #10 + 'See the Log file and add the path in the Options Dialog if ' + #13 + #10 + 'needed.';
 var
   i: integer;
-  _CompiledProjects: Cardinal;
+  _CompiledProjects: Integer;
 begin
   _CompiledProjects := 0;
   FAbortCompile:=false;

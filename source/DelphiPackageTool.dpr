@@ -11,7 +11,9 @@ uses
   RemovePackagesQuestionFrm in 'RemovePackagesQuestionFrm.pas' {FrmRemovePackage},
   MainDM in 'MainDM.pas' {DMMain: TDataModule},
   uDPTDefinitions in 'uDPTDefinitions.pas',
-  AboutFrm in 'AboutFrm.pas' {frmAbout};
+  AboutFrm in 'AboutFrm.pas' {frmAbout},
+  uDPTJclFuncs in 'uDPTJclFuncs.pas',
+  uDPTDelphiPackage in 'uDPTDelphiPackage.pas';
 
 {$R *.res}
 

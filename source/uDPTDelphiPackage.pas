@@ -116,7 +116,6 @@ function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
 function  VersionNoToIDEName(const _version:integer):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
-function  VersionNoToShortName(const _version:integer):string; // turns the ide version no 1-12 into shortname aka D7,D8,D2005,D2006,D2007
 function  CleanUpPackagesByRegistery(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer):boolean; // find registry-entries without the packages
@@ -129,10 +128,13 @@ function  WriteDPKFile(const _filename:string;const _LibSuffix:string;const _sil
 function  WriteDprojFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):boolean;  // write libsuffix into the dproj-file.
 function  DeleteFile(const _Filename:String):boolean;  // delete the file <_filename>.
 function  RemoveProjectFromProjectGroup(const _GroupFilename,_ProjectFilename:string;const _ProjectType:TProjectType):boolean;
-function  ReadBDSCommomDir(_DelphiVersion:integer):string; // reads the path to the BDSCOMMONDIR from the registry.
+function  ReadBDSCommonDir(const _DelphiVersion:integer):string; // reads the path to the BDSCOMMONDIR.
+function  ReadBDSProjectsDir(const _DelphiVersion:integer):string; // reads the path to the BDSPROJECTSDIR.
+function  ReadBDSUserDir(const _DelphiVersion:integer):string; // reads the path to the BDSUSERDIR.
 function  isIDEInstalled(const _Version:Integer):boolean; // find out if the ide version e.g. 11.0 is installed.
 function  OldestIDEVersion:integer; // returns the VersionNo of the oldest IDE installed.
 function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE installed.
+function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 
 var
 FCreateBatchFile:boolean;
@@ -149,8 +151,10 @@ uses uDPTMisc,
      XMLIntf,
      Controls,
      Dialogs,
+     ShlObj,
      uDPTXMLReader,
-     uDPTDefinitions;
+     uDPTDefinitions,
+     uDPTJclFuncs;
 
 
 var
@@ -248,43 +252,70 @@ begin
   end;
 end;
 
-
 {*-----------------------------------------------------------------------------
   Procedure: ReadBDSCommomDir
-  Author:    sam
-  Date:      15-Nov-2008
-  Arguments: None
+  Author:    muem
+  Date:      26-Feb-2010
+  Arguments: _DelphiVersion:integer
   Result:    string
-  Description:  reads the path to the BDSCOMMONDIR from the registry.
-  TODO: here we need a more generic solution to determ the bdscommondir.
+  Description:  reads the path to the BDSCOMMONDIR.
 -----------------------------------------------------------------------------}
-function ReadBDSCommomDir(_DelphiVersion:integer):string;
-var
-_BDSCommonDirKey:string;
-_Reg: TRegistry;
+function ReadBDSCommonDir(const _DelphiVersion:integer):string;
 begin
-  result:='';
-  case _DelphiVersion of
-    9,10: begin
-            _BDSCommonDirKey:='\SYSTEM\CurrentControlSet\Control\Session Manager\Environment';
-            _Reg := TRegistry.Create;
-            try
-              _Reg.RootKey := HKEY_LOCAL_MACHINE;
-              if not _Reg.OpenKeyReadOnly(_BDSCommonDirKey) then begin
-                trace(5,'ReadBDSCommonDir: The Key <%s> was not found in the registry.',[_BDSCommonDirKey]);
-                exit;
-              end;
-              result:=IncludeTrailingPathDelimiter(_Reg.ReadString('BDSCOMMONDIR'));
-            finally
-              _Reg.CloseKey;
-              _reg.free;
-            end;
-          end;
-    11: result:=GetSystemPath(CommonDocs)+'RAD Studio\5.0\';
-    12: result:=GetSystemPath(CommonDocs)+'RAD Studio\6.0\';
-    14: result:=GetSystemPath(CommonDocs)+'RAD Studio\7.0\';
+  Result := '';
+  if _DelphiVersion > 11 then begin
+    //RAD Studio 2009, 2010
+    Result := GetSystemPath(spCommonDocs) + cRADStudioDirName + PathDelim + DelphiVersions[_DelphiVersion].IDEVersionStr;
+  end
+  else begin
+    Result := GetEnvironmentVariable(Copy(cBDSCommonDirTag, 3, length(cBDSCommonDirTag)-3));
   end;
   trace(5,'ReadBDSCommonDir: BDSCOMMONDIR is set to <%s>.',[result]);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: ReadBDSProjectsDir
+  Author:    sam
+  Date:      02-Mar-2010
+  Arguments: _DelphiVersion:integer
+  Result:    string
+  Description:  reads the path to the BDSPROJECTSDIR.
+-----------------------------------------------------------------------------}
+function ReadBDSProjectsDir(const _DelphiVersion:integer):string;
+var
+  LocStr: WideStringArray;
+begin
+  Result:='';
+  if _DelphiVersion <= 7 then exit;  // delphi 1-7 do nothing, because bdsprojectdir was introduced later.
+
+  //Delphi 8 .. RAD Studio 2010
+  LocStr := LoadResStrings(GetDelphiRootDir(_DelphiVersion) + 'Bin\coreide' + DelphiVersions[_DelphiVersion].CoreIdeVersion + '.',['Borland Studio Projects', 'RAD Studio', 'Projects']);
+
+  if DelphiVersions[_DelphiVersion].IDEVersion < 5 then begin
+    Result := LocStr[0];
+  end
+  else begin
+    Result := LocStr[1] + PathDelim + LocStr[2];
+  end;
+
+  Result := IncludeTrailingPathDelimiter(GetSystemPath(spPersonal)) + Result;
+  trace(5,'ReadBDSProjectsDir: BDSPROJECTSDIR is set to <%s>.',[result]);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: ReadBDSUserDir
+  Author:    sam
+  Date:      15-Nov-2008
+  Arguments: _DelphiVersion:integer
+  Result:    string
+  Description:  reads the path to the BDSUSERDIR.
+-----------------------------------------------------------------------------}
+function ReadBDSUserDir(const _DelphiVersion:integer):string;
+begin
+  result:='';
+{ TODO : Impementation of BDSUSERDIR }
+  Showmessage('function ReadBDSUserDir: TODO: We are looking for a nice guy who would like to implement this method ;-)');
+  trace(5,'ReadBDSUserDir: BDSUSERDIR is set to <%s>.',[result]);
 end;
 
 
@@ -1240,28 +1271,6 @@ begin
   end;
 end;
 
-{*-----------------------------------------------------------------------------
-  Procedure: VersionNoToShortName
-  Author:    sam
-  Date:      28-Aug-2009
-  Arguments: const _version:integer
-  Result:    string
-  Description: convert the version number <_version> into a short name.
------------------------------------------------------------------------------}
-function VersionNoToShortName(const _version:integer):string;
-begin
-  result:='??';
-  case _version of
-    1,2,3,4,5,6,7:result:=format('D%d',[_version]);
-                8:result:='D8';
-                9:result:='D2005';
-               10:result:='D2006';
-               11:result:='D2007';
-               12:result:='D2009';
-               14:result:='D2010';
-  end;
-end;
-
 {-----------------------------------------------------------------------------
   Procedure: IDENameToVersionNo
   Author:    sam
@@ -1327,7 +1336,7 @@ begin
     for i:=0 to _lstProjectFiles.Items.count-1 do begin
       _ProjectFilename:=AbsoluteFilename(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
       _ProjectType:=DetermProjectType(_ProjectFilename,_projectGroupFilename,_DelphiVersion);
-      _Projects:=_Projects+OutputFilename(_ProjectFilename,_ProjectType,VersionNoToShortName(_DelphiVersion));
+      _Projects:=_Projects+OutputFilename(_ProjectFilename,_ProjectType,DelphiVersions[_DelphiVersion].ShortName);
       if (length(_Projects)-LastPos(_Projects,'\'))>80 then _Projects:=_Projects+' \'+#$D+#$A+'  '
       else _Projects:=_Projects+' ';
     end;
@@ -1340,7 +1349,7 @@ begin
       _ProjectFilename:=AbsoluteFilename(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
       _ProjectType:=DetermProjectType(_ProjectFilename,_projectGroupFilename,_DelphiVersion);
 
-      _filename:=OutputFilename(_ProjectFilename,_ProjectType,VersionNoToShortName(_DelphiVersion));
+      _filename:=OutputFilename(_ProjectFilename,_ProjectType,DelphiVersions[_DelphiVersion].ShortName);
       _line:=ExtractFilename(_filename)+': '+ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
       if _files.IndexOf(_line)=-1 then begin // avoid doubles.
         _Files.Add(_line);
@@ -1436,10 +1445,10 @@ begin
                end;
         tp_bpl:begin  // project is a package
                  ReadpackageInfo(_packagefilename,_description,_libsuffix);
-                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+VersionNoToShortName(_DelphiVersion)+'.bpl',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
+                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+DelphiVersions[_DelphiVersion].ShortName+'.bpl',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
                  if _file.IndexOf(_lineToInsert)=-1 then begin
                    _file.Insert(j,_lineToInsert);
-                   _TargetsLine:=_TargetsLine+extractfilenameonly(_filename)+VersionNoToShortName(_DelphiVersion)+'.bpl'+' ';
+                   _TargetsLine:=_TargetsLine+extractfilenameonly(_filename)+DelphiVersions[_DelphiVersion].ShortName+'.bpl'+' ';
                  end;
                end;
       end;
@@ -1606,7 +1615,7 @@ begin
     inc(j);
     _lineToInsert:=format('  </Target>',[]);
     _file.insert(j,_lineToInsert);
-    inc(j);
+//    inc(j);
     if RenameFile(_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')) then begin
       trace(1,'Renamed the file <%s> to <%s>.',[_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')]);
     end;
@@ -1773,40 +1782,56 @@ end;
   Description: replaces the Tag <$(DELPHI)> with the real delphi path.
                replaces the Tag <$(BDS)> with the real delphi path.
                replaces the Tag <$(PROGRAMFILES)> with the real program files path.
-               rplaces  the Tag <$(DELPHIVERSION)> with the real delphi version.
+               replaces  the Tag <$(DELPHIVERSION)> with the real delphi version.
+               replaces  the Tag <$(BDSCOMMONDIR)> with the real bds common path.
+               replaces  the Tag <$(BDSPROJECTSDIR)> with the real bds projects path.
 ----------------------------------------------------------------------------}
 function ReplaceTag(_filename: string;_DelphiVersion:integer): string;
 var
 _pos:integer;
 begin
   _filename:=lowercase(_filename);
-  _filename:=StringReplace(_filename,lowercase(cDelphiVersionTag),VersionNoToShortName(_DelphiVersion),[]);
+  _filename:=StringReplace(_filename,lowercase(cDelphiVersionTag),DelphiVersions[_DelphiVersion].ShortName,[]);
 
   _pos:=Pos(lowercase(cDelphiTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cDelphiTag));
+    Delete(_filename,1,_pos+length(cDelphiTag)-1);
     result:=GetDelphiRootDir(_DelphiVersion)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cBDSTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cBDSTag));
+    Delete(_filename,1,_pos+length(cBDSTag)-1);
     result:=GetDelphiRootDir(_DelphiVersion)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cProgramFilesTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+15);
-    result:= GetSystemPath(ProgFiles)+_filename;
+    Delete(_filename,1,_pos+length(cProgramFilesTag)-1);
+    result:= GetSystemPath(spProgFiles)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cBDSCommonDirTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+15);
-    result:= ReadBDSCommomDir(_DelphiVersion)+_filename;
+    Delete(_filename,1,_pos+length(cBDSCommonDirTag)-1);
+    result:= ReadBDSCommonDir(_DelphiVersion)+_filename;
+    exit;
+  end;
+
+  _pos:=Pos(lowercase(cBDSProjectsDirTag),_filename);
+  if _pos>0 then begin
+    Delete(_filename,1,_pos+length(cBDSProjectsDirTag)-1);
+    result:= ReadBDSProjectsDir(_DelphiVersion)+_filename;
+    exit;
+  end;
+
+  _pos:=Pos(lowercase(cBDSUserDirTag),_filename);
+  if _pos>0 then begin
+    Delete(_filename,1,_pos+length(cBDSUserDirTag)-1);
+    result:= ReadBDSUserDir(_DelphiVersion)+_filename;
     exit;
   end;
 
@@ -1836,7 +1861,7 @@ begin
     result:=GetDelphiPathTag(_DelphiVersion)+'\'+_filename;
     exit;
   end;
-  _temp:=lowercase(GetSystemPath(ProgFiles));
+  _temp:=lowercase(GetSystemPath(spProgFiles));
   if Pos(_temp,_filename)=1 then begin
     delete(_filename,1,length(_temp));
     result:=cProgramFilesTag+'\'+_filename;
@@ -2038,7 +2063,6 @@ begin
   if not assigned(_list) then exit;
   try
     _reg := TRegistry.Create;
-
     try
       with _reg do begin     // first search in local machine
         CloseKey;
@@ -2481,6 +2505,96 @@ begin
   result:=true;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: ReadDPROJSettingsD2005_D2007
+  Author:    herzogs2
+  Date:      03-Mrz-2010
+  Arguments: const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string
+  Result:    boolean
+  Description: read dproj settings from a file of version D2005-D2007.
+-----------------------------------------------------------------------------}
+function ReadDPROJSettingsD2005_D2007(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
+var
+_msg:string;
+_condition:string;
+_platform:string;
+_lineNo:integer;
+_ProjectVersion:string;
+begin
+  Result:=false;
+  ProjectOutputPath:='';
+  SearchPath:='';
+  BPLOutputPath:='';
+  DCUOutputPath:='';
+  Conditions:='';
+  _ProjectVersion:='';
+  if not fileExists(_dprojFilename) then begin
+    trace(5,'ReadDPROJSettingsD2005_D2007: Could not find the file <%s>.',[_dprojFilename]);
+    exit;
+  end;
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup).ProjectVersion',_ProjectVersion,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not read condition. <%s>.',[_msg]);
+  if _ProjectVersion='' then begin
+    if not ReadNodeText(_dprojFilename,'(PropertyGroup).(Configuration Condition=" ''$(Configuration)'' == '''' ")',_condition,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not read condition. <%s>.',[_msg]);
+    trace(5,'ReadDPROJSettingsD2005_D2007: Configuration = %s.',[_condition]);
+    if not ReadNodeText(_dprojFilename,'(PropertyGroup).(Platform Condition=" ''$(Platform)'' == '''' ")',_platform,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not read platform. <%s>.',[_msg]);
+    trace(5,'ReadDPROJSettingsD2005_D2007: Platform = %s.',[_platform]);
+    if _condition='' then begin
+       _condition:='Base';
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find SearchPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: SearchPath is <%s>.',[SearchPath]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCUOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: DCU Output Path is <%s>.',[DCUOutputPath]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find BPLOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: BPL Output Path is <%s>.',[BPLOutputPath]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find Conditions. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Conditions are <%s>.',[Conditions]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find ProjectOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Project Output Path is <%s>.',[ProjectOutputPath]);
+    end
+    else begin
+      if _platform<>'' then _condition:=_condition+'|'+_platform;
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find SearchPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: SearchPath is <%s>.',[SearchPath]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCUOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: DCU Output Path is <%s>.',[DCUOutputPath]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find BPLOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: BPL Output Path is <%s>.',[BPLOutputPath]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find Conditions. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Conditions are <%s>.',[Conditions]);
+      if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find ProjectOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Project Output Path is <%s>.',[ProjectOutputPath]);
+    end;
+  end;
+  result:=true;
+end;
+
+function ReadDPROJSettingsD2009_and_Newer(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
+var
+_msg:string;
+_lineNo:integer;
+begin
+  Result:=false;
+  ProjectOutputPath:='';
+  SearchPath:='';
+  BPLOutputPath:='';
+  DCUOutputPath:='';
+  Conditions:='';
+  if not fileExists(_dprojFilename) then begin
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: Could not find the file <%s>.',[_dprojFilename]);
+    exit;
+  end;
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find SearchPath. <%s>.',[_msg]);
+  trace(5,'ReadDPROJSettingsD2009_and_Newer: SearchPath is <%s>.',[SearchPath]);
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find DCUOutputPath. <%s>.',[_msg]);
+  trace(5,'ReadDPROJSettingsD2009_and_Newer: DCU Output Path is <%s>.',[DCUOutputPath]);
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find BPLOutputPath. <%s>.',[_msg]);
+  trace(5,'ReadDPROJSettingsD2009_and_Newer: BPL Output Path is <%s>.',[BPLOutputPath]);
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
+  trace(5,'ReadDPROJSettingsD2009_and_Newer: Conditions are <%s>.',[Conditions]);
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find ProjectOutputPath. <%s>.',[_msg]);
+  trace(5,'ReadDPROJSettingsD2009_and_Newer: Project Output Path is <%s>.',[ProjectOutputPath]);
+  result:=true;
+end;
 
 {*-----------------------------------------------------------------------------
   Procedure: ReadDPROJSettings
@@ -2493,9 +2607,8 @@ end;
 function ReadDPROJSettings(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
 var
 _msg:string;
-_condition:string;
-_platform:string;
 _lineNo:integer;
+_ProjectVersion:string;
 begin
   Result:=false;
   ProjectOutputPath:='';
@@ -2503,40 +2616,14 @@ begin
   BPLOutputPath:='';
   DCUOutputPath:='';
   Conditions:='';
+  _ProjectVersion:='';
   if not fileExists(_dprojFilename) then begin
     trace(5,'ReadDPROJSettings: Could not find the file <%s>.',[_dprojFilename]);
     exit;
   end;
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup).(Configuration Condition=" ''$(Configuration)'' == '''' ")',_condition,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not read condition. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettings: Configuration = %s.',[_condition]);
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup).(Platform Condition=" ''$(Platform)'' == '''' ")',_platform,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not read platform. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettings: Platform = %s.',[_platform]);
-  if _condition='' then begin
-     _condition:='Base';
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find SearchPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: SearchPath is <%s>.',[SearchPath]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find DCUOutputPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: DCU Output Path is <%s>.',[DCUOutputPath]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find BPLOutputPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: BPL Output Path is <%s>.',[BPLOutputPath]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find Conditions. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: Conditions are <%s>.',[Conditions]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$('+_condition+')''!=''''").DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find ProjectOutputPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: Project Output Path is <%s>.',[ProjectOutputPath]);
-  end
-  else begin
-    if _platform<>'' then _condition:=_condition+'|'+_platform;
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find SearchPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: SearchPath is <%s>.',[SearchPath]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find DCUOutputPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: DCU Output Path is <%s>.',[DCUOutputPath]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find BPLOutputPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: BPL Output Path is <%s>.',[BPLOutputPath]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find Conditions. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: Conditions are <%s>.',[Conditions]);
-    if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition=" ''$(Configuration)|$(Platform)'' == '''+_condition+''' ").DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not find ProjectOutputPath. <%s>.',[_msg]);
-    trace(5,'ReadDPROJSettings: Project Output Path is <%s>.',[ProjectOutputPath]);
-  end;
+  if not ReadNodeText(_dprojFilename,'(PropertyGroup).ProjectVersion',_ProjectVersion,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettings: Could not read condition. <%s>.',[_msg]);
+  if _ProjectVersion='' then ReadDPROJSettingsD2005_D2007(_dprojFilename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath)
+                        else ReadDPROJSettingsD2009_and_Newer(_dprojFilename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath);
   result:=true;
 end;
 
