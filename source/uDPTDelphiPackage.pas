@@ -1795,42 +1795,42 @@ begin
 
   _pos:=Pos(lowercase(cDelphiTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cDelphiTag)-1);
+    Delete(_filename,1,_pos+length(cDelphiTag));
     result:=GetDelphiRootDir(_DelphiVersion)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cBDSTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cBDSTag)-1);
+    Delete(_filename,1,_pos+length(cBDSTag));
     result:=GetDelphiRootDir(_DelphiVersion)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cProgramFilesTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cProgramFilesTag)-1);
+    Delete(_filename,1,_pos+length(cProgramFilesTag));
     result:= GetSystemPath(spProgFiles)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cBDSCommonDirTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cBDSCommonDirTag)-1);
+    Delete(_filename,1,_pos+length(cBDSCommonDirTag));
     result:= ReadBDSCommonDir(_DelphiVersion)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cBDSProjectsDirTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cBDSProjectsDirTag)-1);
+    Delete(_filename,1,_pos+length(cBDSProjectsDirTag));
     result:= ReadBDSProjectsDir(_DelphiVersion)+_filename;
     exit;
   end;
 
   _pos:=Pos(lowercase(cBDSUserDirTag),_filename);
   if _pos>0 then begin
-    Delete(_filename,1,_pos+length(cBDSUserDirTag)-1);
+    Delete(_filename,1,_pos+length(cBDSUserDirTag));
     result:= ReadBDSUserDir(_DelphiVersion)+_filename;
     exit;
   end;
@@ -3971,38 +3971,41 @@ begin
 
   if (pos('\\',_path)=1) or               // looks like the filename contains already a absolute path.
      (pos(':\',_path)>0) then begin
-    result:=_path;
+    result:=IncludeTrailingPathDelimiter(_path);
     trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
     exit;
   end;
 
   if (pos('..\',_path)=0) and
      (pos('.\',_path)=0) then begin    // its not a relative path, leave here.
-    if _path<>'' then _path:=IncludeTrailingPathDelimiter(_path);
-    result:=_basepath+_path;
+    if _path<>'' then begin
+      _path:=IncludeTrailingPathDelimiter(_path);
+      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
+    end;
+    result:=IncludeTrailingPathDelimiter(_basepath)+_path;
     trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
     exit;
   end;
 
   _pos:=Pos('..\',_path);
-  if (_pos=0) then begin
-    if (pos('\\',_path)>0) or
-       (pos(':\',_path)>0) then begin
-      if (pos('$(',_path)>0) then _path:=ReplaceTag(_path,_DelphiVersion);
-      result:=_path;
-      result:=IncludeTrailingPathDelimiter(result);
-      exit;
-    end else begin
-      result:=_basepath+_path;
-      result:=IncludeTrailingPathDelimiter(result);
-      exit;
+  if _pos=0 then begin
+    if _path<>'' then begin
+      _path:=IncludeTrailingPathDelimiter(_path);
+      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
     end;
+    result:=IncludeTrailingPathDelimiter(_basepath)+_path;
+    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+    exit;
   end;
 
   while _pos>0 do begin
     Delete(_path,1,_pos+2);
     _pos:=LastPos(_basepath,'\');
-    if _pos=0 then exit;
+    if _pos=0 then begin
+      result:='';
+      trace(1,'Error in AbsolutePath: Relative path <%s> can not be matched to base path <%s>.',[_path,_basepath]);
+      exit;
+    end;
     _len:=length(_basepath);
     if _pos=_len then delete(_basepath,_pos,1);
     _pos:=LastPos(_basepath,'\');
@@ -4010,9 +4013,12 @@ begin
     if _pos>0 then delete(_basepath,_pos,_len);
     _pos:=Pos('..\',_path);
   end;
-  _basepath:=IncludeTrailingPathDelimiter(_basepath);
-  result:=_basepath+_path;
-  result:=IncludeTrailingPathDelimiter(result);
+  if _path<>'' then begin
+    _path:=IncludeTrailingPathDelimiter(_path);
+    if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
+  end;
+  result:=IncludeTrailingPathDelimiter(_basepath)+_path;
+  trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
 end;
 
 {-----------------------------------------------------------------------------
