@@ -3,8 +3,8 @@ program Project1;
 uses
   Forms,
   Unit1 in 'Unit1.pas' {Form1},
-  uXMLReader in '..\..\..\..\Packages\Library\uXMLReader.pas',
-  uNVBMisc in '..\..\..\..\Packages\Library\uNVBMisc.pas';
+  uDPTXMLReader in '..\..\..\uDPTXMLReader.pas',
+  uDPTMisc in '..\..\..\uDPTMisc.pas';
 
 {$R *.res}
 

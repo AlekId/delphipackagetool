@@ -12,18 +12,26 @@ uses
   Controls,
   Forms,
   Dialogs,
-  StdCtrls;
+  StdCtrls,
+  ExtCtrls;
 
 type
   TForm1 = class(TForm)
+    OpenDialog1: TOpenDialog;
+    mmoFile: TMemo;
+    Panel1: TPanel;
     Button: TButton;
-    edtStmt: TEdit;
+    filename: TLabel;
+    cbxfilename: TComboBox;
+    lblstatement: TLabel;
+    lbldata: TLabel;
     edtValue: TEdit;
+    cbxstatement: TComboBox;
+    Splitter1: TSplitter;
+    mmoStatement: TMemo;
     procedure ButtonClick(Sender: TObject);
   private
-    { Private-Deklarationen }
   public
-    { Public-Deklarationen }
   end;
 
 var
@@ -32,25 +40,31 @@ var
 implementation
 
 uses
-  uXMLReader;
+  uDPTXMLReader;
 
 {$R *.dfm}
 
 procedure TForm1.ButtonClick(Sender: TObject);
 var
-_value:string;
-_msg:string;
-_stmt:string;
+  _value: string;
+  _msg: string;
+  _stmt: string;
+  _lineNo: integer;
 begin
-  _stmt:=edtStmt.text;
-
-  ReadNodeText('Project1.bdsproj',  // the name of the xml-file
-                      _stmt,      // the data select statement
-                      _value,        // contains the value (if found)
-                      _msg); // contains an error message ( if not found)
-
-  MessageDlg(_value+'  '+_msg, mtInformation, [mbOK], 0);
-  edtValue.Text:=_value;
+  _stmt := cbxstatement.text;
+  if not fileexists(cbxfilename.text) then begin
+    showmessage(format('The file <%s> does not exist. Please select an existing file.',[cbxfilename.text]));
+    cbxfilename.SetFocus;
+    exit;
+  end;
+  mmoFile.Lines.LoadFromFile(cbxfilename.text);
+  ReadNodeText(cbxfilename.text, // the name of the xml-file
+    _stmt, // the data select statement
+    _value, // contains the value (if found)
+    _msg,
+    _lineNo); // contains an error message ( if not found)
+  if _msg<>'' then MessageDlg(_value + '  ' + _msg, mtInformation, [mbOK], 0);
+  edtValue.Text := _value;
 end;
 
 end.

@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 0
-  Top = 96
+  Left = 76
+  Top = 209
   Width = 800
   Height = 500
   Caption = 'Form1'
@@ -13,31 +13,102 @@ object Form1: TForm1
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object Button: TButton
-    Left = 184
-    Top = 48
-    Width = 75
-    Height = 25
-    Caption = 'Button'
+  object Splitter1: TSplitter
+    Left = 850
+    Top = 201
+    Height = 272
+  end
+  object mmoFile: TMemo
+    Left = 0
+    Top = 201
+    Width = 425
+    Height = 272
+    Align = alLeft
+    ScrollBars = ssBoth
     TabOrder = 0
-    OnClick = ButtonClick
   end
-  object edtStmt: TEdit
-    Left = 40
-    Top = 96
-    Width = 729
-    Height = 21
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 792
+    Height = 201
+    Align = alTop
+    Caption = 'Panel1'
     TabOrder = 1
-    Text = 
-      '<Configuration Condition=" '#39'$(Configuration)'#39' == '#39#39' ">Debug</Con' +
-      'figuration>'
+    object filename: TLabel
+      Left = 16
+      Top = 48
+      Width = 39
+      Height = 13
+      Caption = 'filename'
+    end
+    object lblstatement: TLabel
+      Left = 16
+      Top = 96
+      Width = 46
+      Height = 13
+      Caption = 'statement'
+    end
+    object lbldata: TLabel
+      Left = 16
+      Top = 144
+      Width = 23
+      Height = 13
+      Caption = 'Data'
+    end
+    object Button: TButton
+      Left = 16
+      Top = 16
+      Width = 75
+      Height = 25
+      Caption = 'Button'
+      TabOrder = 0
+      OnClick = ButtonClick
+    end
+    object cbxfilename: TComboBox
+      Left = 16
+      Top = 64
+      Width = 729
+      Height = 21
+      ItemHeight = 13
+      ItemIndex = 0
+      TabOrder = 1
+      Text = '..\..\D2010\project1\Project1.dproj'
+      Items.Strings = (
+        '..\..\D2010\project1\Project1.dproj'
+        '..\..\D2007\project1\Project1.dproj'
+        '..\..\D2006\Project1\Project1.bdsproj')
+    end
+    object edtValue: TEdit
+      Left = 16
+      Top = 160
+      Width = 737
+      Height = 21
+      TabOrder = 2
+    end
+    object cbxstatement: TComboBox
+      Left = 16
+      Top = 112
+      Width = 729
+      Height = 21
+      ItemHeight = 13
+      TabOrder = 3
+      Text = '(PropertyGroup Condition="'#39'$(Base)'#39'!='#39#39'").DCC_ExeOutput'
+      Items.Strings = (
+        'D2006: ')
+    end
   end
-  object edtValue: TEdit
-    Left = 40
-    Top = 184
-    Width = 737
-    Height = 21
+  object mmoStatement: TMemo
+    Left = 425
+    Top = 201
+    Width = 425
+    Height = 272
+    Align = alLeft
+    ScrollBars = ssBoth
     TabOrder = 2
-    Text = 'edtValue'
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 80
+    Top = 32
   end
 end
