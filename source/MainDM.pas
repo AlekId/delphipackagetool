@@ -699,10 +699,6 @@ _FileList:TStringList;
 _BackupZip :TZip;
 {$endif}
 begin
-  if not fileexists(FZipFilename) then begin
-    trace(1,'Can not make auto-backup because the file <%s> is missing.',[FZipFilename]);
-    exit;
-  end;
 {$ifndef NoZipSupport}
   _BackupZip := TZip.Create(nil);
 {$endif}

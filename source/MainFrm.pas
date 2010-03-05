@@ -346,7 +346,6 @@ begin
   DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
   DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
   DMMain.OnCurrentProjectChanged:=DoCurrentProjectChanged;
-  actBackupAll.Enabled:=fileexists(DMMain.ZipFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1534,7 +1533,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.ShowProjectGroup1Click(Sender: TObject);
 begin
-  OpenBPGFileInEditor;;
+  OpenBPGFileInEditor;
 end;
 
 {-----------------------------------------------------------------------------
