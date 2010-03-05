@@ -492,14 +492,6 @@ object FrmMain: TFrmMain
       Action = actBackupAll
     end
   end
-  object OpenSkinDialog: TOpenDialog
-    DefaultExt = '*.skn'
-    FileName = 'C:\Projects\Packages\Downloads\VCLSkin\skins\skin0297.skn'
-    Filter = 'Skin Files|*.skn'
-    Options = [ofHideReadOnly, ofExtensionDifferent, ofEnableSizing]
-    Left = 128
-    Top = 120
-  end
   object ppmFilesGrid: TPopupMenu
     Left = 208
     Top = 280

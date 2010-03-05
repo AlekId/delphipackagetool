@@ -89,7 +89,6 @@ type
     About1: TMenuItem;
     actShowAbout: TAction;
     LoadSkin1: TMenuItem;
-    OpenSkinDialog: TOpenDialog;
     actFindFilePath: TAction;
     Find1: TMenuItem;
     pnlTop: TPanel;
