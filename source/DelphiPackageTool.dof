@@ -111,7 +111,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=0
-Build=120
+Build=121
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.0.120
+FileVersion=1.9.0.121
 InternalName=
 LegalCopyright=Samuel Herzog
 LegalTrademarks=
@@ -130,6 +130,8 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.1.7.2
 Comments=
+[Excluded Packages]
+c:\projects\delphipackagetool\source\test\d7\bpl\d7\packagewithsuffixd7.bpl=Package with Suffix
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source

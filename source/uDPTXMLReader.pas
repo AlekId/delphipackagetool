@@ -3,15 +3,13 @@
  Author:    herzogs2
  Date:      19-Aug-2008
  Purpose:   read from an xml file.
- History:   23.10.2010 -SH made changes to allow '.'-char inside a node name.
-            17.11.2009 -SH fix in case a field is read by array-style value[24].
-            15.06.2009 -SH replaced strtoint with a safer version.
-            04.11.2008 -SH changes in case the value string contains a ')' char. eg. (Test="(Hello)").Name
+TODO: CLEANUP THIS MESS.
 -----------------------------------------------------------------------------}
 unit uDPTXMLReader;
 
 interface
 uses
+  MSXML2_TLB,
   XMLIntf,
   XMLDoc;
 
@@ -47,6 +45,7 @@ uses
               the statement must look like this: (Delphi.Personality)  <- additional brakets around the node-name.
 -----------------------------------------------------------------------------}
 procedure ParseToken(var _tokenname: string; var _tokenvalue: string; var _tokenindex:integer;var _statement: string);
+
 var
 _pos: Integer;
 _token: string;
@@ -149,17 +148,17 @@ begin
   end;
 end;
 
-
 {-----------------------------------------------------------------------------
-  Procedure: ReadNodeText
+  Procedure: ReadNodeDocumentOldStyle
   Author:    herzogs2
   Date:      21-Aug-2008
   Arguments: const _xmlfile: TXMLDocument;_statement: string;var value:string;var errormsg:string
   Result:    boolean
   Description: The same as above but, this time an instance of TXMLDocument is passed instead of
                the filename.
+  TODO: change all statements of offical xpath and afterwards remove this method.
 -----------------------------------------------------------------------------}
-function ReadNodeDocument(var xmlfile: IXMLDocument;_statement: string;var value:string;var errormsg:string;var lineNo:integer): boolean;
+function ReadNodeDocumentOldStyle(var xmlfile: IXMLDocument;_statement: string;var value:string;var errormsg:string;var lineNo:integer): boolean;
 var
 i:integer;
 _node:IXMLNode;
@@ -207,7 +206,7 @@ begin
                  break;
                end;
              end
-                                                                          else _node:=nil;
+             else _node:=nil;
              _founditem:=true;
              break;
            end;
@@ -252,5 +251,41 @@ begin
    end;
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: ReadNodeDocumentNewStyle
+  Author:    sam
+  Date:      06-Mrz-2010
+  Arguments: var xmlfile: IXMLDocument;_statement: string;var value:string;var errormsg:string;var lineNo:integer
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
+function ReadNodeDocumentNewStyle(var xmlfile: IXMLDocument;_statement: string;var value:string;var errormsg:string;var lineNo:integer): boolean;
+var
+_node:IXMLDOMNode;
+begin
+  result:=false;
+  lineNo:=0;
+  _node:=(xmlfile as  IXMLDOMDocument).selectSingleNode(_statement);
+  if not assigned(_node) then begin
+    errormsg:='Not found.';
+    exit;
+  end;
+  value:=_node.text;
+  result:=true;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: ReadNodeDocument
+  Author:    sam
+  Date:      06-Mrz-2010
+  Arguments: var xmlfile: IXMLDocument;_statement: string;var value:string;var errormsg:string;var lineNo:integer
+  Result:    boolean
+  Description: until we have clean-up the old-style node-selection, this supports both way's.
+-----------------------------------------------------------------------------}
+function ReadNodeDocument(var xmlfile: IXMLDocument;_statement: string;var value:string;var errormsg:string;var lineNo:integer): boolean;
+begin
+  if pos('//',_statement)=1 then result:=ReadNodeDocumentNewStyle(xmlfile,_statement,value,errormsg,lineNo)
+                            else result:=ReadNodeDocumentOldStyle(xmlfile,_statement,value,errormsg,lineNo);
+end;
 
 end.

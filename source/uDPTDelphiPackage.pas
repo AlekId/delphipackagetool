@@ -2568,6 +2568,14 @@ begin
   result:=true;
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: ReadDPROJSettingsD2009_and_Newer
+  Author:    sam
+  Date:      06-Mrz-2010
+  Arguments: const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string
+  Result:    boolean
+  Description: read path information from a dproj file used by D2009 or newer.
+-----------------------------------------------------------------------------}
 function ReadDPROJSettingsD2009_and_Newer(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
 var
 _msg:string;
@@ -2583,15 +2591,15 @@ begin
     trace(5,'ReadDPROJSettingsD2009_and_Newer: Could not find the file <%s>.',[_dprojFilename]);
     exit;
   end;
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find SearchPath. <%s>.',[_msg]);
+  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_UnitSearchPath',SearchPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find SearchPath. <%s>.',[_msg]);
   trace(5,'ReadDPROJSettingsD2009_and_Newer: SearchPath is <%s>.',[SearchPath]);
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find DCUOutputPath. <%s>.',[_msg]);
+  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_DcuOutput',DCUOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find DCUOutputPath. <%s>.',[_msg]);
   trace(5,'ReadDPROJSettingsD2009_and_Newer: DCU Output Path is <%s>.',[DCUOutputPath]);
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find BPLOutputPath. <%s>.',[_msg]);
+  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_BplOutput',BPLOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find BPLOutputPath. <%s>.',[_msg]);
   trace(5,'ReadDPROJSettingsD2009_and_Newer: BPL Output Path is <%s>.',[BPLOutputPath]);
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
+  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_Define',Conditions,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
   trace(5,'ReadDPROJSettingsD2009_and_Newer: Conditions are <%s>.',[Conditions]);
-  if not ReadNodeText(_dprojFilename,'(PropertyGroup Condition="''$(Base)''!=''''").DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find ProjectOutputPath. <%s>.',[_msg]);
+  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_ExeOutput',ProjectOutputPath,_msg,_lineNo) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find ProjectOutputPath. <%s>.',[_msg]);
   trace(5,'ReadDPROJSettingsD2009_and_Newer: Project Output Path is <%s>.',[ProjectOutputPath]);
   result:=true;
 end;
