@@ -2,7 +2,6 @@
   <PropertyGroup>
     <ProjectGuid>{34c02722-10d0-4c25-a5f6-eabb36880d57}</ProjectGuid>
   </PropertyGroup>
-  <ItemGroup />
   <ItemGroup>
     <Projects Include="package_suffix\designtimepackage.dproj" />
     <Projects Include="package_suffix\NormalPackage.dproj" />

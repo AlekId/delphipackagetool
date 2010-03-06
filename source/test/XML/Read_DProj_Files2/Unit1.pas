@@ -31,6 +31,10 @@ type
     cbxFilename2010: TComboBox;
     lblFilename2010: TLabel;
     lblStmt2010: TLabel;
+    lblFilename2007: TLabel;
+    cbxFilename2007: TComboBox;
+    lblstmt2007: TLabel;
+    edtStmt2007: TEdit;
     procedure btnExecuteClick(Sender: TObject);
   private
   public
@@ -49,19 +53,28 @@ uses
 procedure TForm1.btnExecuteClick(Sender: TObject);
 var
 _filename:string;
+_stmt:string;
 _XMLDoc:IXMLDOMDocument;
 _node:IXMLDOMNode;
 _nodeList:IXMLDOMNodeList;
 begin
 
   case PageControl1.ActivePageIndex of
-    3:_filename:=cbxFilename2010.Text;
+    1:begin
+        _filename:=cbxFilename2007.Text;
+        _stmt    :=edtStmt2007.text;
+      end;
+    3:begin
+        _filename:=cbxFilename2010.Text;
+        _stmt    :=edtStmt2010.text;
+      end;
   end;
   _XMLDoc := CoDOMDocument.Create;
   try
     _XMLDoc.load(_filename);
-    _node:=_XMLDoc.selectSingleNode(edtStmt2010.text);
+    _node:=_XMLDoc.selectSingleNode(_stmt);
     if not assigned(_node) then begin
+      edtValue.Text:='';
       showmessage('Not found.');
       exit;
     end;

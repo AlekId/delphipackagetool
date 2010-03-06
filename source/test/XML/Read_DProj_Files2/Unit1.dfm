@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 0
   Top = 96
-  Width = 800
-  Height = 500
   Caption = 'Form1'
+  ClientHeight = 473
+  ClientWidth = 936
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,9 +16,9 @@ object Form1: TForm1
   object PageControl1: TPageControl
     Left = 0
     Top = 0
-    Width = 792
+    Width = 936
     Height = 193
-    ActivePage = tabD2010
+    ActivePage = tabD2007
     Align = alTop
     TabOrder = 0
     object tabD2006: TTabSheet
@@ -27,6 +27,37 @@ object Form1: TForm1
     object tabD2007: TTabSheet
       Caption = 'tabD2007'
       ImageIndex = 1
+      object lblFilename2007: TLabel
+        Left = 12
+        Top = 8
+        Width = 42
+        Height = 13
+        Caption = 'Filename'
+      end
+      object lblstmt2007: TLabel
+        Left = 12
+        Top = 62
+        Width = 48
+        Height = 13
+        Caption = 'Statement'
+      end
+      object cbxFilename2007: TComboBox
+        Left = 12
+        Top = 27
+        Width = 785
+        Height = 21
+        ItemHeight = 13
+        TabOrder = 0
+        Text = '..\..\d2007\test.groupproj'
+      end
+      object edtStmt2007: TEdit
+        Left = 12
+        Top = 80
+        Width = 809
+        Height = 21
+        TabOrder = 1
+        Text = '//ItemGroup[@Projects[0]]/'
+      end
     end
     object tabD2009: TTabSheet
       Caption = 'tabD2009'
@@ -36,21 +67,21 @@ object Form1: TForm1
       Caption = 'tabD2010'
       ImageIndex = 3
       object lblFilename2010: TLabel
-        Left = 16
+        Left = 12
         Top = 8
         Width = 42
         Height = 13
         Caption = 'Filename'
       end
       object lblStmt2010: TLabel
-        Left = 16
+        Left = 12
         Top = 64
         Width = 48
         Height = 13
         Caption = 'Statement'
       end
       object edtStmt2010: TEdit
-        Left = 16
+        Left = 12
         Top = 80
         Width = 809
         Height = 21
@@ -58,7 +89,7 @@ object Form1: TForm1
         Text = '//PropertyGroup[@Condition="'#39'$(Base)'#39'!='#39#39'"]/DCC_UnitSearchPath'
       end
       object cbxFilename2010: TComboBox
-        Left = 16
+        Left = 12
         Top = 24
         Width = 785
         Height = 21
@@ -71,7 +102,7 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Top = 193
-    Width = 792
+    Width = 936
     Height = 41
     Align = alTop
     TabOrder = 1
@@ -95,7 +126,7 @@ object Form1: TForm1
   object mmoFile: TMemo
     Left = 0
     Top = 234
-    Width = 792
+    Width = 936
     Height = 239
     Align = alClient
     ScrollBars = ssBoth
