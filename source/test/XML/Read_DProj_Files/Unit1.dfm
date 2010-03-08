@@ -1,8 +1,8 @@
 object Form1: TForm1
-  Left = 76
-  Top = 209
-  Width = 800
-  Height = 500
+  Left = -4
+  Top = -4
+  Width = 1288
+  Height = 780
   Caption = 'Form1'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,13 +16,13 @@ object Form1: TForm1
   object Splitter1: TSplitter
     Left = 850
     Top = 201
-    Height = 272
+    Height = 552
   end
   object mmoFile: TMemo
     Left = 0
     Top = 201
     Width = 425
-    Height = 272
+    Height = 552
     Align = alLeft
     ScrollBars = ssBoth
     TabOrder = 0
@@ -30,7 +30,7 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 792
+    Width = 1280
     Height = 201
     Align = alTop
     Caption = 'Panel1'
@@ -102,7 +102,7 @@ object Form1: TForm1
     Left = 425
     Top = 201
     Width = 425
-    Height = 272
+    Height = 552
     Align = alLeft
     ScrollBars = ssBoth
     TabOrder = 2

@@ -35,6 +35,14 @@ type
     cbxFilename2007: TComboBox;
     lblstmt2007: TLabel;
     edtStmt2007: TEdit;
+    lblFilename2006: TLabel;
+    cbxFilename2006: TComboBox;
+    lblStmt2006: TLabel;
+    edtStmt2006: TEdit;
+    lblFilename2009: TLabel;
+    cbxFilename2009: TComboBox;
+    lblStmt2009: TLabel;
+    edtStmt2009: TEdit;
     procedure btnExecuteClick(Sender: TObject);
   private
   public
@@ -50,24 +58,39 @@ uses
 
 {$R *.dfm}
 
+
+
+
+
 procedure TForm1.btnExecuteClick(Sender: TObject);
 var
 _filename:string;
 _stmt:string;
 _XMLDoc:IXMLDOMDocument;
 _node:IXMLDOMNode;
-_nodeList:IXMLDOMNodeList;
+//_nodeList:IXMLDOMNodeList;
 begin
-
   case PageControl1.ActivePageIndex of
+    0:begin
+        _filename:=cbxFilename2006.Text;
+        _stmt    :=edtStmt2006.text;
+      end;
     1:begin
         _filename:=cbxFilename2007.Text;
         _stmt    :=edtStmt2007.text;
+      end;
+    2:begin
+        _filename:=cbxFilename2009.Text;
+        _stmt    :=edtStmt2009.text;
       end;
     3:begin
         _filename:=cbxFilename2010.Text;
         _stmt    :=edtStmt2010.text;
       end;
+  end;
+  if not fileexists(_filename) then begin
+    showmessagefmt('The file <%s> does not exists.',[_filename]);
+    exit;
   end;
   _XMLDoc := CoDOMDocument.Create;
   try
@@ -82,8 +105,6 @@ begin
   finally
     _XMLDoc := nil;
   end;
-
-
 end;
 
 end.

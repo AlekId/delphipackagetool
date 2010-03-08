@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 0
   Top = 96
+  Width = 944
+  Height = 500
   Caption = 'Form1'
-  ClientHeight = 473
-  ClientWidth = 936
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,11 +18,40 @@ object Form1: TForm1
     Top = 0
     Width = 936
     Height = 193
-    ActivePage = tabD2007
+    ActivePage = tabD2009
     Align = alTop
     TabOrder = 0
     object tabD2006: TTabSheet
       Caption = 'tabD2006'
+      object lblFilename2006: TLabel
+        Left = 12
+        Top = 8
+        Width = 42
+        Height = 13
+        Caption = 'Filename'
+      end
+      object lblStmt2006: TLabel
+        Left = 12
+        Top = 62
+        Width = 48
+        Height = 13
+        Caption = 'Statement'
+      end
+      object cbxFilename2006: TComboBox
+        Left = 12
+        Top = 27
+        Width = 785
+        Height = 21
+        ItemHeight = 13
+        TabOrder = 0
+      end
+      object edtStmt2006: TEdit
+        Left = 12
+        Top = 80
+        Width = 809
+        Height = 21
+        TabOrder = 1
+      end
     end
     object tabD2007: TTabSheet
       Caption = 'tabD2007'
@@ -62,6 +91,35 @@ object Form1: TForm1
     object tabD2009: TTabSheet
       Caption = 'tabD2009'
       ImageIndex = 2
+      object lblFilename2009: TLabel
+        Left = 12
+        Top = 8
+        Width = 42
+        Height = 13
+        Caption = 'Filename'
+      end
+      object lblStmt2009: TLabel
+        Left = 12
+        Top = 62
+        Width = 48
+        Height = 13
+        Caption = 'Statement'
+      end
+      object cbxFilename2009: TComboBox
+        Left = 12
+        Top = 27
+        Width = 785
+        Height = 21
+        ItemHeight = 13
+        TabOrder = 0
+      end
+      object edtStmt2009: TEdit
+        Left = 12
+        Top = 80
+        Width = 809
+        Height = 21
+        TabOrder = 1
+      end
     end
     object tabD2010: TTabSheet
       Caption = 'tabD2010'
