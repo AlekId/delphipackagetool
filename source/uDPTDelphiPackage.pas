@@ -3585,31 +3585,23 @@ end;
 -----------------------------------------------------------------------------}
 procedure ReadPackageListfromGroupProjFileToStrings(_filename:string;var lst:TStrings); // read the package names from the delphi project group file <.bdsgroup>
 var
-  i:integer;
-  _XMLFile:xmlintf.IXMLDocument;
-  _Project:xmlintf.IXMLNode;
-  _ItemGroup:xmlintf.IXMLNode;
-  _Projectname:String;
+i:integer;
+_Projectname:String;
+_errormsg:string;
+_lineNo:integer;
 begin
   if not assigned(lst) then exit;
   if not fileExists(_filename) then begin
     trace(5,'ReadPackageListfromGroupProjFileToStrings: Could not find the file <%s>.',[_filename]);
     exit;
   end;
-  _XMLFile:=newXMLDocument;
-  try
-    _XMLFile.LoadFromFile(_filename);
-    _XMLFile.active:=true;
-    _Project:=_XMLFile.ChildNodes['Project'];
-    _ItemGroup:=_Project.ChildNodes['ItemGroup'];
-    for i:=0 to _ItemGroup.ChildNodes.count-1 do begin
-      _Projectname:=ReadAttributes(_ItemGroup.ChildNodes[i],'Include');
-      if _Projectname='' then continue;
-      lst.add(trim(_Projectname));
-    end;
-  finally
-    _XMLFile.active:=false;
-  end;
+  lst.Clear;
+  i:=0;
+  repeat
+    if not ReadNodeText(_filename,format('//Projects[%d]/@Include',[i]),_Projectname,_errormsg,_lineNo) then exit;
+    if  _Projectname<>'' then lst.Add(_Projectname);
+    inc(i);
+  until (_Projectname='') or (i>10000);
 end;
 
 {*-----------------------------------------------------------------------------
