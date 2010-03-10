@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.121 ( 10.03.2010 )
+- added patch from M.Mueller. DPT now uses MSXML to read data from dproj,bdsgroup,groupproj files.
+
 1.9.0.120 ( 04.03.2010 )
 - integrate changes from M.Mueller. Donated code to correctly read BDSCommenDir and BDSProjectsDir.
 
