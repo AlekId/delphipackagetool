@@ -26,7 +26,7 @@ Source: ..\Bin\Lies_mich.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\doc\create_new_project.swf; DestDir: {app}\doc\video; Flags: ignoreversion
 Source: ..\doc\open_in_IDE.swf; DestDir: {app}\doc\video; Flags: ignoreversion
 Source: ..\doc\setup_search_path.swf; DestDir: {app}\doc\video; Flags: ignoreversion
-Source: ..\Bin\BPGFileHeader.txt; DestDir: {app}; Flags: ignoreversion
+Source: ..\Bin\ProjectGroupTemplate.bpg; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\ProjectGroupTemplate.bdsgroup; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\ProjectGroupTemplate.groupproj; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

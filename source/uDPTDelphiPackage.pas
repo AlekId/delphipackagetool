@@ -1312,7 +1312,7 @@ procedure CreateBPGFile(const _lstProjectFiles:TListBox;const _projectGroupFilen
 resourcestring
 cDoFreshInstall='Could not find the file <%s>. Download the latest <setup.exe> of Delphi Package Tool and do fresh install.';
 const
-  cBPGTemplateFilename='BPGFileHeader.txt'; // this file must be in the application directory. the file contains the header part of a bpg-file.
+  cBPGTemplateFilename='ProjectGroupTemplate.bpg'; // this file must be in the application directory. the file contains the header part of a bpg-file.
 var
 i:integer;
 _Files:TStrings;

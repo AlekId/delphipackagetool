@@ -6,6 +6,7 @@
 
 1.9.0.121 ( 10.03.2010 )
 - added patch from M.Mueller. DPT now uses MSXML to read data from dproj,bdsgroup,groupproj files.
+- changed name of BPGTemplatefile.txt to ProjectGroupTemplate.bpg.
 
 1.9.0.120 ( 04.03.2010 )
 - integrate changes from M.Mueller. Donated code to correctly read BDSCommenDir and BDSProjectsDir.
