@@ -270,7 +270,7 @@ uses
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actOpenProjectExecute(Sender: TObject);
 resourcestring
-cPleaseSelectProjectGroup='Please select a Package Group File <.bpg/.bdsgroup>.';
+cPleaseSelectProjectGroup='Please select a Package Group File <.bpg/.bdsgroup/*.groupproj>.';
 cFilter='Delphi Group Files|*.bpg;*.groupproj;*.bdsgroup';
 begin
   OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile', 19));

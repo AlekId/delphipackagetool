@@ -1,7 +1,7 @@
 object FrmMain: TFrmMain
   Left = 112
   Top = 174
-  Width = 800
+  Width = 1092
   Height = 543
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
@@ -25,16 +25,16 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 303
-    Width = 993
+    Top = 319
+    Width = 1084
     Height = 12
     Cursor = crVSplit
     Align = alBottom
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 315
-    Width = 993
+    Top = 331
+    Width = 1084
     Height = 166
     Align = alBottom
     Ctl3D = False
@@ -48,8 +48,8 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 145
-    Width = 993
-    Height = 158
+    Width = 1084
+    Height = 174
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -74,7 +74,7 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 993
+    Width = 1084
     Height = 145
     Align = alTop
     BevelOuter = bvNone
@@ -96,9 +96,9 @@ object FrmMain: TFrmMain
     object lblPackageGroupFile: TLabel
       Left = 240
       Top = 0
-      Width = 187
+      Width = 233
       Height = 13
-      Caption = 'ProjectGroup File <*.bpg or *.bdsgroup>'
+      Caption = 'ProjectGroup File <*.bpg/*.bdsgroup/*.groupproj>'
     end
     object lblDcuPath: TLabel
       Left = 392
