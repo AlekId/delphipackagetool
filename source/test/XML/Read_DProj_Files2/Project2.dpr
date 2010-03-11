@@ -3,7 +3,8 @@ program Project2;
 uses
   Forms,
   Unit1 in 'Unit1.pas' {Form1},
-  MSXML2_TLB in '..\..\..\MSXML2_TLB.pas';
+  MSXML2_TLB in '..\..\..\MSXML2_TLB.pas',
+  uDPTXMLReader in '..\..\..\uDPTXMLReader.pas';
 
 {$R *.res}
 

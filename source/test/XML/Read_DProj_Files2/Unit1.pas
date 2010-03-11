@@ -54,7 +54,7 @@ var
 implementation
 
 uses
-  MSXML2_TLB;
+  MSXML2_TLB, uDPTXMLReader;
 
 {$R *.dfm}
 
@@ -66,9 +66,8 @@ procedure TForm1.btnExecuteClick(Sender: TObject);
 var
 _filename:string;
 _stmt:string;
-_XMLDoc:IXMLDOMDocument;
-_node:IXMLDOMNode;
-//_nodeList:IXMLDOMNodeList;
+_value:string;
+_errormsg:string;
 begin
   case PageControl1.ActivePageIndex of
     0:begin
@@ -88,23 +87,12 @@ begin
         _stmt    :=edtStmt2010.text;
       end;
   end;
-  if not fileexists(_filename) then begin
-    showmessagefmt('The file <%s> does not exists.',[_filename]);
+  if not ReadNodeText(_filename,_stmt,_value,_errormsg) then begin
+    edtValue.Text:='';
+    showmessage('Not found.');
     exit;
   end;
-  _XMLDoc := CoDOMDocument.Create;
-  try
-    _XMLDoc.load(_filename);
-    _node:=_XMLDoc.selectSingleNode(_stmt);
-    if not assigned(_node) then begin
-      edtValue.Text:='';
-      showmessage('Not found.');
-      exit;
-    end;
-    edtValue.Text:=_node.text;
-  finally
-    _XMLDoc := nil;
-  end;
+  edtValue.Text:=_value;
 end;
 
 end.

@@ -18,7 +18,7 @@ object Form1: TForm1
     Top = 0
     Width = 936
     Height = 193
-    ActivePage = tabD2009
+    ActivePage = tabD2007
     Align = alTop
     TabOrder = 0
     object tabD2006: TTabSheet
@@ -85,7 +85,7 @@ object Form1: TForm1
         Width = 809
         Height = 21
         TabOrder = 1
-        Text = '//ItemGroup[@Projects[0]]/'
+        Text = '//Projects[0]/@Include'
       end
     end
     object tabD2009: TTabSheet

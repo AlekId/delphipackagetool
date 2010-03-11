@@ -64,7 +64,6 @@ var
   _xmlDOMfile: IXMLDOMDocument;
 begin
   result := False;
-
   _xmlDOMfile := CoDOMDocument.Create;
   try
     if not _xmlDOMfile.load(_filename) then begin
