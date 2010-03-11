@@ -151,7 +151,8 @@ uses uDPTMisc,
      XMLIntf,
      Controls,
      Dialogs,
-     ShlObj,
+//     ShlObj,
+     ShellApi,
      uDPTXMLReader,
      uDPTDefinitions,
      uDPTJclFuncs;
@@ -3874,7 +3875,11 @@ begin
   if not FileExists(_FileName) then exit;
   VerifyRegistry(_DelphiVersion);
   trace(5,'StartUpDelphi:Try to start Delphi from <%s>.',[_FileName]);
-  WinExec(PChar(_FileName+' /ns "'+_ProjectName+'"'), SW_SHOWNORMAL);
+{$IF CompilerVersion < 20.0}
+  ShellExecute(0, 'open', PChar(_FileName), PChar(' /ns "'+_ProjectName+'"'), nil, SW_SHOWNORMAL);
+{$ELSE}
+  ShellExecute(0, 'open', PWideChar(_FileName), PWideChar(' /ns "'+_ProjectName+'"'), nil, SW_SHOWNORMAL);
+{$IFEND}
 end;
 
 {-----------------------------------------------------------------------------

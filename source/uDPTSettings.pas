@@ -176,7 +176,7 @@ type
     class function NewInstance: TObject; override;
     procedure FreeInstance; override;
     class function RefCount: Integer;
-    destructor destroy; override;
+    destructor Destroy; override;
   end;
 
 function FontStylesToInteger(_FontStyle: TFontStyles): Integer;
@@ -242,7 +242,7 @@ end;
 // ****************************************************************************
 // ****************************************************************************
 
-destructor TNVBSingleTonSettings.destroy;
+destructor TNVBSingleTonSettings.Destroy;
 begin
   // very important, do not delete this method.
 end;
@@ -920,7 +920,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.StrValue;
   finally
@@ -947,7 +947,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.StrValue;
   finally
@@ -974,7 +974,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.StrValue;
   finally
@@ -1005,7 +1005,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.IntValue;
   finally
@@ -1036,7 +1036,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.FloatValue;
   finally
@@ -1067,7 +1067,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.BoolValue;
   finally
@@ -1098,7 +1098,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.ColorValue;
   finally
@@ -1134,7 +1134,7 @@ begin
     _SettingData.isVisible:= _isVisible;
     _SettingData.isCrypted:= _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     Result := _SettingData.IntValue;
   finally
@@ -1165,7 +1165,7 @@ begin
     _SettingData.isVisible := _isVisible;
     _SettingData.isCrypted := _isCrypted;
     _SettingData.isReadOnly:= _isReadOnly;
-    StrLCopy(@_SettingData.Descr, PChar(_Descr), cMaxDescr);
+    _SettingData.Descr := _Descr;
     if not GetSetting(_SettingData) then exit;
     result := _SettingData.CharValue;
   finally

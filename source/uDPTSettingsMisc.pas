@@ -29,7 +29,6 @@ uses Graphics,
 
 
 const
-  cMaxDescr = 512;
   cDelimiterChar = '|';
   cNVBSettingsFileExtension='.ini';
   cNVBFilename='_CustomColors'+cNVBSettingsFileExtension;
@@ -49,13 +48,12 @@ type
                      nvbFile,
                      nvbPath);
 
-  TDescriptionStr=array[0..cMaxDescr] of char;
 
   TNVBSettingData = class(TObject)
-    Name: string[64];
+    Name: string;
     ID: integer;
     SettingType: TNVBSettingType;
-    StrValue: string[255];
+    StrValue: string;
     IntValue: integer;
     FloatValue: double;
     BoolValue: boolean;
@@ -65,10 +63,10 @@ type
     isVisible: Boolean;
     isReadOnly: Boolean;
     isCrypted:Boolean;
-    Descr:TDescriptionStr;
+    Descr: string;
   public
     constructor create;
-    destructor destroy;override;
+    destructor Destroy;override;
     procedure assign(_dataobject:TNVBSettingData);
   end;
 
@@ -197,7 +195,7 @@ begin
   GetToken(_ValueStr,'=');
 
   GetToken(_DescrStr,'=');
-  StrLCopy(@SettingData.Descr,PChar(_DescrStr),cMaxDescr);
+  SettingData.Descr := _DescrStr;
   GetToken(_isVisibleStr,'=');
   SettingData.isVisible:=false;
   if _isVisibleStr='' then _isVisibleStr:='0';
@@ -584,7 +582,7 @@ begin
   EnumList:=TStringList.create;
 end;
 
-destructor TNVBSettingData.destroy;
+destructor TNVBSettingData.Destroy;
 begin
   if assigned(EnumList) then begin
     EnumList.Clear;

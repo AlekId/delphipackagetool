@@ -613,7 +613,7 @@ begin
   FProjectList:=TStringList.create;
   FZipFilename:=extractfilepath(application.ExeName)+'zipdll.dll';
   GetInstalledIDEVersions(FInstalledDelphiVersions);
-
+  InitializeAppSettings(FApplicationIniFilename); // load application settings.
   if ParamCount=1 then begin
     _tmp := lowercase(trim(Paramstr(1)));
     trace(3,'Parameter is <%s>.',[_tmp]);
@@ -674,11 +674,11 @@ begin
       begin // project file (either bpg,dpk,dpr)
         Delete(_tmp, 1, 2); //e.g. -OC:\Projects\Packages\Owncomponents.ini
         FApplicationIniFilename := AbsoluteFilename(extractFilepath(Application.exename),_tmp);
+        InitializeAppSettings(FApplicationIniFilename); // load application settings.
         CommandLineAction := actRecompileAllPackages;
       end;
     end;
   end;
-  InitializeAppSettings(FApplicationIniFilename); // load application settings.
   FDelphiWasStartedOnApplicationStart := isDelphiStarted(FCurrentDelphiVersion);
 end;
 

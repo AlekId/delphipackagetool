@@ -310,7 +310,11 @@ begin
   result:=false;
   if trim(_filename)='' then exit;
   for i:=1 to length(_filename) do begin
+{$IF CompilerVersion < 20.0}
     if not (_filename[i] in cValidFilenameChars) then exit;
+{$ELSE}
+    if not CharInSet(_filename[i], cValidFilenameChars) then exit;
+{$IFEND}
   end;
   result:=true;
 end;
@@ -573,22 +577,19 @@ end;
   Description: get the date&time of a file.
 -----------------------------------------------------------------------------}
 function GetFileDateTime(const _Filename:TFileName;var FileDateTime:TDateTime):Boolean;
+{$IF CompilerVersion < 20.0}
 var
-  FStruct: TOFSTRUCT;
-  wndFile: LongWord;
+  _age: Integer;
+{$IFEND}
 begin
-  Result:=false;
-  wndFile:=0;
-  if not FileExists(_Filename) then exit;
-  try
-    wndFile:= OpenFile(PChar(_Filename), FStruct, OF_SHARE_DENY_NONE);
-    if not (wndFile=HFILE_ERROR) then begin
-      FileDateTime:=FileDateToDateTime(FileGetDate(wndFile));
-      Result:=true;
-    end;
-  finally
-    if wndFile<>HFILE_ERROR then CloseHandle(wndFile);
-  end;
+  Result := false;
+{$IF CompilerVersion < 20.0}
+  _age := FileAge(_Filename);
+  if _age = -1 then exit;  // File doesn't exist
+  FileDateTime := FileDateToDateTime(_age);
+{$ELSE}
+  if not FileAge(_Filename, FileDateTime)then exit;  // File doesn't exist
+{$IFEND}
 end;
 
 
@@ -889,7 +890,11 @@ _s:string;
 begin
   _s:=datetimetostr(_datetime);
   for i:=1 to length(_s) do begin
+{$IF CompilerVersion < 20.0}
     if not (_s[i] in cValidChars) then _s[i]:='_';
+{$ELSE}
+    if not CharInSet(_s[i], cValidChars) then _s[i]:='_';
+{$IFEND}
   end;
   result:=_s;
 end;
@@ -960,7 +965,11 @@ begin
   IsNumeric:=false;
   _done:=false;
   for i:=1 to length(_s) do begin
+{$IF CompilerVersion < 20.0}
     if not (_s[i] in cValidChars) then exit;
+{$ELSE}
+    if not CharInSet(_s[i], cValidChars) then exit;
+{$IFEND}
     _done:=true;
   end;
   if _done then IsNumeric:=true;

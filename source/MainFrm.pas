@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.122 ( 11.03.2010 )
+- added patch from M.Mueller. DPT can now be built with different delphi versions.
+- SH: fixed AV when using DPT with command-line parameters.
+
 1.9.0.121 ( 10.03.2010 )
 - added patch from M.Mueller. DPT now uses MSXML to read data from dproj,bdsgroup,groupproj files.
 - changed name of BPGTemplatefile.txt to ProjectGroupTemplate.bpg.

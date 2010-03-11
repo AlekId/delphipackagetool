@@ -60,8 +60,8 @@ type
   public
     NVBSplitter1: TNVBSplitter;
     NVBDblList1: TNVBDblList;
-    constructor create(AOwner: TComponent);override;
-    destructor destroy;override;
+    constructor Create(AOwner: TComponent);override;
+    destructor Destroy;override;
   end;
 
 function ShowBPGEditor(const _ProjectGroupFilename: string):string;
@@ -226,7 +226,7 @@ begin
   FilterAvailableFileList(edtFilter.Text);
 end;
 
-constructor TFrmBPGEditor.create(AOwner: TComponent);
+constructor TFrmBPGEditor.Create(AOwner: TComponent);
 begin
   inherited;
   FItems:=TStringList.create;
@@ -259,7 +259,7 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-destructor TFrmBPGEditor.destroy;
+destructor TFrmBPGEditor.Destroy;
 begin
   FItems.Free;
   inherited;
