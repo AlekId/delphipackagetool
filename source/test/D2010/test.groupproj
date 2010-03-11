@@ -1,0 +1,84 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{4A9B642E-022D-4EE0-969A-42B952625823}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="package_suffix\PackageWithSuffix.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="package_suffix\NormalPackage.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="package_suffix\designtimepackage.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="package_suffix\runtimepackage.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="project1\Project1.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Default.Personality/>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="PackageWithSuffix">
+			<MSBuild Projects="package_suffix\PackageWithSuffix.dproj"/>
+		</Target>
+		<Target Name="PackageWithSuffix:Clean">
+			<MSBuild Targets="Clean" Projects="package_suffix\PackageWithSuffix.dproj"/>
+		</Target>
+		<Target Name="PackageWithSuffix:Make">
+			<MSBuild Targets="Make" Projects="package_suffix\PackageWithSuffix.dproj"/>
+		</Target>
+		<Target Name="NormalPackage">
+			<MSBuild Projects="package_suffix\NormalPackage.dproj"/>
+		</Target>
+		<Target Name="NormalPackage:Clean">
+			<MSBuild Targets="Clean" Projects="package_suffix\NormalPackage.dproj"/>
+		</Target>
+		<Target Name="NormalPackage:Make">
+			<MSBuild Targets="Make" Projects="package_suffix\NormalPackage.dproj"/>
+		</Target>
+		<Target Name="designtimepackage">
+			<MSBuild Projects="package_suffix\designtimepackage.dproj"/>
+		</Target>
+		<Target Name="designtimepackage:Clean">
+			<MSBuild Targets="Clean" Projects="package_suffix\designtimepackage.dproj"/>
+		</Target>
+		<Target Name="designtimepackage:Make">
+			<MSBuild Targets="Make" Projects="package_suffix\designtimepackage.dproj"/>
+		</Target>
+		<Target Name="runtimepackage">
+			<MSBuild Projects="package_suffix\runtimepackage.dproj"/>
+		</Target>
+		<Target Name="runtimepackage:Clean">
+			<MSBuild Targets="Clean" Projects="package_suffix\runtimepackage.dproj"/>
+		</Target>
+		<Target Name="runtimepackage:Make">
+			<MSBuild Targets="Make" Projects="package_suffix\runtimepackage.dproj"/>
+		</Target>
+		<Target Name="Project1">
+			<MSBuild Projects="project1\Project1.dproj"/>
+		</Target>
+		<Target Name="Project1:Clean">
+			<MSBuild Targets="Clean" Projects="project1\Project1.dproj"/>
+		</Target>
+		<Target Name="Project1:Make">
+			<MSBuild Targets="Make" Projects="project1\Project1.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="PackageWithSuffix;NormalPackage;designtimepackage;runtimepackage;Project1"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="PackageWithSuffix:Clean;NormalPackage:Clean;designtimepackage:Clean;runtimepackage:Clean;Project1:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="PackageWithSuffix:Make;NormalPackage:Make;designtimepackage:Make;runtimepackage:Make;Project1:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>

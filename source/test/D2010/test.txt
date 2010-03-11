@@ -1,0 +1,4 @@
+$(BDS)\lib\;
+$(BDS)\projects\bpl\;
+$(BDS)\bin\;
+..\;
