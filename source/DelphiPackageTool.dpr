@@ -13,7 +13,9 @@ uses
   uDPTDefinitions in 'uDPTDefinitions.pas',
   AboutFrm in 'AboutFrm.pas' {frmAbout},
   uDPTJclFuncs in 'uDPTJclFuncs.pas',
-  uDPTDelphiPackage in 'uDPTDelphiPackage.pas';
+  uDPTDelphiPackage in 'uDPTDelphiPackage.pas',
+  uDPTSettings in 'uDPTSettings.pas',
+  uDPTMisc in 'uDPTMisc.pas';
 
 {$R *.res}
 
