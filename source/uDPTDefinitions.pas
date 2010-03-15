@@ -35,6 +35,7 @@ type
     Supported: Boolean;
   end;
 
+
 const
   cDelphiKey='SOFTWARE\BORLAND\DELPHI';
   cBorlandBDSKey='SOFTWARE\BORLAND\BDS';
@@ -46,14 +47,16 @@ const
   cBDSUserDirTag='$(BDSUSERDIR)';
   cProgramFilesTag='$(PROGRAMFILES)';
   cDelphiVersionTag='$(DELPHIVERSION)';
-
   cRADStudioDirName='RAD Studio';
-
   cDelphiName = 'Delphi';
   cBCBName    = 'C++Builder';
   cCSharpName = 'C#Builder';
   cBDSName    = 'Borland Developer Studio';
   cRSName     = 'RAD Studio';
+
+
+  cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';
+  cProjectGroupFilter='*.bpg;*.groupproj;*.bdsgroup';
 
   DelphiVersions: array [1..14] of TDelphiVersionInfo = (
     (

@@ -1757,21 +1757,39 @@ begin
   end;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: DetermProjectTypeGroupProj
+  Author:    herzogs2
+  Date:      15-Mrz-2010
+  Arguments: const _projectfilename:string;const _projectGroupfilename:string
+  Result:    TProjectType
+  Description:
+-----------------------------------------------------------------------------}
+function  DetermProjectTypeGroupProj(const _projectfilename:string;const _projectGroupfilename:string):TProjectType;
+begin
+  result:=tp_unkown;
+  showmessage('TODO: Reading of project type from a .groupproj file is not implemented yet.');
+end;
+
 {*-----------------------------------------------------------------------------
   Procedure: DetermProjectType
   Author:    sam
   Date:      29-Aug-2009
   Arguments: _projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer
   Result:    TProjectType
-  Description:
+  Description: find out if the project <_projectfilename> is a .exe,.dll or a .bpl.
 -----------------------------------------------------------------------------}
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType;
 begin
+  result:=tp_unkown;
   _projectfilename:=ReadProjectFilenameFromDProj(_projectfilename);
   if (lowercase(ExtractFileext(_projectfilename))='.dpk') or
      (lowercase(ExtractFileext(_projectfilename))='.dpr') or
      (lowercase(ExtractFileext(_projectGroupfilename))='.bpg') then result:=DetermProjectTypeDelphi(_projectfilename)
-  else result:=DetermProjectTypeBDS(_projectfilename,_projectGroupfilename);
+  else
+  if (lowercase(ExtractFileext(_projectfilename))='.bdsgoup')  then result:=DetermProjectTypeBDS(_projectfilename,_projectGroupfilename)
+  else
+  if (lowercase(ExtractFileext(_projectfilename))='.groupproj')then result:=DetermProjectTypeGroupProj(_projectfilename,_projectGroupfilename);
 end;
 
 {-----------------------------------------------------------------------------

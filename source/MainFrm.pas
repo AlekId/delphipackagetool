@@ -275,13 +275,13 @@ uses
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actOpenProjectExecute(Sender: TObject);
 resourcestring
-cPleaseSelectProjectGroup='Please select a Package Group File <.bpg/.bdsgroup/*.groupproj>.';
-cFilter='Delphi Group Files|*.bpg;*.groupproj;*.bdsgroup';
+cPleaseSelectProjectGroup='Please select a Package Group File <%s>.';
+cFilter='Delphi Group Files|%s';
 begin
   OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile', 19));
-  OpenDialog1.Title := cPleaseSelectProjectGroup;
+  OpenDialog1.Title := format(cPleaseSelectProjectGroup,[cProjectGroupExtensions]);
   OpenDialog1.DefaultExt := DMMain.ApplicationSettings.StringValue('Application/LastUsedExtension',27);
-  OpenDialog1.Filter := cFilter;
+  OpenDialog1.Filter := format(cFilter,[cProjectGroupFilter]);
   OpenDialog1.FileName := '';
   OpenDialog1.FilterIndex := 3;
   if not OpenDialog1.Execute then exit;
