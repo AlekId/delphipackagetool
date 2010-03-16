@@ -1370,6 +1370,7 @@ procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersi
 begin
   SetDelphiVersionCombobox(_DelphiVersion);
   if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
+  actShowDOFFile.Visible:=(_DelphiVersion<8)
 end;
 
 {*-----------------------------------------------------------------------------
