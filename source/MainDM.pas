@@ -77,7 +77,7 @@ type
     FCurrentProjectOutputFilename: string;  // the filename only of the output file. e.g. .exe,.dll,.bpl
     FCurrentProjectNo:integer;        // the position in the project list.
     FCurrentProjectOutputPath:string;  // real path where the output file (.bpl,.dcp or .exe or .dll) file will be placed.
-    FCurrentCFGFilename:string; //  real path and filename of the cfg-file
+    FCurrentConfigFilename:string; //  real path and filename of the config-file (delphi 1..8 it was .cfg, 2005,2006 it was .bdsproj, later .dproj
     FCurrentPackageDescription:string;
     FCurrentBPLFilename:string; // if the current project is a package then this contains the full .bpl filename and path.
     FCurrentBPLOutputPath:string;  // output path for the package file bpl.
@@ -148,7 +148,7 @@ type
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
     property  CurrentProjectOutputFilename:string read FCurrentProjectOutputFilename;
     property  CurrentProjectOutputPath:string read FCurrentProjectOutputPath;
-    property  CurrentCFGFilename:string read FCurrentCFGFilename;
+    property  CurrentConfigFilename:string read FCurrentConfigFilename;
     property  CurrentBPLFilename:string read FCurrentBPLFilename;
     property  CurrentBPLOutputPath:string read FCurrentBPLOutputPath;
     property  CurrentDCUOutputPath:string read FCurrentDCUOutputPath;
@@ -286,6 +286,24 @@ begin
 end;
 
 {*-----------------------------------------------------------------------------
+  Procedure: GetConfigFilename
+  Author:    sam
+  Date:      16-Mrz-2010
+  Arguments: const _ProjectFilename:string;const _DelphiVersion:integer
+  Result:    string
+  Description:
+-----------------------------------------------------------------------------}
+function GetConfigFilename(const _ProjectFilename:string;const _DelphiVersion:integer):string;
+begin
+  result:='';
+  case _DelphiVersion of
+    1..8: result:=changefileext(_ProjectFilename,'.cfg');   // delphi 1..8
+    9..10:result:=changefileext(_ProjectFilename,'.bdsproj'); //delphi 2005,2006
+    else result:=changefileext(_ProjectFilename,'.dproj');
+  end;
+end;
+
+{*-----------------------------------------------------------------------------
   Procedure: SetCurrentProject
   Author:    sam
   Date:      14-Mrz-2008
@@ -295,22 +313,23 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.SetCurrentProject(const _ProjectName: string);
 resourcestring
-cCouldNotFindProjectFile='Could not find Project File <%s>. Please check if the .bpg file is still correct.';
-cCouldNotFindDCUOutputPath='Could not find the DCU Output Path <%s>. Do you want to edit this path in the cfg-file ?';
-cCouldNotFindBPLOutputPath='Could not find the BPL Output Path <%s>. Do you want to edit this path in the cfg-file ?';
+cCouldNotFindProjectFile='Could not find Project File <%s>. Please check if the file <%s> is still correct.';
+cCouldNotFindDCUOutputPath='Could not find the DCU Output Path <%s>. Do you want to edit this path ?';
+cCouldNotFindBPLOutputPath='Could not find the BPL Output Path <%s>. Do you want to edit this path ?';
 begin
   FCurrentConditions:='';
   FCurrentSearchPath:='';
   FCurrentBPLFilename:='';
+  FCurrentConfigFilename:='';
   if _ProjectName='' then exit;
   FCurrentProjectFilename:=AbsoluteFilename(FBPGPath,_ProjectName);
   if not fileexists(FCurrentProjectFilename) then begin
-    Application.MessageBox(pchar(format(cCouldNotFindProjectFile,[FCurrentProjectFilename])),pchar(cWarning),MB_ICONWARNING or MB_OK);
-    trace(1,'Problem in SetCurrentProject: The Project Filename <%s> is not valid. Could not find the file.Please check the bpg-file and path names.',[FCurrentProjectFilename]);
+    Application.MessageBox(pchar(format(cCouldNotFindProjectFile,[FCurrentProjectFilename,FBPGFilename])),pchar(cWarning),MB_ICONWARNING or MB_OK);
+    trace(1,'Problem in SetCurrentProject: The Project Filename <%s> is not valid. Could not find the file.Please check the file <%s> and path names.',[FCurrentProjectFilename,FBPGFilename]);
   end;
 
   FCurrentProjectNo:=FProjectList.IndexOf(_ProjectName);
-  FCurrentCFGFilename:=ChangefileExt(FCurrentProjectFilename,'.cfg');
+  FCurrentConfigFilename:=GetConfigFilename(FCurrentProjectFilename,FCurrentDelphiVersion);
   ReadCurrentProjectType(FCurrentDelphiVersion); // check if it is a package or not
   case FCurrentProjectType of
     tp_bpl:begin
@@ -344,7 +363,7 @@ begin
   if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
     if (FCurrentBPLOutputPath<>'') and (not DirectoryExists(FCurrentBPLOutputPath)) then begin
       if Application.MessageBox(pchar(format(cCouldNotFindBPLOutputPath,[FCurrentBPLOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YesNo)=IdYes then begin
-        ShowFile(changeFileExt(FCurrentProjectFilename,'.cfg'),0);
+        ShowFile(FCurrentConfigFilename,0);
       end;
     end;
     CheckDirectory(FCurrentBPLOutputPath);
@@ -382,7 +401,7 @@ begin
   trace(5,'CurrentBPLFilename=%s',[FCurrentBPLFilename]);
 
   if ProjectSettings.BoolValue('Application/ChangeFiles', 8) then begin
-    WriteSettingsToDelphi(FBPGPath,FCurrentCFGFilename,FCurrentConditions,GetGlobalSearchPath,FCurrentProjectOutputPath,FCurrentBPLOutputPath,FCurrentDCUOutputPath,ApplicationSettings.BoolValue('Application/SilentMode',5),FCurrentDelphiVersion); // write informations to the cfg-file.
+    WriteSettingsToDelphi(FBPGPath,FCurrentConfigFilename,FCurrentConditions,GetGlobalSearchPath,FCurrentProjectOutputPath,FCurrentBPLOutputPath,FCurrentDCUOutputPath,ApplicationSettings.BoolValue('Application/SilentMode',5),FCurrentDelphiVersion); // write informations to the cfg-file.
     if FCurrentProjectType=tp_bpl then WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5));
   end;
   FireCurrentProjectChanged;
@@ -514,7 +533,7 @@ begin
   FCurrentDelphiVersion:=LatestIDEVersion;
   FCurrentProjectFilename:='';
   FCurrentProjectOutputPath:='';
-  FCurrentCFGFilename:='';
+  FCurrentConfigFilename:='';
   FCurrentPackageDescription:='';
   FCurrentBPLFilename:='';
   FCurrentBPLOutputPath:='';
