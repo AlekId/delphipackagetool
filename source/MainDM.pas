@@ -708,12 +708,23 @@ end;
   Arguments: _backupfilename: string;_Lines:TStrings
   Result:    None
   Description: create a backup file by analyzing the compiler-output.
-  //TODO make this work with external 7z. I don't want to compile zip-components
-  into this project anymore.
+  This method creates the file <backup_template.bat> with a default content for
+  7za-archiver.
+  If the user want's to use another archive, he can edit this template file.
+  The Placeholder's ARCHIVENAME and FILELIST will be replaced automatically.
 -----------------------------------------------------------------------------}
 procedure TDMMain.SaveBackup(_backupfilename: string;_Lines:TStrings);
+resourcestring
+cCreateBackup='Trying to create a backup file. You can modify the file <%s> if you like to change the backup behavoir.';
+cOpenBackupFolder='Open the backup folder ?';
 var
+i:integer;
+_line:string;
+_BatchZipFile:TStrings;
 _FileList:TStringList;
+_BackupFileList:string;
+_batchFilename:string;
+_backupPath:string;
 {$ifndef NoZipSupport}
 _BackupZip :TZip;
 {$endif}
@@ -742,10 +753,45 @@ begin
       _BackupZip.add;
       writelog('Saved zip-file to <%s>.',[_BackupZip.Filename]);
 {$else}
-      _FileList.SaveToFile('FileList_to_Backup.txt');
-      writelog('Saved filelist to <%s>.',['FileList_to_Backup.txt']);
+      _backupPath:=extractfilepath(_backupfilename);
+      _backupFilename:=extractfilename(changefileext(_backupfilename,'.7z'));
+      _BackupFileList:='FileList_to_Backup.txt';
+      _FileList.SaveToFile(_backupPath+_BackupFileList);
+      writelog('Saved filelist to <%s>.',[_backupPath+_BackupFileList]);
+      _batchFilename:=_backupPath+'backup_template.bat';
+      if not fileexists(_batchFilename) then begin
+        _BatchZipFile:=TStringList.create; 
+        try
+          _BatchZipFile.add('7za u -r -t7z "ARCHIVENAME" @"FILELIST"');
+          _BatchZipFile.add('pause');
+          _BatchZipFile.SaveToFile(_batchFilename);
+        finally
+          _BatchZipFile.free;
+        end;
+      end;
+      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+      _BatchZipFile:=TStringList.create;
+      try
+        _BatchZipFile.LoadFromFile(_batchFilename);
+        for i:=0 to _BatchZipFile.Count-1 do begin
+          _line:=_BatchZipFile[i];
+          _line:=stringreplace(_line,'ARCHIVENAME',_backupfilename,[rfReplaceAll, rfIgnoreCase]);
+          _line:=stringreplace(_line,'FILELIST',_BackupFileList,[rfReplaceAll, rfIgnoreCase]);
+          _BatchZipFile[i]:=_line;
+        end;
+        _batchFilename:=_backupPath+'backup.bat';
+        _BatchZipFile.SaveToFile(_batchFilename);
+      finally
+        _BatchZipFile.free;
+      end;
+
+      NVBAppExec1.ExePath:=_backupPath;
+      NVBAppExec1.ExeName:=_batchFilename;
+      NVBAppExec1.Execute;
 {$endif}
-      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then ShowFolder(extractfilepath(_backupfilename));
+      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
+        if Application.MessageBox(pchar(cOpenBackupFolder),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then ShowFolder(_backupPath);
+      end;
     finally
       _FileList.free;
     end;

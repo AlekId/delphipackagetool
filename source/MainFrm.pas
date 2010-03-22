@@ -4,8 +4,10 @@
  Purpose:
  History:
 
-1.9.0.123 ( 16.03.2010 )
+1.9.0.123 ( 22.03.2010 )
 - some changes about the config-filename. from D1-D8 it was .cfg, from D2005-D2006 it was .bdsproj, from D2007- its .dproj
+- work inside SaveBackup to make it work again. DPT now creates a <backup.bat> and tries to execute it.
+  The user of DPT may edit the file <backup_template.bat> to use another archiver.
 
 1.9.0.122 ( 11.03.2010 )
 - added patch from M.Mueller. DPT can now be built with different delphi versions.

@@ -2,10 +2,10 @@ object DMMain: TDMMain
   OldCreateOrder = False
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  Left = 158
-  Top = 171
-  Height = 190
-  Width = 161
+  Left = 389
+  Top = 179
+  Height = 239
+  Width = 261
   object ActionList: TActionList
     Left = 32
     Top = 40
