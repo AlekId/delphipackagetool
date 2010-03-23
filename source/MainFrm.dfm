@@ -25,7 +25,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 303
+    Top = 319
     Width = 993
     Height = 12
     Cursor = crVSplit
@@ -33,7 +33,7 @@ object FrmMain: TFrmMain
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 315
+    Top = 331
     Width = 993
     Height = 166
     Align = alBottom
@@ -49,7 +49,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 145
     Width = 993
-    Height = 158
+    Height = 174
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -198,7 +198,7 @@ object FrmMain: TFrmMain
       Top = 112
       Width = 601
       Height = 21
-      Hint = 'Enter/select the Delphi BPL Path.'
+      Hint = 'Enter/select the Delphi DCU Path.'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 8
