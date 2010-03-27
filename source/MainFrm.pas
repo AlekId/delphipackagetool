@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.125 ( 27.03.2010 )
+- fix in CleanUpPackagesByRegistery. Expand placeholders like BDS before compare the path names.
+
 1.9.0.124 ( 27.03.2010 )
 - some changes about the config-filename. from D1-D8 it was .cfg, from D2005-D2006 it was .bdsproj, from D2007- its .dproj
 - work inside SaveBackup to make it work again. DPT now creates a <backup.bat> and tries to execute it.

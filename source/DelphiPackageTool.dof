@@ -111,7 +111,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=0
-Build=123
+Build=125
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.0.123
+FileVersion=1.9.0.125
 InternalName=
 LegalCopyright=Samuel Herzog
 LegalTrademarks=
@@ -130,5 +130,21 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.1.7.2
 Comments=
-[Excluded Packages]
-c:\projects\delphipackagetool\source\test\d7\bpl\d7\packagewithsuffixd7.bpl=Package with Suffix
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=C:\Projects\Packages\Downloads\ExcMagic\source
+[HistoryLists\hlConditionals]
+Count=1
+Item0=NoCryptSupport;NoZipSupport;
+[HistoryLists\hlUnitAliases]
+Count=1
+Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+[HistoryLists\hlSearchPath]
+Count=1
+Item0=$(DELPHI)\bin;$(DELPHI)\projects\bpl;$(DELPHI)\lib;..\..\packages\downloads\excmagic\source\;..\..\packages\library\;..\..\packages\downloads\cryptpack\ciphers\;..\..\packages\downloads\cryptpack\;..\..\packages\downloads\cryptpack\hashes\;..\..\packages\owncomp\settingscomponents\;..\..\packages\downloads\readmailaddress\;..\..\packages\owncomp\tracefile\;..\..\packages\downloads\tzip\;..\..\packages\owncomp\appexec\;..\..\packages\owncomp\dbllistcontrol\;..\..\packages\owncomp\splitter\;$(DELPHI)\ocx\servers;
+[HistoryLists\hlUnitOutputDirectory]
+Count=1
+Item0=..\dcu\d7\
+[HistoryLists\hlOutputDirectorry]
+Count=1
+Item0=..\bin\
