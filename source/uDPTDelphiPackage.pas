@@ -1176,6 +1176,7 @@ begin
     try
       for i:=0 to _ValueNames.count-1 do begin
         _packageName:=_ValueNames[i];
+        _packageName:=ReplaceTag(_packageName,_DelphiVersion);
         if pos(lowercase(_DelphiBINPath),lowercase(_packageName))<>0 then continue;
         if not _Reg.DeleteValue(_packageName) then begin
           trace(3,'Problem in CleanUpPackagesByRegistery: Could not delete package <%s> for delphi <%d>.',[_packageName,_DelphiVersion]);
