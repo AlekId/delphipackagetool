@@ -24,7 +24,7 @@ package designtimepackage;
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'DesignTime Package'}
 {$DESIGNONLY}
-{$LIBSUFFIX 'D7'}
+{$IMPLICITBUILD ON}
 
 requires
   rtl;
