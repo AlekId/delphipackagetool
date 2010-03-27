@@ -3,7 +3,6 @@
  Author:    herzogs2
  Date:      19-Aug-2008
  Purpose:   read from an xml file.
-TODO: CLEANUP THIS MESS.
 -----------------------------------------------------------------------------}
 unit uDPTXMLReader;
 

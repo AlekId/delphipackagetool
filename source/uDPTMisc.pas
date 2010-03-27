@@ -4,7 +4,6 @@
  * Purpose  :  different help functions for the other units.
  * Author   : Donated by Samuel Herzog
 
- TODO: we must remove all un-needed functions from this unit.
  ****************************************************************}
 
 unit uDPTMisc;
@@ -35,7 +34,6 @@ type
   TNVBSendTrace     =function (_to:string='';_subject:string='';_attachementFilename:string=''):boolean of object;
 
 procedure RegisterFileType(ExtName:String; AppName:String) ;
-//procedure RegisterFileType(const _FileExtension:string;const _Description:string);
 function GetWindowsPath:String;  // returns the windows directory name
 function IsFilenameValid(_filename:string):boolean; // check if the given name <_filename> can be used as filename.
 procedure Trace(const _level:byte;const _msg:String;const _params:array of const);
@@ -62,7 +60,6 @@ function GetFileSize(const _filename: string; var filesize:Int64): boolean; // r
 function CreateDirectory(const _path:string):boolean;
 function RemoveReadOnlyFlag(const _filename:string;const _silent:boolean):boolean;
 function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;Show: Word; bWait: Boolean; var ExitCode: LongWord): LongWord;
-function RemoveChar(const _ch:char;_s:string):string;
 procedure ShowFolder(strFolder: string);
 
 var
@@ -76,29 +73,6 @@ uses Graphics,
      Dialogs,
      ShellAPI,
      shlObj;
-
-
-
-
-{-----------------------------------------------------------------------------
-  Procedure: RemoveChar
-  Author:    HerzogS2
-  Date:      05-Sep-2006
-  Arguments: const _ch:char;_s:string
-  Result:    string
-  Description: remove the char <ch> from string <s>.
------------------------------------------------------------------------------}
-function RemoveChar(const _ch:char;_s:string):string;
-var
-_pos:integer;
-begin
-  _pos:=Pos(''+_ch,_s);
-  while _pos>0 do begin
-    delete(_s,_pos,1);
-    _pos:=Pos(''+_ch,_s);
-  end;
-  result:=_s;
-end;
 
 {-----------------------------------------------------------------------------
   Procedure: RemoveReadOnlyFlag
@@ -225,73 +199,6 @@ begin
   end;
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil) ;
 end;
-
-
-{-----------------------------------------------------------------------------
-  Procedure: RegisterFileType
-  Author:    sam
-  Date:      23-Dez-2004
-  Arguments: _FileExtension:string;_Description:string
-  Result:    None
-  Description: register a file extension so when you click in the File-Explorer onto
-               the file then the correct application will be started.
-
-  Example:  RegisterFileType('.trc','Trace-File');
------------------------------------------------------------------------------}
-{procedure RegisterFileType(const _FileExtension:string;const _Description:string);
-var
-  _Reg: TRegistry;
-  _FileType:string;
-begin
-  _FileType:=uppercase(extractFileNameOnly(Application.exename))+'.FileType';
-  _Reg := TRegistry.Create;
-  try
-    try
-      // Set the root key to HKEY_CLASSES_ROOT
-      _Reg.RootKey := HKEY_CLASSES_ROOT;
-      // Now open the key, with the possibility to create
-      // the key if it doesn't exist.
-      _Reg.OpenKey(_FileExtension, True);
-      // Write my file type to it.
-      // This adds HKEY_CLASSES_ROOT\.abc\(Default) = 'Project1.FileType'
-      _Reg.WriteString('',_FileType);
-      _Reg.CloseKey;
-      // Now create an association for that file type
-      _Reg.OpenKey(_Description, True);
-      // This adds HKEY_CLASSES_ROOT\Project1.FileType\(Default)
-      //   = 'Project1 File'
-      // This is what you see in the file type description for
-      // the a file's properties.
-      _Reg.WriteString('', _Description);
-      _Reg.CloseKey;
-      // Now write the default icon for my file type
-      // This adds HKEY_CLASSES_ROOT\Project1.FileType\DefaultIcon
-      //  \(Default) = 'Application Dir\Project1.exe,0'
-      _Reg.OpenKey(_FileType + '\DefaultIcon', True);
-      _Reg.WriteString('', Application.ExeName + ',0');
-      _Reg.CloseKey;
-      // Now write the open action in explorer
-      _Reg.OpenKey(_FileType + '\Shell\Open', True);
-      _Reg.WriteString('', '&Open');
-      _Reg.CloseKey;
-      // Write what application to open it with
-      // This adds HKEY_CLASSES_ROOT\Project1.FileType\Shell\Open\Command
-      //  (Default) = '"Application Dir\Project1.exe" "%1"'
-      // Your application must scan the command line parameters
-      // to see what file was passed to it.
-      _Reg.OpenKey(_FileType + '\Shell\Open\Command', True);
-      _Reg.WriteString('', '"' + Application.ExeName + '" "%1"');
-      _Reg.CloseKey;
-      // Finally, we want the Windows Explorer to realize we added
-      // our file type by using the SHChangeNotify API.
-      SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
-    except
-      on e:exception do trace(1,'Problem in RegisterFileType: Could not register FileType in the Windows Registery. <%s>',[e.message]);
-    end;
-  finally
-    _Reg.Free;
-  end;
-end;}
 
 {-----------------------------------------------------------------------------
   Procedure: IsFilenameValid
@@ -481,32 +388,6 @@ begin
   if not Result then CloseHandle(HFileRes);
 end;
 
-{-----------------------------------------------------------------------------
-  Procedure: GetAssignedApp
-  Author:    Not available
-  Date:      07-Jun-2003
-  Arguments: _FileExt:string
-  Result:    string
-  Description: gets the application Path + Name for the documents with extension <_FileExt>.
-  For instance if you want to know which application is assigned to <.doc> files.
------------------------------------------------------------------------------}
-function  GetAssignedApp(_FileExt:string):string;
-//var
-//_Reg: TRegistry;
-//_temp:string;
-begin
-//  _Reg := TRegistry.Create;
-//  try
-//    _Reg.RootKey := HKEY_CLASSES_ROOT;
-//    if _Reg.OpenKey('\Applications\AcroRd32.exe\shell\open\command',false) then begin
-//      _temp:=_Reg.ReadString('');
-//
-//      _Reg.CloseKey;
-//    end;
-//  finally
-//    _Reg.Free;
-//  end;
-end;
 
 {-----------------------------------------------------------------------------
   Procedure: GetFileVersion
@@ -592,9 +473,6 @@ begin
 {$IFEND}
 end;
 
-
-
-
 {-----------------------------------------------------------------------------
   Procedure: VerifySeparator
   Author:    Not available
@@ -613,7 +491,6 @@ begin
   if _delim_pos>0 then _s[_Delim_pos]:=DecimalSeparator;
   result:=_s;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: Trace
@@ -634,8 +511,6 @@ begin
     OutputDebugString(PChar(_s));
   end;
 end;
-
-
 
 {-----------------------------------------------------------------------------
   Procedure: BackupFile
@@ -683,7 +558,6 @@ begin
     end;
   end;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: ExtractFilenameOnly
@@ -763,9 +637,6 @@ begin
     Value:=0;
   end;
 end;
-
-
-
 
 {-----------------------------------------------------------------------------
   Procedure: IsLastChar
@@ -962,7 +833,7 @@ var
 i:integer;
 _done:boolean;
 begin
-  IsNumeric:=false;
+  result:=false;
   _done:=false;
   for i:=1 to length(_s) do begin
 {$IF CompilerVersion < 20.0}
@@ -972,26 +843,9 @@ begin
 {$IFEND}
     _done:=true;
   end;
-  if _done then IsNumeric:=true;
+  if _done then result:=true;
 end;
 
-//*****************************************************
-// Method:  integertostr
-// Programmer: S.Herzog
-// Description:
-// Last changes: 10.07.01
-//*****************************************************
-function integertostr(_int:longint;var str:string):boolean;
-begin
-  str:='';
-  result:=false;
-  try
-    str:=IntToStr(_int);
-    result:=true;
-  except
-    str:='';
-  end;
-end;
 
 //============================================================
 // PROCEDURE SetProperty
@@ -1136,16 +990,14 @@ begin
   Info.nShow := Show;
   Result := NO_ERROR;
   if not ShellExecuteEx(@Info) then Result := GetLastError;
-  if Result = NO_ERROR then begin
-    if bWait then begin
-      while
-        WaitForSingleObject(Info.hProcess, 100) = WAIT_TIMEOUT
-        do Application.ProcessMessages;
-      if not GetExitCodeProcess(Info.hProcess, DWORD(ExitCode)) then begin
-        Result := GetLastError;
-      end;
-    end; //  if bWait then begin
-  end;// if Result = NO_ERROR
+  if Result <> NO_ERROR then exit;
+  if not bWait then exit;
+  while
+    WaitForSingleObject(Info.hProcess, 100) = WAIT_TIMEOUT
+    do Application.ProcessMessages;
+  if not GetExitCodeProcess(Info.hProcess, DWORD(ExitCode)) then begin
+    Result := GetLastError;
+  end;
 end;
 
 end.

@@ -1064,11 +1064,14 @@ end;
   Description: shows the search dialog to add a search path.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.SearchFile(_filename:string;_lineno:integer;_compilerOutput:string);
+resourcestring
+cFileNotFoundTagGerman='nicht gefunden';
+cFileNotFoundTagEnglish='not found';
 begin
   _filename:=lowercase(_filename);
   if ExtractFileExt(_filename)='' then _filename:=_filename+'*.*';
-  if (Pos('nicht gefunden',_compilerOutput)>0) or  //TODO we need a better way to find out if the compilation was successfull.
-     (Pos('not found',_compilerOutput)>0) then ShowSelectPathDialog(DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15),_filename,true) else
+  if (Pos(cFileNotFoundTagGerman,_compilerOutput)>0) or  //TODO we need a better way to find out if the compilation was successfull.
+     (Pos(cFileNotFoundTagEnglish,_compilerOutput)>0) then ShowSelectPathDialog(DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15),_filename,true) else
   if (Pos('.dpr',_filename)>0) or
      (Pos('.dpk',_filename)>0) or
      (Pos('.pas',_filename)>0) then begin
