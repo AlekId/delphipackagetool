@@ -22,7 +22,7 @@ uses
 begin
   Application.Initialize;
   Application.Title := 'Delphi Package Tool';
-  Application.HintHidePause:=4000;
+  Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);
   Application.CreateForm(TFrmMain, FrmMain);
   Application.Run;

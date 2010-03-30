@@ -84,6 +84,7 @@ type
     FCurrentDCUOutputPath:string;  // output path for the dcu-files.
     FCurrentConditions:string;  // the conditions of the current project.
     FCurrentSearchPath:string;  // search path of the current project.
+    FDPTSearchPath: string;     // search path defined in DPT Options Dialog.
     FDelphiRootDirectory:string;  // e.g. <C:\Program files\Borland\Delphi7>
     FDelphiCompilerFile:string;   // e.g. <C:\Program files\Borland\Delphi7\bin\dcc32.exe>
     FBPGPath:string; // path to the package group file .bpg
@@ -119,7 +120,6 @@ type
     procedure SetBPGFilename(const Value: string);
     procedure CheckDelphiRunning;
     procedure ExecuteApp;
-    function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
     function PrepareEXEParams(_filename:string;_lineNo:integer;_SourceCodeEditorParams:string):string;
     procedure AdaptSearchPath; // replace $(DELPHI) with $(BDS) when the user switches delphi version
   public
@@ -141,6 +141,7 @@ type
     function  CompilePackage(const _updateCursor: boolean):boolean;
     function  OpenBPG(const _filename: string):boolean;
     procedure CloseBPG;
+    function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
     procedure AbortCompile;
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
     property  Compiler:string read FDelphiCompilerFile;
@@ -152,12 +153,14 @@ type
     property  CurrentBPLFilename:string read FCurrentBPLFilename;
     property  CurrentBPLOutputPath:string read FCurrentBPLOutputPath;
     property  CurrentDCUOutputPath:string read FCurrentDCUOutputPath;
+    property  CurrentSearchPath:string read FCurrentSearchPath;
     property  CurrentPackageDescription:string read FCurrentPackageDescription;
     property  CurrentPackageSuffix:string read FCurrentPackageSuffix;
     property  CurrentConditions:string read     FCurrentConditions;
     property  CurrentDelphiVersion:Integer read FCurrentDelphiVersion write SetDelphiVersion; // currently selected delphi version.
     property  BPGPath:string read FBPGPath;
     property  BPGFilename:string read FBPGFilename write SetBPGFilename;
+    property  DPTSearchPath:string read FDPTSearchPath;
     property  ProjectList:TStrings read FProjectList;
     property  ZipFilename:string read FZipFilename;
     property  InstalledDelphiVersions:TStrings read FInstalledDelphiVersions;
@@ -447,6 +450,7 @@ begin
       end
       else Result := Result + _currentPath + ';';
     end;
+    FDPTSearchPath := result;
   finally
     _SearchPath.free;
   end;  
@@ -505,6 +509,7 @@ begin
                           else ProjectSettings.SetInteger('Application/DelphiVersion',5,CurrentDelphiVersion);
   CurrentDelphiVersion:=ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   ReadPackageListfromFile(FBPGFilename,FProjectList);
+  GetGlobalSearchPath(true);
   if FProjectList.count>0 then SetCurrentProject(FProjectList[0]);
   ApplicationState:=tas_open;
   if assigned(FOnBPGOpen) then FOnBPGOpen(self);
@@ -1327,20 +1332,16 @@ end;
 function TDMMain.CompilePackage(const _updateCursor: boolean):boolean;
 var
   _CompilerSwitches: string;
-  _ProjectSearchPath: string;
   _Output: string;
-  _GlobalSearchPath: string;
   _temp:string;
 begin
   FSuccess:=false;
   // prepare search path
-  _GlobalSearchPath := GetGlobalSearchPath(true);
-  if LastPos(_ProjectSearchPath, '\') = length(_ProjectSearchPath) then Delete(_ProjectSearchPath, length(_ProjectSearchPath), 1);
   _CompilerSwitches := ProjectSettings.StringValue('Application/CompilerSwitches',3);
   if _CompilerSwitches='' then _CompilerSwitches := ApplicationSettings.StringValue('Application/CompilerSwitches',11);
   _temp:='';
-  if _GlobalSearchPath  <> ''  then _temp :='"'+_GlobalSearchPath;
-  if _ProjectSearchPath <> '' then _temp := _temp + _ProjectSearchPath;
+  if FDPTSearchPath  <> ''    then _temp :='"'+FDPTSearchPath;
+  if FCurrentSearchPath <> '' then _temp := _temp + FCurrentSearchPath;
   if FCurrentConditions <> '' then _CompilerSwitches := _CompilerSwitches +' '+FCurrentConditions + ' ';
   if _temp<>'' then begin
     _temp := _temp +'"';

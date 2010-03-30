@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.126 ( 30.03.2010 )
+- fix for Search Path.
+
 1.9.0.125 ( 27.03.2010 )
 - fix in CleanUpPackagesByRegistery. Expand placeholders like BDS before compare the path names.
 
@@ -1285,7 +1288,9 @@ begin
   stgFiles.Hint:='Output Filename    :='+extractfilename(DMMain.CurrentProjectOutputFilename)+#10+#13+
                  'Project Output Path:='+DMMain.CurrentProjectOutputPath+#10+#13+
                  'BPL Output Path    :='+DMMain.CurrentBPLOutputPath+#10+#13+
-                 'DCU Output Path    :='+DMMain.CurrentDCUOutputPath;
+                 'DCU Output Path    :='+DMMain.CurrentDCUOutputPath+#10+#13+
+                 'Project Search Path:='+DMMain.CurrentSearchPath+#10+#13+
+                 'DPT Search Path    :='+DMMain.DPTSearchPath;
 end;
 
 {-----------------------------------------------------------------------------
