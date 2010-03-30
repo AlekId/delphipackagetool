@@ -354,7 +354,7 @@ begin
       spCommonDocs: CSIDL := CSIDL_COMMON_DOCUMENTS;
     end;
     if CSIDL > -1 then begin
-      SHGetSpecialFolderPath(GetActiveWindow, Path, CSIDL_COMMON_DOCUMENTS, False);
+      SHGetSpecialFolderPath(GetActiveWindow, Path, CSIDL, False);
       Result := Path;
     end;
   finally

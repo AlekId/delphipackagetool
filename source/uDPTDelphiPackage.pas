@@ -134,6 +134,8 @@ function  isIDEInstalled(const _Version:Integer):boolean; // find out if the ide
 function  OldestIDEVersion:integer; // returns the VersionNo of the oldest IDE installed.
 function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE installed.
 function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
+function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
+function  MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
 
 var
 FCreateBatchFile:boolean;
@@ -159,6 +161,35 @@ uses uDPTMisc,
 var
 FBatchFile:TStrings;
 FBatchFilename:string;
+
+{-----------------------------------------------------------------------------
+  Procedure: RemoveDoublePathEntries
+  Author:    herzogs2
+  Date:      30-Mrz-2010
+  Arguments: _Path:string
+  Result:    string
+  Description: verify the string <_Path> and remove double entries.
+-----------------------------------------------------------------------------}
+function  RemoveDoublePathEntries(_Path:string):string;
+var
+i:integer;
+_item:string;
+_list:TStrings;
+begin
+  result:='';
+  _list:=TStringList.create;
+  try
+    while _path<>'' do begin
+      _item:=lowercase(GetField(';',_path));
+      if _list.IndexOf(_item)=-1 then _list.add(_item)
+      else trace(5,'The path <%s> is already in the list. Removed!',[_item]);
+    end;
+    for i:=0 to _list.count-1 do result:=result+_list[i]+';'
+  finally
+    _list.free;
+  end;
+end;
+
 
 {*-----------------------------------------------------------------------------
   Procedure: OldestIDEVersion
@@ -3286,6 +3317,7 @@ var { V1 by Pat Ritchey, V2 by P.Below }
   _Line: String;
   _field,_prev_field:string;
 begin { WinExecAndWait32V2 }
+   result:=0;
 //  trace(5,Filename);
    with SA do
    begin
@@ -3323,12 +3355,13 @@ begin { WinExecAndWait32V2 }
     ProcessInfo) { pointer to PROCESS_INF }
   then begin
     Result := DWORD(-1) { failed, GetLastError has error code }
-  end else begin
+  end
+  else begin
+    Waitfor(ProcessInfo.hProcess);
     GetExitCodeProcess(ProcessInfo.hProcess, Result);
     CloseHandle(ProcessInfo.hProcess);
     CloseHandle(ProcessInfo.hThread);
     CloseHandle(StdOutPipeWrite);
-    Waitfor(ProcessInfo.hProcess);
   end;
 
   ReadFile(StdOutPipeRead, Buffer, 255, BytesRead, nil);
@@ -3368,6 +3401,7 @@ end; { WinExecAndWait32V2 }
 function CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;var Output:String):boolean; // compile the package
 var
 _commandLine:string;
+_returnValue:Cardinal;
 begin
   Result:=false;
   if not fileexists(_Compiler) then begin
@@ -3411,14 +3445,12 @@ begin
   trace(5,'Command line is %s.',[_commandLine]);
   FBatchFile.Add('cd "'+ExtractFilePath(_ProjectName)+'"');
   FBatchFile.Add('"'+_compiler+'" '+_commandLine);
-  WinExecAndWait32V2(_compiler,
+  _returnValue:=WinExecAndWait32V2(_compiler,
                      _commandLine,
                      _WorkPath,
                      SW_HIDE,
                      Output);
-
-  if (pos('seconds,',Output)>0) or
-     (pos('Sekunden',Output)>0) then begin
+  if _returnValue=0 then begin
     trace(5,'CompileProject: Successfully build Project file <%s>.',[_ProjectName]);
     Result:=True;
   end;
@@ -3977,6 +4009,35 @@ begin
   end;
   result:=IncludeTrailingPathDelimiter(_basepath)+_path;
   trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: MakeAbsolutePath
+  Author:    herzogs2
+  Date:      30-Mrz-2010
+  Arguments: _basePath,_path.string;_DelphiVersion:integer
+  Result:    string
+  Description: convert all entries in the path-list <_path> into a path-list with absolut path-names.
+  e.g. $(Delphi)\bin;$(ProgramFiles)\test;..\..\library; will be converted into absolute path names.
+-----------------------------------------------------------------------------}
+function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string;
+var
+i:integer;
+_item:string;
+_list:TStrings;
+begin
+  result:='';
+  _list:=TStringList.create;
+  try
+    while _path<>'' do begin
+      _item:=GetField(';',_path);
+      _item:=lowercase(AbsolutePath(_basePath,_item,_DelphiVersion));
+      if _list.IndexOf(_item)=-1 then _list.Add(_item);
+    end;
+    for i:=0 to _list.Count-1 do result:=result+_list[i]+';';
+  finally
+    _list.free;
+  end;
 end;
 
 {-----------------------------------------------------------------------------

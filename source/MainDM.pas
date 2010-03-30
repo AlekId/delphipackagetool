@@ -160,7 +160,7 @@ type
     property  CurrentDelphiVersion:Integer read FCurrentDelphiVersion write SetDelphiVersion; // currently selected delphi version.
     property  BPGPath:string read FBPGPath;
     property  BPGFilename:string read FBPGFilename write SetBPGFilename;
-    property  DPTSearchPath:string read FDPTSearchPath;
+    property  DPTSearchPath:string read FDPTSearchPath write FDPTSearchPath;
     property  ProjectList:TStrings read FProjectList;
     property  ZipFilename:string read FZipFilename;
     property  InstalledDelphiVersions:TStrings read FInstalledDelphiVersions;
@@ -416,7 +416,8 @@ end;
   Date:      27-Sep-2002
   Arguments: None
   Result:    string
-  Purpose:
+  Purpose:   load the path information defined in DPT Options-Dialog. if <_absolutePaths> is set to
+             true, then the returned string contains absolute path names.
   History:
 -----------------------------------------------------------------------------}
 function TDMMain.GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
@@ -450,7 +451,6 @@ begin
       end
       else Result := Result + _currentPath + ';';
     end;
-    FDPTSearchPath := result;
   finally
     _SearchPath.free;
   end;  
@@ -509,7 +509,7 @@ begin
                           else ProjectSettings.SetInteger('Application/DelphiVersion',5,CurrentDelphiVersion);
   CurrentDelphiVersion:=ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   ReadPackageListfromFile(FBPGFilename,FProjectList);
-  GetGlobalSearchPath(true);
+  FDPTSearchPath := GetGlobalSearchPath(false);
   if FProjectList.count>0 then SetCurrentProject(FProjectList[0]);
   ApplicationState:=tas_open;
   if assigned(FOnBPGOpen) then FOnBPGOpen(self);
@@ -1331,24 +1331,27 @@ end;
 -----------------------------------------------------------------------------}
 function TDMMain.CompilePackage(const _updateCursor: boolean):boolean;
 var
-  _CompilerSwitches: string;
-  _Output: string;
-  _temp:string;
+_CompilerSwitches: string;
+_Output: string;
+_SearchPath:string;
 begin
   FSuccess:=false;
   // prepare search path
   _CompilerSwitches := ProjectSettings.StringValue('Application/CompilerSwitches',3);
   if _CompilerSwitches='' then _CompilerSwitches := ApplicationSettings.StringValue('Application/CompilerSwitches',11);
-  _temp:='';
-  if FDPTSearchPath  <> ''    then _temp :='"'+FDPTSearchPath;
-  if FCurrentSearchPath <> '' then _temp := _temp + FCurrentSearchPath;
+  _SearchPath:='';
+  if FDPTSearchPath  <> ''    then _SearchPath :='"'+GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
+  if FCurrentSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
+    _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename),FCurrentSearchPath,FCurrentDelphiVersion);
+    _SearchPath := RemoveDoublePathEntries(_SearchPath);
+  end;
   if FCurrentConditions <> '' then _CompilerSwitches := _CompilerSwitches +' '+FCurrentConditions + ' ';
-  if _temp<>'' then begin
-    _temp := _temp +'"';
-    _CompilerSwitches := _CompilerSwitches + ' '+'-U'+_temp;
-    _CompilerSwitches := _CompilerSwitches + ' '+'-O'+_temp;
-    _CompilerSwitches := _CompilerSwitches + ' '+'-I'+_temp;
-    _CompilerSwitches := _CompilerSwitches + ' '+'-R'+_temp;
+  if _SearchPath<>'' then begin
+    _SearchPath := _SearchPath +'"';
+    _CompilerSwitches := _CompilerSwitches + ' '+'-U'+_SearchPath;
+    _CompilerSwitches := _CompilerSwitches + ' '+'-O'+_SearchPath;
+    _CompilerSwitches := _CompilerSwitches + ' '+'-I'+_SearchPath;
+    _CompilerSwitches := _CompilerSwitches + ' '+'-R'+_SearchPath;
   end;
 
   trace(5,'CompilePackage: Compiler switch --> %s.',[_CompilerSwitches]);

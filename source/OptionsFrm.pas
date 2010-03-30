@@ -302,7 +302,7 @@ end;
 procedure TFrmOptions.FormDestroy(Sender: TObject);
 begin
   FSearchPaths.Free;
-  DMMain.GetGlobalSearchPath(true);
+  DMMain.DPTSearchPath := DMMain.GetGlobalSearchPath(false);
 end;
 
 function TFrmOptions.AddPath( _path: string): boolean;
