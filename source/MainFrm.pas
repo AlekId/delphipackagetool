@@ -4,9 +4,10 @@
  Purpose:
  History:
 
-1.9.0.126 ( 30.03.2010 )
+1.9.0.127 ( 30.03.2010 )
 - fix for Search Path.
-- fix in GetSystemPath. 
+- fix in GetSystemPath.
+- fix for Project Search Path and DPT Search Path. 
 
 1.9.0.125 ( 27.03.2010 )
 - fix in CleanUpPackagesByRegistery. Expand placeholders like BDS before compare the path names.
