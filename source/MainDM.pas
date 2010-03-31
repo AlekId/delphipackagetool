@@ -974,6 +974,7 @@ _CompiledProjects: Integer;
 _start:cardinal;
 _end:cardinal;
 _batchfilename:string;
+_filename:string;
 begin
   result:=false;
   _CompiledProjects := 0;
@@ -1012,7 +1013,11 @@ begin
       Application.ProcessMessages;
       writelog('%s',[FCurrentProjectFilename]);
     end;
-    SaveBatchFile;
+    _filename:=SaveBatchFile;
+    if _filename<>'' then begin
+      writelog('Saved batch file <%s>.',[_filename]);
+      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then ShowFolder(extractfilepath(_filename));
+    end;
   finally
     ApplicationState:=tas_open;
   end;  

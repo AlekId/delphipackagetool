@@ -104,7 +104,7 @@ function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_Se
 function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns delphi root directory e.g. C:\Program files\Borland\Delphi7
 function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and bds versions.
 procedure InitBatchFile(const _filename:string); // reset batch file
-procedure SaveBatchFile; // save the batch file.
+function  SaveBatchFile:string; // save the batch file.
 function  GetPackageVersion(const _PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):string;
 function  ReplaceTag(_filename:string;_DelphiVersion:integer):string;
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType; // find out if the source file contains a application or library or package.
@@ -1952,9 +1952,16 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure SaveBatchFile; // save the batch file to _filename
+function SaveBatchFile:string; // save the batch file to _filename
 begin
-  if FCreateBatchFile then FBatchFile.SaveToFile(FBatchFilename);
+  result:='';
+  if not FCreateBatchFile then exit;
+  try
+    FBatchFile.SaveToFile(FBatchFilename);
+    result:=FBatchFilename;
+  except
+    on e:exception do trace(1,'Error in SaveBatchFile: Could not save file <%s>. <%s>.',[FBatchFilename,e.message]);
+  end;
 end;
 
 {-----------------------------------------------------------------------------
@@ -2401,7 +2408,6 @@ begin
       Delete(_text,1,_pos+1);
       _pos:=Pos(#$D+#$A,_Text);
       Conditions:=Copy(_Text,1,_Pos-1);
-      Conditions:='-D"'+Conditions+'"';
       trace(5,'ReadCFGSettings: Conditions are <%s>.',[Conditions]);
     end;
 
@@ -2478,7 +2484,6 @@ begin
   end;
 
   ReadNodeText(_bdsprojFilename,'//Delphi.Personality/Directories/Directories[@Name="Conditionals"]',Conditions,_msg);
-  if Conditions<>'' then Conditions:='-D"'+Conditions+'"';
   trace(5,'ReadBDSProjSettings: Conditions are <%s>.',[Conditions]);
 
   ReadNodeText(_bdsprojFilename,'//Delphi.Personality/Directories/Directories[@Name="SearchPath"]',SearchPath,_msg);
@@ -2642,6 +2647,7 @@ begin
      (_fileext='.dpr')   then result:=ReadCFGSettings(ChangefileExt(_filename,'.cfg'),Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath)   else
   if _fileext='.dproj'   then result:=ReadDProjSettings(_filename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath) else
   if _fileext='.bdsproj' then result:=ReadBDSProjSettings(_filename,_ProjectName,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath);
+  if Conditions<>'' then Conditions:='-D"'+Conditions+'"';
 end;
 
 {-----------------------------------------------------------------------------
