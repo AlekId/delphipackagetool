@@ -1471,7 +1471,6 @@ _BeginTargetSection:integer;
 _EndTargetSection:integer;
 _filename:string;
 _lineToInsert:string;
-_packagefilename:string;
 _templateFilename:string;
 _buildsection:string;
 _makesection:string;
@@ -1512,7 +1511,6 @@ begin
     j:=_BeginProjectSection+1;
     for i:=0 to _lstProjectFiles.Count-1 do begin
       _filename:=_lstProjectFiles.Items[i];
-      _packagefilename:=AbsoluteFilename(extractFilepath(_projectGroupFilename),_filename);
       _lineToInsert:=format('    <Projects Include="%s" />',[ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
       _file.insert(j,_lineToInsert);
       inc(j);
@@ -1533,7 +1531,6 @@ begin
     j:=_BeginTargetSection+1;
     for i:=0 to _lstProjectFiles.Count-1 do begin
       _filename:=_lstProjectFiles.Items[i];
-      _packagefilename:=AbsoluteFilename(extractFilepath(_projectGroupFilename),_filename);
 // build
       _lineToInsert:=format('  <Target Name="%s">',[ExtractFileNameOnly(_filename)]);
       _file.insert(j,_lineToInsert);

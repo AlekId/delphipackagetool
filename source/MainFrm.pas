@@ -7,6 +7,7 @@
 1.9.0.128 ( 31.03.2010 )
 - fix for Command Line Parameter -D (Conditional Define).
 - improvements about information on batchfile creation.
+- removed unused variable from CreateGroupProj.
 
 1.9.0.127 ( 30.03.2010 )
 - fix for Search Path.
