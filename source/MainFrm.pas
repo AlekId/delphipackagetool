@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.129 ( 06.04.2010 )
+- applied patch from M.Mueller about reading of dproj-file for D2009,D2010.
+
 1.9.0.128 ( 31.03.2010 )
 - fix for Command Line Parameter -D (Conditional Define).
 - improvements about information on batchfile creation.

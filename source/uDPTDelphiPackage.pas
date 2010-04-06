@@ -2,47 +2,7 @@
  Unit Name: uDPTDelphiPackage
  Author:    s.herzog
  Purpose:   cool functions to install/uninstall and recompile delphi projects.
- History: 19.11.2002 - added error message in case the user has no administrator rights
-          03.12.2002 - removed some unused code.
-          05.06.2003 - Bugfix in WinExecAndWait32V2
-          03.07.2003 - added method <GetDelphiRootDir>.
-          24.12.2003 - added method <GetInstalledDelphiVersions> to find out the installed delphi versions.
-          10.01.2004 - added method <GetDelphiApplication>.
-                     - moved into the library directory and renamed it to uNVBDelphiPackage.
-          02.02.2004 - GetDelphiRootDir and GetDelphiApplication are now using HKEY_LOCAL_MACHINE.
-          05.05.2004 - added parameter to startupdelphi
-          06.07.2004 - added batch,reg-file support.
-                     - fix in GetPackageDescription.
-          15.11.2004 - fix in GetInstalledDelphiVersions.
-          29.12.2004 - added method <ReplaceTag>.
-          08.02.2005 - made changes to avoid problems with spaces inside a path name when writing to batch file.
-          06.05.2005 - read the filesize of a package.
-          09.05.2005 - fix to clean the grid when new bpg-file is loaded. The filesize column was not cleaned up.
-          11.01.2006 - StartUpDelphi: added chars " at begin and end of filename so that projects with spaces in pathname also open.
-          25.02.2006 - added new method GetInstalledBDSVersions to also read BDS Versions.
-          22.04.2006 - changes in install/uninstall package.
-          28.06.2006 - added method <CleanUpPackagesByRegistery>.
-          06.07.2006 - added method <CleanUpPackagesByBPLPath>.
-          07.10.2006 - fix in <IDENameToVersionNo> for Delphi-Version 8,2005,2006
-          07.03.2007 - added method to write path settings into the .cfg-file.
-          08.03.2007 - until Delphi 7, the placeholder for Delphi was $(DELPHI). Then it changed to $(BDS).
-          16.10.2007 - added function <ExtractFilenamesFromDCC32Output> which extracts the filenames mentioned in the dcc32 compiler output.
-          08.11.2007 - corrected some trace messages.
-          21.05.2008 - added support for D2008 (aka bds 6.0)
-          08.07.2008 - added support to write path settings to bdsproj-files.
-          06.11.2008 - added support to write project group file. for bds.
-          15.11.2008 - ReplaceTag now also can replace $(BDSCOMMONDIR)
-          19.01.2009 - fix in CreateBDSProj about file types.
-          11.03.2009 - added function <isIDEInstalled>.
-                     - added function <LowestIDEVersion>.
-          07.04.2009 - added function <WriteDProjSettings>.
-          28.08.2009 - added support for Delphi 2010.
-          29.08.2009 - fix in CleanupRegistery. Create full pathname. Did not work with Tags e.g. (BDS)\bin up to now.
-          08.09.2009 - avoid double entries when creating bpg ord bdsgroup-file.
-          21.11.2009 - changes to also read dproj-settings.
-          30.11.2009 - changed to handle .groupproj files.
-          24.12.2009 - changes for libsuffix.
-          02.01.2010 - implemented <WriteDProjFile> to write LibSuffix into the dproj file.
+ History:
 -----------------------------------------------------------------------------}
 //TODO: some re-factoring of this unit is needed.
 
@@ -155,7 +115,8 @@ uses uDPTMisc,
      ShellApi,
      uDPTXMLReader,
      uDPTDefinitions,
-     uDPTJclFuncs;
+     uDPTJclFuncs,
+     MSXML_TLB;
 
 
 var
@@ -2569,29 +2530,119 @@ end;
 -----------------------------------------------------------------------------}
 function ReadDPROJSettingsD2009_and_Newer(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
 var
-_msg:string;
+  _xmlDOMfile: IXMLDOMDocument;
+  _msg:string;
+  _Config:string;
+  _Temp:string;
+  i: Integer;
+  _NodeList:IXMLDOMNodeList;
+  _Node:IXMLDOMNode;
+  _Configs: TStringList;
 begin
   Result:=false;
+  _Config:='';
   ProjectOutputPath:='';
   SearchPath:='';
   BPLOutputPath:='';
   DCUOutputPath:='';
   Conditions:='';
-  if not fileExists(_dprojFilename) then begin
-    trace(5,'ReadDPROJSettingsD2009_and_Newer: Could not find the file <%s>.',[_dprojFilename]);
-    exit;
+  _Configs := TStringList.Create;
+  _xmlDOMfile := CoDOMDocument.Create;
+  try
+    if not _xmlDOMfile.load(_dprojFilename) then begin
+      trace(5,'ReadDPROJSettingsD2009_and_Newer: Could not find the file <%s>.',[_dprojFilename]);
+      exit;
+    end;
+
+    if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup/DCC_Define',Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: Conditions are <%s>.',[Conditions]);
+
+    if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup/Config[@Condition="''$(Config)''==''''"]',_Config,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Config. <%s>.',[_msg]);
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: Config is <%s>.',[_Config]);
+
+    //Search for Config
+    _NodeList := _xmlDOMfile.selectNodes('//PropertyGroup/@Condition');
+    _Temp := '';
+    for i:=0 to _NodeList.length - 1 do begin
+      if Pos(WideString('''$(Config)''=='''+ _Config +''''), _NodeList[i].text) > 0 then begin
+        _Node:= _NodeList[i];
+        break;
+      end;
+    end;
+
+    if not Assigned(_Node) then begin
+      trace(5,'ReadDPROJSettingsD2009_and_Newer: Could not find Config <%s>.',[_Config]);
+      exit;
+    end;
+
+    //Config found
+    _Temp := _Node.text;
+    _Node := _xmlDOMfile.selectSingleNode('//PropertyGroup[@Condition="' + _Temp + '"]');
+    _NodeList := _Node.childNodes;
+    if _NodeList.length > 0 then begin
+      _Configs.Add(_NodeList[0].nodeName);
+
+      _Node := _xmlDOMfile.selectSingleNode('//PropertyGroup[@Condition="' + _Temp + '"]/CfgParent');
+      if Assigned(_Node) then begin
+        _Configs.Insert(0, _Node.text);
+      end;
+    end;
+
+    //Get DCC_UnitSearchPath
+    for i := 0 to _Configs.Count - 1 do begin
+      if _Configs[i] <> '' then begin
+        _Temp := '';
+        if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_UnitSearchPath',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s SearchPath. <%s>.',[_Configs[i], _msg]);
+        if _Temp <> '' then SearchPath := StringReplace(_Temp, '$(DCC_UnitSearchPath)', SearchPath, [rfIgnoreCase, rfReplaceAll]);
+      end;
+    end;
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: SearchPath is <%s>.',[SearchPath]);
+
+    //Get DCC_DcuOutput
+    for i := 0 to _Configs.Count - 1 do begin
+      if _Configs[i] <> '' then begin
+        _Temp := '';
+        if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_DcuOutput',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s DCUOutputPath. <%s>.',[_Configs[i], _msg]);
+        if _Temp <> '' then DCUOutputPath := StringReplace(_Temp, '$(DCC_DcuOutput)', DCUOutputPath, [rfIgnoreCase, rfReplaceAll]);
+      end;
+    end;
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: DCU Output Path is <%s>.',[DCUOutputPath]);
+
+    //Get DCC_BplOutput
+    for i := 0 to _Configs.Count - 1 do begin
+      if _Configs[i] <> '' then begin
+        _Temp := '';
+        if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_BplOutput',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s BPLOutputPath. <%s>.',[_Configs[i], _msg]);
+        if _Temp <> '' then BPLOutputPath := StringReplace(_Temp, '$(DCC_BplOutput)', BPLOutputPath, [rfIgnoreCase, rfReplaceAll]);
+      end;
+    end;
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: BPL Output Path is <%s>.',[BPLOutputPath]);
+
+    //Get DCC_Define
+    for i := 0 to _Configs.Count - 1 do begin
+      if _Configs[i] <> '' then begin
+        _Temp := '';
+        if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_Define',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s Conditions. <%s>.',[_Configs[i], _msg]);
+        if _Temp <> '' then Conditions := StringReplace(_Temp, '$(DCC_Define)', Conditions, [rfIgnoreCase, rfReplaceAll]);
+      end;
+    end;
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: Conditions are <%s>.',[Conditions]);
+
+    //Get DCC_ExeOutput
+    for i := 0 to _Configs.Count - 1 do begin
+      if _Configs[i] <> '' then begin
+        _Temp := '';
+        if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_ExeOutput',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s ProjectOutputPath. <%s>.',[_Configs[i], _msg]);
+        if _Temp <> '' then ProjectOutputPath := StringReplace(_Temp, '$(DCC_ExeOutput)', ProjectOutputPath, [rfIgnoreCase, rfReplaceAll]);
+      end;
+    end;
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: ProjectOutputPath is <%s>.',[ProjectOutputPath]);
+
+    result:=true;
+  finally
+    _xmlDOMfile := nil;
+    _Configs.Free;
   end;
-  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_UnitSearchPath',SearchPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find SearchPath. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettingsD2009_and_Newer: SearchPath is <%s>.',[SearchPath]);
-  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_DcuOutput',DCUOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find DCUOutputPath. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettingsD2009_and_Newer: DCU Output Path is <%s>.',[DCUOutputPath]);
-  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_BplOutput',BPLOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find BPLOutputPath. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettingsD2009_and_Newer: BPL Output Path is <%s>.',[BPLOutputPath]);
-  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_Define',Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettingsD2009_and_Newer: Conditions are <%s>.',[Conditions]);
-  if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Base)''!=''''"]/DCC_ExeOutput',ProjectOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find ProjectOutputPath. <%s>.',[_msg]);
-  trace(5,'ReadDPROJSettingsD2009_and_Newer: Project Output Path is <%s>.',[ProjectOutputPath]);
-  result:=true;
 end;
 
 {*-----------------------------------------------------------------------------
