@@ -3,6 +3,8 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+1.9.0.130 ( 07.04.2010 )
+- add's -N /-NO to the batch file. Used to define the .dcu output path.
 
 1.9.0.129 ( 06.04.2010 )
 - applied patch from M.Mueller about reading of dproj-file for D2009,D2010.

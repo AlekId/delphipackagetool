@@ -1371,7 +1371,8 @@ begin
     FCurrentProjectOutputPath,
     FCurrentDCUOutputPath,
     ExtractFilePath(ReadProjectFilenameFromDProj(FCurrentProjectFilename)),
-    _Output);
+    _Output,
+    FCurrentDelphiVersion);
 
   if FSuccess then
   begin
