@@ -3338,6 +3338,8 @@ end;
   Changes: -SH 05.06.2003 Bugfix for deadlock of the external app.
 -----------------------------------------------------------------------------}
 function WinExecAndWait32V2(FileName,CommandLine,WorkPath: string; Visibility: Integer;var Output:String): LongWord;
+const
+cMaxBuffer=255;
   procedure WaitFor(processHandle: THandle);
   var
     Msg: TMsg;
@@ -3366,9 +3368,9 @@ var { V1 by Pat Ritchey, V2 by P.Below }
   SA: TSecurityAttributes;
   StdOutPipeRead,
   StdOutPipeWrite: THandle;
-  Buffer: array[0..256] of Char;
+  Buffer: array[0..cMaxBuffer] of Char;
   BytesRead: Cardinal;
-  _Line: String;
+  _Line: AnsiString;
   _field,_prev_field:string;
 begin { WinExecAndWait32V2 }
    result:=0;
@@ -3418,12 +3420,12 @@ begin { WinExecAndWait32V2 }
     CloseHandle(StdOutPipeWrite);
   end;
 
-  ReadFile(StdOutPipeRead, Buffer, 255, BytesRead, nil);
+  ReadFile(StdOutPipeRead, Buffer, cMaxBuffer, BytesRead, nil);
   while BytesRead>0 do begin
     Buffer[BytesRead] := #0;
     // combine the buffer with the rest of the last run
     _line:=_line+Buffer;
-    ReadFile(StdOutPipeRead, Buffer, 255, BytesRead, nil);
+    ReadFile(StdOutPipeRead, Buffer, cMaxBuffer, BytesRead, nil);
   end;
   Output:='';
   _prev_field:='';
