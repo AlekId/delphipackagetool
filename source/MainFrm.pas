@@ -3,6 +3,10 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+
+1.9.0.131 ( 11.04.2010 )
+- applied patch from M.Mueller about WinExecAndWait.
+
 1.9.0.130 ( 07.04.2010 )
 - add's -N /-NO to the batch file. Used to define the .dcu output path.
 

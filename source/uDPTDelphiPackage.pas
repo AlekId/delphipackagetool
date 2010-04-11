@@ -54,7 +54,7 @@ function  VerifyRegistry(const _DelphiVersion:integer):boolean; // scan through 
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStrings);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
 function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
-function  WinExecAndWait32V2(FileName,CommandLine,WorkPath: string; Visibility: Integer;Var Output:String): LongWord;
+function  WinExecAndWait(FileName,CommandLine,WorkPath: string; Visibility: Integer;Var Output:String): LongWord;
 function  isDelphiStarted(const _DelphiVersion:Integer): Boolean;
 procedure ShutDownDelphi(const _DelphiVersion:Integer;_Blocking : Boolean);
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
@@ -2554,7 +2554,7 @@ begin
       exit;
     end;
 
-    if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup/DCC_Define',Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
+    if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[0]/DCC_Define',Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Conditions. <%s>.',[_msg]);
     trace(5,'ReadDPROJSettingsD2009_and_Newer: Conditions are <%s>.',[Conditions]);
 
     if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup/Config[@Condition="''$(Config)''==''''"]',_Config,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find Config. <%s>.',[_msg]);
@@ -3337,44 +3337,23 @@ end;
   Description:
   Changes: -SH 05.06.2003 Bugfix for deadlock of the external app.
 -----------------------------------------------------------------------------}
-function WinExecAndWait32V2(FileName,CommandLine,WorkPath: string; Visibility: Integer;var Output:String): LongWord;
+function WinExecAndWait(FileName,CommandLine,WorkPath: string; Visibility: Integer;var Output:String): LongWord;
 const
-cMaxBuffer=255;
-  procedure WaitFor(processHandle: THandle);
-  var
-    Msg: TMsg;
-    ret: DWORD;
-  begin
-    repeat
-      ret := MsgWaitForMultipleObjects(
-        1, { 1 handle to wait on }
-        processHandle, { the handle }
-        False, { wake on any event }
-        INFINITE, { wait without timeout }
-        QS_PAINT or { wake on paint messages }
-        QS_SENDMESSAGE { or messages from other threads }
-        );
-      if ret = WAIT_FAILED then Exit; { can do little here }
-      if ret = (WAIT_OBJECT_0 + 1) then begin
-          { Woke on a message, process paint messages only. Calling
-            PeekMessage gets messages send from other threads processed. }
-        while PeekMessage(Msg, 0, WM_PAINT, WM_PAINT, PM_REMOVE) do DispatchMessage(Msg);
-      end;
-    until ret = WAIT_OBJECT_0;
-  end; { Waitfor }
-var { V1 by Pat Ritchey, V2 by P.Below }
+  BufSize = 1024;
+var
+  i:integer;
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
   SA: TSecurityAttributes;
   StdOutPipeRead,
   StdOutPipeWrite: THandle;
-  Buffer: array[0..cMaxBuffer] of Char;
-  BytesRead: Cardinal;
-  _Line: AnsiString;
-  _field,_prev_field:string;
-begin { WinExecAndWait32V2 }
+  Buffer: array[1..BufSize] of Byte;
+  BytesRead: cardinal;
+  _prev_field,_field:string;
+  _line:string;
+begin
    result:=0;
-//  trace(5,Filename);
+   Output:='';
    with SA do
    begin
      nLength := SizeOf(SA);
@@ -3386,60 +3365,66 @@ begin { WinExecAndWait32V2 }
               @SA,             // security attributes
               0                // number of bytes reserved for pipe - 0 default
               );
+  try
+    FillChar(StartupInfo, SizeOf(StartupInfo), #0);
+    StartupInfo.cb          := SizeOf(StartupInfo);
+    StartupInfo.dwFlags     := STARTF_USESHOWWINDOW  or  STARTF_USESTDHANDLES;
+    StartupInfo.wShowWindow := Visibility;
+    StartupInfo.hStdInput   := GetStdHandle(STD_INPUT_HANDLE); // don't redirect std input
+    StartupInfo.hStdOutput := StdOutPipeWrite;
+    StartupInfo.hStdError  := StdOutPipeWrite;
+    if not CreateProcess(
+      nil,
+      PChar(FileName+' '+CommandLine), // command line.
+      nil,
+      nil, { pointer to thread security attributes }
+      true, { handle inheritance flag }
+      CREATE_NEW_CONSOLE or { creation flags }
+      NORMAL_PRIORITY_CLASS,
+      nil, { pointer to new environment block }
+      PChar(WorkPath), { pointer to current directory name }
+      StartupInfo, { pointer to STARTUPINFO }
+      ProcessInfo) { pointer to PROCESS_INF }
+    then begin
+      Result := DWORD(-1) { failed, GetLastError has error code }
+    end
+    else begin
+      //Wait for completion and read pipe
+      CloseHandle(ProcessInfo.hThread);
+      repeat
+        GetExitCodeProcess(ProcessInfo.hProcess, Result);
 
-//  StrPCopy(zAppName, FileName);
-  FillChar(StartupInfo, SizeOf(StartupInfo), #0);
-  StartupInfo.cb          := SizeOf(StartupInfo);
-  StartupInfo.dwFlags     := STARTF_USESHOWWINDOW  or  STARTF_USESTDHANDLES;
-  StartupInfo.wShowWindow := Visibility;
-  StartupInfo.hStdInput   := GetStdHandle(STD_INPUT_HANDLE); // don't redirect std input
-  StartupInfo.hStdOutput := StdOutPipeWrite;
-  StartupInfo.hStdError  := StdOutPipeWrite;
-  if not CreateProcess(
-    //zAppName, { pointer to command line string }
-//    PChar(FileName),    //appplication to be executed
-    nil,
-    PChar(FileName+' '+CommandLine), // command line.
-    nil,
-    nil, { pointer to thread security attributes }
-    true, { handle inheritance flag }
-    CREATE_NEW_CONSOLE or { creation flags }
-    NORMAL_PRIORITY_CLASS,
-    nil, { pointer to new environment block }
-    PChar(WorkPath), { pointer to current directory name }
-    StartupInfo, { pointer to STARTUPINFO }
-    ProcessInfo) { pointer to PROCESS_INF }
-  then begin
-    Result := DWORD(-1) { failed, GetLastError has error code }
-  end
-  else begin
-    Waitfor(ProcessInfo.hProcess);
-    GetExitCodeProcess(ProcessInfo.hProcess, Result);
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
-    CloseHandle(StdOutPipeWrite);
-  end;
-
-  ReadFile(StdOutPipeRead, Buffer, cMaxBuffer, BytesRead, nil);
-  while BytesRead>0 do begin
-    Buffer[BytesRead] := #0;
-    // combine the buffer with the rest of the last run
-    _line:=_line+Buffer;
-    ReadFile(StdOutPipeRead, Buffer, cMaxBuffer, BytesRead, nil);
-  end;
-  Output:='';
-  _prev_field:='';
-  _field:='';
-  if length(_line)>0 then begin
-    _field:=trim(GetField(#$D,_line));
-    while _line<>'' do begin
-      if (_field<>_prev_field) then Output:=Output+_field+#$D+#$A;
-       _prev_field:=_field;
-       _field:=trim(GetField(#$D,_line));
+        PeekNamedPipe(StdOutPipeRead, @Buffer, sizeof(Buffer), @BytesRead, nil, nil);
+        if BytesRead > 0 then begin
+          if ReadFile(StdOutPipeRead, Buffer, sizeof(Buffer), BytesRead, nil) then begin
+            while BytesRead > 0 do begin
+              for i:=1 to BytesRead do Output := Output + char(Buffer[i]); // combine the buffer with the rest of the last run
+              if BytesRead < sizeof(Buffer) then break;
+              if not ReadFile(StdOutPipeRead, Buffer,sizeof(Buffer), BytesRead, nil) then break;
+            end;
+          end;
+        end;
+        Application.ProcessMessages;
+      until (Result <> STILL_ACTIVE) and (not Application.Terminated);
+      CloseHandle(ProcessInfo.hProcess);
+      _line:=Output;
+      _prev_field:='';
+      _field:='';
+      Output:='';
+      if length(_line)>0 then begin
+        _field:=trim(GetField(#$D,_line));
+        while _line<>'' do begin
+          if (_field<>_prev_field) then Output:=Output+_field+#$D+#$A;
+           _prev_field:=_field;
+           _field:=trim(GetField(#$D,_line));
+        end;
+      end;
     end;
+  finally
+    CloseHandle(StdOutPipeWrite);
+    CloseHandle(StdOutPipeRead);
   end;
-  CloseHandle(StdOutPipeRead);
-end; { WinExecAndWait32V2 }
+end;
 
 {-----------------------------------------------------------------------------
   Procedure: CompileProject
@@ -3507,7 +3492,7 @@ begin
   trace(5,'Command line is %s.',[_commandLine]);
   FBatchFile.Add('cd "'+ExtractFilePath(_ProjectName)+'"');
   FBatchFile.Add('"'+_compiler+'" '+_commandLine);
-  _returnValue:=WinExecAndWait32V2(_compiler,
+  _returnValue:=WinExecAndWait(_compiler,
                      _commandLine,
                      _WorkPath,
                      SW_HIDE,
