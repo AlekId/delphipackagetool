@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.132 ( 15.04.2010 )
+- applied patch from M.Mueller about Binary Output Path (-E).
+
 1.9.0.131 ( 11.04.2010 )
 - applied patch from M.Mueller about WinExecAndWait.
 

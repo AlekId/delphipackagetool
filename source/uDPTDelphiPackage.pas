@@ -49,7 +49,7 @@ function SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;con
 procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer); // create a bpg-file or bdsproj-file.
 function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer):string; // add package into the regitstry.
 function  UninstallPackage(_PackageName,_PackageDirectory,_PackageLibSuffix:String;_DelphiVersion:Integer):boolean;  // remove package from regeistry.
-function  CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;Var Output:String;const _DelphiVersion:integer):boolean; // compile the package
+function  CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;_ProjectType:TProjectType;Var Output:String;const _DelphiVersion:integer):boolean; // compile the package
 function  VerifyRegistry(const _DelphiVersion:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStrings);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
@@ -2633,7 +2633,7 @@ begin
       if _Configs[i] <> '' then begin
         _Temp := '';
         if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_ExeOutput',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s ProjectOutputPath. <%s>.',[_Configs[i], _msg]);
-        if _Temp <> '' then ProjectOutputPath := StringReplace(_Temp, '$(DCC_ExeOutput)', ProjectOutputPath, [rfIgnoreCase, rfReplaceAll]);
+        if _Temp <> '' then ProjectOutputPath := _Temp;
       end;
     end;
     trace(5,'ReadDPROJSettingsD2009_and_Newer: ProjectOutputPath is <%s>.',[ProjectOutputPath]);
@@ -3439,7 +3439,7 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;var Output:String;const _DelphiVersion:integer):boolean; // compile the package
+function CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;_ProjectType:TProjectType;var Output:String;const _DelphiVersion:integer):boolean; // compile the package
 var
 _commandLine:string;
 _returnValue:Cardinal;
@@ -3484,7 +3484,14 @@ begin
   trace(5,'Output path is <%s>.',[_TargetPath]);
   trace(5,'DCU path is <%s>.',[_DCUPath]);
   _commandLine:=_CompilerSwitches+' "'+_ProjectName;
-  if _TargetPath<>'' then _commandLine:=_commandLine+'" -LE"'+_TargetPath+'"'+' -LN"'+_TargetPath+'"';
+  if _TargetPath<>'' then begin
+    case _ProjectType of
+      tp_dll,
+      tp_exe: _commandLine:=_commandLine+'" -E"'+_TargetPath+'"';
+    else
+      _commandLine:=_commandLine+'" -LE"'+_TargetPath+'"'+' -LN"'+_TargetPath+'"';
+    end;
+  end;
   if _DCUPath<>'' then begin
     if _DelphiVersion<=7 then _commandLine:=_commandLine+' -N"'+_DCUPath+'"'
                          else _commandLine:=_commandLine+' -N0"'+_DCUPath+'"';

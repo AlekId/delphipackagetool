@@ -1371,6 +1371,7 @@ begin
     FCurrentProjectOutputPath,
     FCurrentDCUOutputPath,
     ExtractFilePath(ReadProjectFilenameFromDProj(FCurrentProjectFilename)),
+    FCurrentProjectType,
     _Output,
     FCurrentDelphiVersion);
 

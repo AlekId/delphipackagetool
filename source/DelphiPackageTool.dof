@@ -111,7 +111,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=0
-Build=131
+Build=132
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.0.131
+FileVersion=1.9.0.132
 InternalName=
 LegalCopyright=Samuel Herzog
 LegalTrademarks=
@@ -130,8 +130,6 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.1.7.2
 Comments=
-[Excluded Packages]
-c:\programme\borland\delphi7\projects\bpl\nvbcomponentsd7.bpl=Novabit Components
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source
