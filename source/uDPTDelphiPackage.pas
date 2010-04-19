@@ -141,7 +141,7 @@ begin
   _list:=TStringList.create;
   try
     while _path<>'' do begin
-      _item:=lowercase(GetField(';',_path));
+      _item:=ExcludeTrailingPathDelimiter(lowercase(GetField(';',_path)));
       if _list.IndexOf(_item)=-1 then _list.add(_item)
       else trace(5,'The path <%s> is already in the list. Removed!',[_item]);
     end;
@@ -765,11 +765,12 @@ begin
     _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion);
     if DirectoryExists(_absolutepath) then begin
       _path:=RelativePath(_basepath,_path,_DelphiVersion);
-      if (pos(_path+';',result)=0) and
-         (pos(_path+'\;',result)=0) then result:=result+_path+';';
-    end;
+      result:=result+_path+';';
+    end
+    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[]);
     _path:=Getfield(';',_paths);
   end;
+  result:=RemoveDoublePathEntries(result);
 end;
 
 

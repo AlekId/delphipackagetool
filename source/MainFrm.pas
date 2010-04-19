@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.133 ( 17.04.2010 )
+- SH: fix in method <RelativePaths> about removing of double entries.
+
 1.9.0.132 ( 15.04.2010 )
 - applied patch from M.Mueller about Binary Output Path (-E).
 
