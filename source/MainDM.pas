@@ -1391,7 +1391,7 @@ begin
      ((Pos(pchar(cWarning), lowercase(_output)) > 0))) then begin
     if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) then begin
       if length(_output)>2000 then _output:=copy(_output,length(_output)-2000,2000);
-      if Application.MessageBox(pchar(_output),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then FAbortCompile:=true;
+      Application.MessageBox(pchar(_output),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
     end;
     trace(3,'There are problems/warnings in project <%s>. Please see log-file.',[FCurrentProjectFilename]);
   end;
