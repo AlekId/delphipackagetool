@@ -502,7 +502,7 @@ begin
   ProjectSettings.GetPathValue('Application/DCUOutputPath', 7, 'dcu\$(DELPHIVERSION)\', 'Output Path for the dcu-files.', true,false,false);
   ProjectSettings.GetBoolValue('Application/ChangeFiles', 8, false,'If set to <True>, then DelphiPackageTool is allowed to change the *.dof and *.cfg files.', true,false,false);
   ProjectSettings.GetBoolValue('Application/ModifyEnvironmentPath', 9, true,'If set to <True>, then DelphiPackageTool tries to add the location of the bpl-files to the environment settings.', true,false,false);
-  ProjectSettings.GetStringValue('Application/LibSuffix',10,cLIBAutomaticTag,'Defines the Lib-Suffix for the Package-Names.',true,false,false);
+  ProjectSettings.GetStringValue('Application/LibSuffix',10,cLIBNoneTag,'Defines the Lib-Suffix for the Package-Names.',true,false,false);
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath',11,'','Defines last used Backup Path.',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup', 12, true,'If set to <True>, then DelphiPackageTool creates a backup zip-file after succeessfull run of "Install All".', true,false,false);
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName])

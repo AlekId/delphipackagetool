@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.134 ( 27.04.2010 )
+- SH: improvements for LIBSuffix.
+
 1.9.0.133 ( 17.04.2010 )
 - SH: fix in method <RelativePaths> about removing of double entries.
 

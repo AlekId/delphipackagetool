@@ -184,11 +184,11 @@ begin
     i:=0;
     while i<=count do begin
       _path:=trim(lowercase(mmoSearchPath.Lines[i]));
-      if LastPos(_Path, ';') = length(_Path) then System.Delete(_Path, length(_Path), 1);
+      _path:=RemoveTrailingSemikolon(_path);
       _path:=IncludeTrailingPathDelimiter(_path);
       for j:=i+1 to mmoSearchPath.Lines.Count-1 do begin
         _curpath:=trim(lowercase(mmoSearchPath.Lines[j]));
-        if LastPos(_curpath, ';') = length(_curpath) then System.Delete(_curpath, length(_curpath), 1);
+        _curpath:=RemoveTrailingSemikolon(_curpath);
         _curpath:=IncludeTrailingPathDelimiter(_curpath);
         if _curpath=_path then begin
           mmoSearchPath.Lines.delete(i);
@@ -205,7 +205,7 @@ begin
         inc(i);
         continue;
       end;
-      if LastPos(_Path, ';') = length(_Path) then System.Delete(_Path, length(_Path), 1);
+      _path:=RemoveTrailingSemikolon(_Path);
       _path:=AbsolutePath(DMMain.BPGPath,_path,_DelphiVersion);
       if not DirectoryExists(_path) then begin
         if Application.MessageBox(pchar(format(cDirectoryDoesNotExist, [_Path])),pchar(cWarning),MB_ICONWARNING or MB_YESNO)=IDYes then begin
@@ -305,11 +305,12 @@ begin
   DMMain.DPTSearchPath := DMMain.GetGlobalSearchPath(false);
 end;
 
-function TFrmOptions.AddPath( _path: string): boolean;
+function TFrmOptions.AddPath(_path: string): boolean;
 begin
   result:=false;
   if trim(_path)='' then exit;
-  if not IsLastChar(';',_path) then _path:=_path+';';
+  _path:=RemoveTrailingSemikolon(lowercase(_path));
+  _path:=_path+';';
   if FSearchPaths.IndexOf(_path)<>-1 then begin
     trace(5,'TFrmOptions.AddPath: The path <%s> is already in the list.',[_path]);
     exit;

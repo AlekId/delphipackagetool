@@ -96,6 +96,7 @@ function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE i
 function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
 function  MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
+function  RemoveTrailingSemikolon(const _path:string):string;
 
 var
 FCreateBatchFile:boolean;
@@ -569,22 +570,30 @@ begin
   try
     _File.LoadFromFile(_filename);
     _index:=FindLine(_File,'{$LIBSUFFIX',_OldText);
-    if _index=-1 then begin
-      _index:=_File.IndexOf('requires');
-      if _index>-1 then _index:=_index-2
-                   else _index:=2;
-    end;
-    _NewText:=format('{$LIBSUFFIX ''%s''}',[_LibSuffix]);
-    if _NewText<>_OldText then begin
-      if not _silent then begin
-        if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+    if _LibSuffix='' then begin
+      if _index>-1 then begin // no libsuffix to be set but there is one already in the file.
+        _File.Delete(_index); // delete it.
+        _FileChanged:=true;
       end;
-      _File.Delete(_index);
-      _File.Insert(_index,_NewText);
-      _FileChanged:=true;
+    end
+    else begin
+      if _index=-1 then begin
+        _index:=_File.IndexOf('requires');
+        if _index>-1 then _index:=_index-2
+                     else _index:=2;
+      end;
+      _NewText:=format('{$LIBSUFFIX ''%s''}',[_LibSuffix]);
+      if _NewText<>_OldText then begin
+        if not _silent then begin
+          if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+        end;
+        _File.Delete(_index);
+        _File.Insert(_index,_NewText);
+        _FileChanged:=true;
+      end;
     end;
     if _FileChanged then begin
-      if BackupFile(_filename,'.dof_old','',false) then _File.SaveToFile(_filename);
+      if BackupFile(_filename,'.dpk_old','',false) then _File.SaveToFile(_filename);
     end;
     result:=true;
   finally
@@ -4125,6 +4134,19 @@ begin
   result:=_path+ExtractFilename(_filename);
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: RemoveTrailingSemikolon
+  Author:    sam
+  Date:      27-Apr-2010
+  Arguments: const _path:string
+  Result:    string
+  Description: if there is a ';' at the end, then remove it.
+-----------------------------------------------------------------------------}
+function RemoveTrailingSemikolon(const _path:string):string;
+begin
+  result:=_path;
+  if LastPos(result, ';') = length(result) then System.Delete(result, length(result), 1);
+end;
 
 initialization
   FBatchFile:=TStringList.create;
