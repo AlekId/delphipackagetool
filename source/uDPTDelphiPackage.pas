@@ -83,8 +83,8 @@ function  CheckDirectory(const _name:string):boolean; // check if the directory 
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):boolean;
-function  WriteDPKFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):boolean;  // write libsuffix into the dpk-file.
-function  WriteDprojFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):boolean;  // write libsuffix into the dproj-file.
+function  WriteDPKFile(_filename:string;const _LibSuffix:string;const _silent:boolean):boolean;  // write libsuffix into the dpk-file.
+function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean):boolean;  // write libsuffix into the dproj-file.
 function  DeleteFile(const _Filename:String):boolean;  // delete the file <_filename>.
 function  RemoveProjectFromProjectGroup(const _GroupFilename,_ProjectFilename:string;const _ProjectType:TProjectType):boolean;
 function  ReadBDSCommonDir(const _DelphiVersion:integer):string; // reads the path to the BDSCOMMONDIR.
@@ -549,7 +549,7 @@ end;
   Result:    boolean
   Description: write libsuffix into dpk-file.
 -----------------------------------------------------------------------------}
-function  WriteDPKFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):boolean;
+function  WriteDPKFile(_filename:string;const _LibSuffix:string;const _silent:boolean):boolean;
 resourcestring
 cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
@@ -565,7 +565,6 @@ begin
     trace(1,'Problem in WriteDPKFile: Could not find the file <%s>. Nothing to do.',[_filename]);
     exit;
   end;
-  if not RemoveReadOnlyFlag(_filename,_silent) then exit;
   _File:=TStringList.create;
   try
     _File.LoadFromFile(_filename);
@@ -592,10 +591,17 @@ begin
         _FileChanged:=true;
       end;
     end;
-    if _FileChanged then begin
-      if BackupFile(_filename,'.dpk_old','',false) then _File.SaveToFile(_filename);
+    if not _FileChanged then exit;
+    if not RemoveReadOnlyFlag(_filename,_silent) then exit;
+    if not BackupFile(_filename,'.dpk_old','',false) then exit;
+    _filename:=changefileext(_filename,'.dpk_new');
+    try
+      _File.SaveToFile(_filename);
+      trace(5,'WriteDPKFile: Saved changes to file <%s>.',[_filename]);
+      result:=true;
+    except
+      on e:exception do trace(1,'Error in WriteDPKFile: Could not save file <%s>. Check User-Rights. <%s>.',[_filename,e.message]);
     end;
-    result:=true;
   finally
     _File.free;
   end;
@@ -609,7 +615,7 @@ end;
   Result:    boolean
   Description: write libsuffix into .dproj file.
 -----------------------------------------------------------------------------}
-function  WriteDProjFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):boolean;
+function  WriteDProjFile(_filename:string;const _LibSuffix:string;const _silent:boolean):boolean;
 resourcestring
 cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
@@ -649,10 +655,16 @@ begin
       _FileChanged:=true;
       trace(3,'Succsessfully written <%s> into file <%s>.',[_NewText,_filename]);
     end;
-    if _FileChanged then begin
-      if BackupFile(_filename,'.dproj_old','',false) then _File.SaveToFile(_filename);
+    if not _FileChanged then exit;
+    if not BackupFile(_filename,'.dproj_old','',false) then exit;
+    _filename:=changefileext(_filename,'.dproj_new');
+    try
+      _File.SaveToFile(_filename);
+      trace(5,'WriteDProjFile: Saved changes to file <%s>.',[_filename]);
+      result:=true;
+    except
+      on e:exception do trace(1,'Error in WriteDProjFile: Could not save file <%s>. Check User-Rights. <%s>.',[_filename,e.message]);
     end;
-    result:=true;
   finally
     _File.free;
   end;
@@ -811,18 +823,14 @@ _searchText:string;
     _index:=FindLine(content,_searchStr,_OldText);
     if _SearchPath='' then exit;
     if _OldText=_NewText then exit;
-    if _silent or
-       (not _silent and
-        (Application.MessageBox(pchar(format(cAskToReplace,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes)) then begin
-      if _index>-1 then begin
-        content.Delete(_index);
-        content.Insert(_index,_NewText);
-        result:=true;
-      end
-      else begin
-        content.Insert(_indexDirectories+1,_NewText);
-        result:=true;
-      end;
+    if _index>-1 then begin
+      content.Delete(_index);
+      content.Insert(_index,_NewText);
+      result:=true;
+    end
+    else begin
+      content.Insert(_indexDirectories+1,_NewText);
+      result:=true;
     end;
   end;
 
@@ -863,10 +871,16 @@ begin
        _FileChanged:=true;
     end;
 
-    if _FileChanged then begin
-      if BackupFile(_dofFilename,'.dof_old','',false) then _DOFFile.SaveToFile(_dofFilename);
+    if not _FileChanged then exit; // if nothing changed then exit;
+    if not BackupFile(_dofFilename,'.dof_old','',false) then exit;  // if no backup could be made.
+    _dofFilename:=changefileext(_dofFilename,'.dof_new');
+    try
+      _DOFFile.SaveToFile(_dofFilename);
+      trace(5,'Saved changes to file <%s>.',[_dofFilename]);
+      result:=true;
+    except
+     on e:exception do trace(1,'Error in WriteDOFFile: Could not save file <%s>. Check User-Rights. <%s>.',[_dofFilename,e.message]);
     end;
-    result:=true;
   finally
     _DOFFile.free;
   end;
@@ -2750,34 +2764,50 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .cfg-file.
 -----------------------------------------------------------------------------}
-function  WriteCFGSettings(const _bpgPath,_cfgFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):boolean; // get informations from the cfg-file.
+function  WriteCFGSettings(const _bpgPath:string; _cfgFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):boolean; // get informations from the cfg-file.
 var
 _CFGFile:TStrings;
+_FileChanged:boolean;
 
-  procedure DeleteSection(_BeginMark,_EndMark:string);
+  function GetField(_BeginMark,_EndMark:string):string;
   var
   _Text:String;
   _begin,_End:Integer;
   begin
+    result:='';
     _Text:=_CFGFile.Text;
     _begin:=Pos(_BeginMark,_Text);
-    if _begin<=0 then exit;
-    Delete(_text,_begin,length(_BeginMark));
-    _end:=PosEx(_EndMark,_Text,_begin);
-    if _end=0 then _end:=length(_text);
-    if _EndMark<>#13+#10 then Delete(_Text,_begin,_end-_begin+3)
-                         else Delete(_Text,_begin,_end-_begin+1);
-    _CFGFile.Text:=_Text;
+    if _begin=0 then exit;
+    _end:=PosEx(_EndMark,_Text,_begin+length(_BeginMark));
+    result:=copy(_text,_begin+length(_BeginMark),_end-_begin-length(_BeginMark));
+  end;
+
+  function ReplaceItem(const _OptionMark:string;const _value:string):boolean;
+  var
+  _OldValue:string;
+  _text:string;
+  begin
+    result:=false;
+    _Text:=_CFGFile.Text;
+    _OldValue:=GetField(_OptionMark,'"');
+    if _OldValue=_value then exit;
+    if _OldValue<>'' then begin
+      _text:=StringReplace(_text,_OldValue,_value,[rfIgnoreCase]);
+      _CFGFile.Text:=_text;
+    end
+    else _CFGFile.Add(_OptionMark+_value+'"');
+    trace(5,'WriteCFGSettings: Set Option <%s> to <%s>.',[_OptionMark,_value]);
+    result:=true;
   end;
 
 begin
   Result:=false;
+  _FileChanged:=false;
   if not fileExists(_cfgFilename) then begin
     trace(2,'Problem in WriteCFGSettings: Could not find the file <%s>.',[_cfgFilename]);
     exit;
   end;
   if not RemoveReadOnlyFlag(_cfgFilename,_silent) then exit;
-  if not BackupFile(_cfgFilename,'.cfg_old','',false) then exit;
 // make all paths relative
   _searchPath       :=RelativePaths(ExtractFilePath(_cfgFilename),_searchPath,_DelphiVersion);
   _ProjectOutputPath:=RelativePath(ExtractFilePath(_cfgFilename),_ProjectOutputPath,_DelphiVersion,false);
@@ -2788,39 +2818,24 @@ begin
   _CFGFile:=TStringList.Create;
   try
     _CFGFile.LoadFromFile(_cfgFilename);
-    DeleteSection('-U"','"');
-    if _SearchPath<>'' then _CFGFile.Add('-U"'+_SearchPath+'"');
-    DeleteSection('-O"','"');
-    if _SearchPath<>'' then _CFGFile.Add('-O"'+_SearchPath+'"');
-    DeleteSection('-I"','"');
-    if _SearchPath<>'' then _CFGFile.Add('-I"'+_SearchPath+'"');
-    DeleteSection('-R"','"');
-    if _SearchPath<>'' then begin
-      _CFGFile.Add('-R"'+_SearchPath+'"');
-      trace(5,'WriteCFGSettings: Set Search Path to <%s>.',[_SearchPath]);
-    end;  
-    DeleteSection('-E"','"');
-    if _ProjectOutputPath<>'' then begin
-      _CFGFile.Add('-E"'+_ProjectOutputPath+'"');
-      trace(5,'WriteCFGSettings: -E Set Output Path to <%s>.',[_ProjectOutputPath]);
+    if ReplaceItem('-U"',_SearchPath) then _FileChanged:=true;
+    if ReplaceItem('-O"',_SearchPath) then _FileChanged:=true;
+    if ReplaceItem('-I"',_SearchPath) then _FileChanged:=true;
+    if ReplaceItem('-R"',_SearchPath) then _FileChanged:=true;
+    if ReplaceItem('-E"',_ProjectOutputPath) then _FileChanged:=true;
+    if ReplaceItem('-LE"',_BPLOutputPath) then _FileChanged:=true;
+    if ReplaceItem('-LN"',_BPLOutputPath) then _FileChanged:=true;
+    if ReplaceItem('-N"',_DCUOutputPath) then _FileChanged:=true;
+    if not _FileChanged then exit;  // if nothing has changed, then leave here.
+    if not BackupFile(_cfgFilename,'.cfg_old','',false) then exit;
+    _cfgFilename:=changefileext(_cfgFilename,'.cfg_new');
+    try
+      _CFGFile.SaveToFile(_cfgFilename);
+      trace(5,'Saved changes to file <%s>.',[_cfgFilename]);
+      result:=true;
+    except
+      on e:exception do trace(1,'Error in WriteCFGSettings: Could not save file <%s>. Check User-Rights. <%s>.',[_cfgFilename,e.message]);
     end;
-    DeleteSection('-LE"','"');
-    if _BPLOutputPath<>'' then begin
-      _CFGFile.Add('-LE"'+_BPLOutputPath+'"');
-      trace(5,'WriteCFGSettings: -LE BPL Output Path is <%s>.',[_BPLOutputPath]);
-    end;
-    DeleteSection('-LN"','"');
-    if _BPLOutputPath<>'' then begin
-      _CFGFile.Add('-LN"'+_BPLOutputPath+'"');
-      trace(5,'WriteCFGSettings: -LN BPL Output Path is <%s>.',[_BPLOutputPath]);
-    end;
-    DeleteSection('-N"','"');
-    if _DCUOutputPath<>'' then begin
-      _CFGFile.Add('-N"'+_DCUOutputPath+'"');
-      trace(5,'WriteCFGSettings: -N DCU Output Path is <%s>.',[_DCUOutputPath]);
-    end;
-    _CFGFile.SaveToFile(_cfgFilename);
-    result:=true;
   finally
     _CFGFile.free;
   end;
@@ -2834,11 +2849,11 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .bdsproj-file.
 -----------------------------------------------------------------------------}
-function  WriteBDSProjSettings(const _bpgPath,_bdsprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):boolean;
+function  WriteBDSProjSettings(const _bpgPath:string; _bdsprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):boolean;
 var
 _BDSProjFile:TStrings;
 _index:integer;
-_changed:boolean;
+_FileChanged:boolean;
 _temp:string;
 _pos:integer;
   function FindText(const _s:string;var position:integer):integer;
@@ -2856,10 +2871,9 @@ _pos:integer;
     end;
   end;
 
-
 begin
   Result:=false;
-  _changed:=false;
+  _FileChanged:=false;
   if not fileExists(_bdsprojFilename) then begin
     trace(2,'Problem in WriteBDSProjSettings: Could not find the file <%s>.',[_bdsprojFilename]);
     exit;
@@ -2881,7 +2895,7 @@ begin
       if _BDSProjFile[_index]<>_temp+'<Directories Name="SearchPath">'+_searchPath+'</Directories>' then begin
         _BDSProjFile[_index]:=_temp+'<Directories Name="SearchPath">'+_searchPath+'</Directories>';
         trace(4,'WriteBDSProjSettings: Write search path <%s> to file <%s>.',[_searchPath,_bdsprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
 
@@ -2891,7 +2905,7 @@ begin
       if _BDSProjFile[_index]<>_temp+'<Directories Name="OutputDir">'+_ProjectOutputPath+'</Directories>' then begin
         _BDSProjFile[_index]:=_temp+'<Directories Name="OutputDir">'+_ProjectOutputPath+'</Directories>';
         trace(4,'WriteBDSProjSettings: Write output path <%s> to file <%s>.',[_ProjectOutputPath,_bdsprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
 
@@ -2901,7 +2915,7 @@ begin
       if _BDSProjFile[_index]<>_temp+'<Directories Name="PackageDLLOutputDir">'+_ProjectOutputPath+'</Directories>' then begin
         _BDSProjFile[_index]:=_temp+'<Directories Name="PackageDLLOutputDir">'+_ProjectOutputPath+'</Directories>';
         trace(4,'WriteBDSProjSettings: Write dll output path <%s> to file <%s>.',[_ProjectOutputPath,_bdsprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
 
@@ -2911,7 +2925,7 @@ begin
       if _BDSProjFile[_index]<>_temp+'<Directories Name="UnitOutputDir">'+_DCUOutputPath+'</Directories>' then begin
         _BDSProjFile[_index]:=_temp+'<Directories Name="UnitOutputDir">'+_DCUOutputPath+'</Directories>';
         trace(4,'WriteBDSProjSettings: Write unit output path <%s> to file <%s>.',[_DCUOutputPath,_bdsprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
     _index:=FindText('<Directories Name="PackageDCPOutputDir">',_pos);
@@ -2920,16 +2934,20 @@ begin
       if _BDSProjFile[_index]<>_temp+'<Directories Name="PackageDCPOutputDir">'+_BPLOutputPath+'</Directories>' then begin
         _BDSProjFile[_index]:=_temp+'<Directories Name="PackageDCPOutputDir">'+_BPLOutputPath+'</Directories>';
         trace(4,'WriteBDSProjSettings: Write package output path <%s> to file <%s>.',[_BPLOutputPath,_bdsprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
-    if _changed then  begin
-      if not RemoveReadOnlyFlag(_bdsprojFilename,_silent) then exit;
-      if not BackupFile(_bdsprojFilename,'.bdsproj_old','',false) then exit;
+    if not _FileChanged then exit;
+    if not RemoveReadOnlyFlag(_bdsprojFilename,_silent) then exit;
+    if not BackupFile(_bdsprojFilename,'.bdsproj_old','',false) then exit;
+    _bdsprojFilename:=changefileext(_bdsprojFilename,'.bdsproj_new');
+    try
       _BDSProjFile.SaveToFile(_bdsprojFilename);
       trace(3,'WriteBDSProjSettings: Write changes to file <%s>.',[_bdsprojFilename]);
+      result:=true;
+    except
+      on e:exception do trace(1,'Error in WriteBDSProjSettings: Could not save file <%s>. Check User-Rights. <%s>.',[_bdsprojFilename,e.message]);
     end;
-    result:=true;
   finally
     _BDSProjFile.free;
   end;
@@ -2943,11 +2961,11 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .dproj-file.
 -----------------------------------------------------------------------------}
-function  WriteDProjSettings(const _bpgPath,_dprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):boolean;
+function  WriteDProjSettings(const _bpgPath:string;_dprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):boolean;
 var
 _DProjFile:TStrings;
 _index:integer;
-_changed:boolean;
+_FileChanged:boolean;
 _temp:string;
 _pos:integer;
   function FindText(const _s:string;var position:integer):integer;
@@ -2958,17 +2976,16 @@ _pos:integer;
     position:=0;
     for i:=0 to _DProjFile.Count-1 do begin
       position:=pos(_s,_DProjFile[i]);
-      if position>0 then begin
-        result:=i;
-        exit;
-      end;
+      if position<=0 then continue;
+      result:=i;
+      exit;
     end;
   end;
 
 
 begin
   Result:=false;
-  _changed:=false;
+  _FileChanged:=false;
   if not fileExists(_DProjFilename) then begin
     trace(2,'Problem in WriteDProjSettings: Could not find the file <%s>.',[_dprojFilename]);
     exit;
@@ -2990,7 +3007,7 @@ begin
       if _DProjFile[_index]<>_temp+'<DCC_UnitSearchPath>'+_searchPath+'</DCC_UnitSearchPath>' then begin
         _DProjFile[_index]:=_temp+'<DCC_UnitSearchPath>'+_searchPath+'</DCC_UnitSearchPath>';
         trace(4,'WriteDProjSettings: Write search path <%s> to file <%s>.',[_searchPath,_dprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
 
@@ -3000,7 +3017,7 @@ begin
       if _DProjFile[_index]<>_temp+'<Directories Name="OutputDir">'+_ProjectOutputPath+'</Directories>' then begin
         _DProjFile[_index]:=_temp+'<Directories Name="OutputDir">'+_ProjectOutputPath+'</Directories>';
         trace(4,'WriteDProjSettings: Write output path <%s> to file <%s>.',[_ProjectOutputPath,_dprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
 
@@ -3010,7 +3027,7 @@ begin
       if _DProjFile[_index]<>_temp+'<DCC_ResourcePath>'+_ProjectOutputPath+'</DCC_ResourcePath>' then begin
         _DProjFile[_index]:=_temp+'<DCC_ResourcePath>'+_ProjectOutputPath+'</DCC_ResourcePath>';
         trace(4,'WriteDProjSettings: Write dll output path <%s> to file <%s>.',[_ProjectOutputPath,_dprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
 
@@ -3020,7 +3037,7 @@ begin
       if _DProjFile[_index]<>_temp+'<DCC_ObjPath>'+_DCUOutputPath+'</DCC_ObjPath>' then begin
         _DProjFile[_index]:=_temp+'<DCC_ObjPath>'+_DCUOutputPath+'</DCC_ObjPath>';
         trace(4,'WriteDProjSettings: Write unit output path <%s> to file <%s>.',[_DCUOutputPath,_dprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
     _index:=FindText('<DCC_IncludePath>',_pos);
@@ -3029,16 +3046,20 @@ begin
       if _DProjFile[_index]<>_temp+'<DCC_IncludePath>'+_BPLOutputPath+'</DCC_IncludePath>' then begin
         _DProjFile[_index]:=_temp+'<DCC_IncludePath>'+_BPLOutputPath+'</DCC_IncludePath>';
         trace(4,'WriteDProjSettings: Write package output path <%s> to file <%s>.',[_BPLOutputPath,_dprojFilename]);
-        _changed:=true;
+        _FileChanged:=true;
       end;
     end;
-    if _changed then  begin
-      if not RemoveReadOnlyFlag(_dprojFilename,_silent) then exit;
-      if not BackupFile(_dprojFilename,'.dproj_old','',false) then exit;
+    if not _FileChanged then exit;
+    if not RemoveReadOnlyFlag(_dprojFilename,_silent) then exit;
+    if not BackupFile(_dprojFilename,'.dproj_old','',false) then exit;
+    _dprojFilename:=changefileext(_dprojFilename,'.dproj_new');
+    try
       _DProjFile.SaveToFile(_dprojFilename);
       trace(3,'WriteDProjSettings: Write changes to file <%s>.',[_dprojFilename]);
+      result:=true;
+    except
+      on e:exception do trace(1,'Error in WriteDProjSettings: Could not save file <%s>. Check User-Rights. <%s>.',[_dprojFilename,e.message]);
     end;
-    result:=true;
   finally
     _DProjFile.free;
   end;

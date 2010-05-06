@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
   Left = 0
-  Top = 39
+  Top = 40
   Width = 800
   Height = 543
   Caption = 'Package Group Rebuilder/Installer'
@@ -25,7 +25,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 319
+    Top = 303
     Width = 993
     Height = 12
     Cursor = crVSplit
@@ -33,7 +33,7 @@ object FrmMain: TFrmMain
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 331
+    Top = 315
     Width = 993
     Height = 166
     Align = alBottom
@@ -49,7 +49,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 145
     Width = 993
-    Height = 174
+    Height = 158
     Align = alClient
     ColCount = 8
     Ctl3D = False

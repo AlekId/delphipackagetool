@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.135 ( 06.05.2010 )
+- SH: re-work of functions which change dpk,dproj,bdsproj,cfg,dof files.
+- SH added feature to setup/integrate an external diff-tool. 
+
 1.9.0.134 ( 27.04.2010 )
 - SH: improvements for LIBSuffix.
 
@@ -1247,7 +1251,6 @@ begin
   if not OpenDialog1.Execute then exit;
   LoadBPG(OpenDialog1.filename);
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: actVerifyRegistryExecute

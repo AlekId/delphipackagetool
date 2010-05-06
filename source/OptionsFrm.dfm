@@ -3,7 +3,7 @@ object FrmOptions: TFrmOptions
   Top = 51
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 670
+  ClientHeight = 717
   ClientWidth = 710
   Color = clBtnFace
   Constraints.MinHeight = 612
@@ -33,7 +33,7 @@ object FrmOptions: TFrmOptions
     Left = 0
     Top = 0
     Width = 710
-    Height = 629
+    Height = 676
     Align = alClient
     TabOrder = 4
     object btnSelectCodeEditor: TSpeedButton
@@ -67,14 +67,14 @@ object FrmOptions: TFrmOptions
     end
     object lblBeforeInstallAll: TLabel
       Left = 8
-      Top = 480
+      Top = 520
       Width = 104
       Height = 13
       Caption = 'On Before <Install All>'
     end
     object btnSelectOnBeforeInstallAll: TSpeedButton
       Left = 656
-      Top = 496
+      Top = 536
       Width = 23
       Height = 22
       Caption = '...'
@@ -82,7 +82,7 @@ object FrmOptions: TFrmOptions
     end
     object lblAfterInstallAll: TLabel
       Left = 8
-      Top = 520
+      Top = 560
       Width = 95
       Height = 13
       Caption = 'On After <Install All>'
@@ -108,6 +108,21 @@ object FrmOptions: TFrmOptions
       Width = 53
       Height = 13
       Caption = 'Parameters'
+    end
+    object lblDiffTool: TLabel
+      Left = 8
+      Top = 480
+      Width = 40
+      Height = 13
+      Caption = 'Diff-Tool'
+    end
+    object btnDiffTool: TSpeedButton
+      Left = 656
+      Top = 496
+      Width = 23
+      Height = 22
+      Caption = '...'
+      OnClick = btnDiffToolClick
     end
     object edtCodeEditor: TEdit
       Left = 8
@@ -152,7 +167,7 @@ object FrmOptions: TFrmOptions
     end
     object edtBeforeInstallAll: TEdit
       Left = 8
-      Top = 496
+      Top = 536
       Width = 641
       Height = 21
       Hint = 
@@ -164,7 +179,7 @@ object FrmOptions: TFrmOptions
     end
     object edtAfterInstallAll: TEdit
       Left = 8
-      Top = 536
+      Top = 576
       Width = 641
       Height = 21
       Hint = 
@@ -176,7 +191,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxAutomaticShowAddPathDialog: TCheckBox
       Left = 272
-      Top = 568
+      Top = 608
       Width = 185
       Height = 17
       Hint = 
@@ -191,7 +206,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxCreateBatchFile: TCheckBox
       Left = 544
-      Top = 568
+      Top = 608
       Width = 145
       Height = 17
       Hint = 'Create the Install-Batch and .Reg-Files'
@@ -202,7 +217,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxChangeFiles: TCheckBox
       Left = 8
-      Top = 568
+      Top = 608
       Width = 233
       Height = 17
       Hint = 
@@ -215,7 +230,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxModifyEnvironment: TCheckBox
       Left = 8
-      Top = 592
+      Top = 632
       Width = 185
       Height = 17
       Hint = 
@@ -250,7 +265,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxAutoBackup: TCheckBox
       Left = 272
-      Top = 592
+      Top = 632
       Width = 185
       Height = 17
       Hint = 
@@ -264,10 +279,20 @@ object FrmOptions: TFrmOptions
       TabOrder = 11
       OnExit = cbxAutoBackupExit
     end
+    object edtDiffTool: TEdit
+      Left = 8
+      Top = 496
+      Width = 641
+      Height = 21
+      Hint = 'Define here your favorit source code editor.'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 12
+    end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 629
+    Top = 676
     Width = 710
     Height = 41
     Align = alBottom

@@ -131,11 +131,13 @@ type
     NVBAppExec1: TNVBAppExec;
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
+    function UpdateProjectFiles:boolean;
     function RemoveProjectFromProjectGroup:boolean;
     function ReCompileAndInstallAll:boolean;
     procedure AutoSaveBackup(_Lines:TStrings);
     procedure ShowProjectDir; // open the file explorer and show the current project directory.
     procedure ShowOutputDir;
+    function CompareFiles(_filename1,_filename2:string):boolean; // start the external diff-tool
     procedure SetCurrentProject(const _ProjectName:string);
     procedure ShowFile(_filename:string;_lineno:integer);
     function  CompilePackage(const _updateCursor: boolean):boolean;
@@ -231,13 +233,60 @@ begin
   NVBAppExec1.Execute;
 end;
 
+
+{-----------------------------------------------------------------------------
+  Procedure: CompareFiles
+  Author:    herzogs2
+  Date:      06-Mai-2010
+  Arguments: _filename1,_filename2:string
+  Result:    None
+  Description: start external diff-tool and display <filename1> and <filename2>.
+-----------------------------------------------------------------------------}
+function TDMMain.CompareFiles(_filename1,_filename2:string):boolean;
+resourcestring
+cSetupDiffTool='Please setup a Diff-Tool to be opened when DPT modifies a file. Open the <Settings><Options> Dialog to '+#13+#10+'setup.';
+cCouldNotFindDiffTool='The Diff-Tool <%s> you have setup could not be '+#13+#10+'found. Please check the settings.';
+var
+_DiffToolEXEName:string;
+_DiffToolParams:string;
+begin
+  result:=false;
+  if not fileexists(_filename1) then begin
+    trace(1,'Problem in TDMMain.CompareFiles: Could not find file <%s>.',[_filename1]);
+    exit;
+  end;
+  if not fileexists(_filename2) then begin
+    trace(1,'Problem in TDMMain.CompareFiles: Could not find file <%s>.',[_filename2]);
+    exit;
+  end;
+  _DiffToolEXEName:=ApplicationSettings.StringValue('Application/DiffTool',29);
+  if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
+    if _DiffToolEXEName='' then begin
+      Application.MessageBox(pChar(cSetupDiffTool),pchar(cInformation),MB_ICONWARNING or MB_OK);
+      exit;
+    end;
+    if not fileexists(_DiffToolEXEName) then begin
+      Application.MessageBox(pchar(format(cCouldNotFindDiffTool,[_DiffToolEXEName])),pchar(cWarning),MB_ICONWARNING or MB_OK);
+      exit;
+    end;
+  end;
+  _DiffToolParams:='"'+_filename1+'" "'+_filename2+'"';
+  NVBAppExec1.Wait:=true;
+  NVBAppExec1.ExeName  :=_DiffToolEXEName;
+  NVBAppExec1.ExeParams:=_DiffToolParams;
+  if not NVBAppExec1.Execute then exit;
+  result:=true;
+end;
+
+
 {*-----------------------------------------------------------------------------
   Procedure: ShowFile
   Author:    sam
   Date:      02-Feb-2008
   Arguments: const _filename:string
   Result:    None
-  Description:
+  Description: open an external editor and display the file <_filename>.
+               Try to set the cursor to line <_lineNo>.
 -----------------------------------------------------------------------------}
 procedure TDMMain.ShowFile(_filename:string;_lineno:integer);
 resourcestring
@@ -316,6 +365,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.SetCurrentProject(const _ProjectName: string);
 resourcestring
+cAskToChangeFiles='DelphiPackageTool will change your files. Ok ?';
 cCouldNotFindProjectFile='Could not find Project File <%s>. Please check if the file <%s> is still correct.';
 cCouldNotFindDCUOutputPath='Could not find the DCU Output Path <%s>. Do you want to edit this path ?';
 cCouldNotFindBPLOutputPath='Could not find the BPL Output Path <%s>. Do you want to edit this path ?';
@@ -402,11 +452,7 @@ begin
   trace(5,'CurrentConditions=%s',[FCurrentConditions]);
   trace(5,'CurrentProjectOutputPath=%s',[FCurrentProjectOutputPath]);
   trace(5,'CurrentBPLFilename=%s',[FCurrentBPLFilename]);
-
-  if ProjectSettings.BoolValue('Application/ChangeFiles', 8) then begin
-    WriteSettingsToDelphi(FBPGPath,FCurrentConfigFilename,FCurrentConditions,GetGlobalSearchPath,FCurrentProjectOutputPath,FCurrentBPLOutputPath,FCurrentDCUOutputPath,ApplicationSettings.BoolValue('Application/SilentMode',5),FCurrentDelphiVersion); // write informations to the cfg-file.
-    if FCurrentProjectType=tp_bpl then WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5));
-  end;
+  UpdateProjectFiles;
   FireCurrentProjectChanged;
 end;
 
@@ -883,7 +929,7 @@ begin
   ApplicationSettings.GetFileValue('Compiler/DelphiCompiler', 2, '$(DELPHI)\Bin\DCC32.EXE', 'The Borland Delphi Compiler <DCC32.EXE>.', true,false,false);
   ApplicationSettings.GetFileValue('Application/ProjectGroupFile', 3, '', 'The name of Borland Package Group File', true,false,false);
   ApplicationSettings.GetPathValue('Application/PackageOutputPath', 4,GetDelphiPackageDir(LatestIDEVersion), 'Path to the Delphi Projects\BPL directory.', true,false,false);
-  ApplicationSettings.GetBoolValue('Application/SilentMode', 5, False, 'If this settings is true, then now dialog boxes will be shown.', true,false,false);
+  ApplicationSettings.GetBoolValue('Application/SilentMode', 5, False, 'If this settings is true, then no dialog boxes will be shown.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StopOnFailure', 6, false, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StartDelphiOnClose', 7, False, 'Start Delphi when this application terminates.', true,false,false);
   ApplicationSettings.GetStringValue('Application/PathNameFile', 8, 'DelphiPackageToolPathD'+inttostr(CurrentDelphiVersion)+'.txt', 'The file containing the search path for the compiler.', true,false,false);
@@ -907,6 +953,7 @@ begin
   ApplicationSettings.GetIntegerValue('Application/Position/Height',26,600,'Stores the last height of the Main-Form.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedExtnsion',27,'.bpg','Stores the last used file-type in the file-open dialog.',true,false,false);
   ApplicationSettings.GetStringValue('Application/SourceCodeEditorParams',28,'%FILENAME%','Define the Source code Editor command Line Parameters.',true,false,false);
+  ApplicationSettings.GetFileValue('Application/DiffTool', 29, 'MyFavoriteDiffTool.exe', 'Define here your favorite Diff-Tool.', true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/FileHistory/Item%d',[i]),50+i,'',format('Recently used File <%d>.',[i]), true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/SearchPathHistory/Item%d',[i]),100+i,'',format('Recently used File <%d>.',[i]), true,false,false);
   ApplicationSettings.Open;
@@ -1345,14 +1392,14 @@ begin
   _CompilerSwitches := ProjectSettings.StringValue('Application/CompilerSwitches',3);
   if _CompilerSwitches='' then _CompilerSwitches := ApplicationSettings.StringValue('Application/CompilerSwitches',11);
   _SearchPath:='';
-  if FDPTSearchPath  <> ''    then _SearchPath :='"'+GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
+  if FDPTSearchPath  <> ''    then _SearchPath :=GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
   if FCurrentSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
     _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename),FCurrentSearchPath,FCurrentDelphiVersion);
-    _SearchPath := RemoveDoublePathEntries(_SearchPath);
   end;
   if FCurrentConditions <> '' then _CompilerSwitches := _CompilerSwitches +' '+FCurrentConditions + ' ';
   if _SearchPath<>'' then begin
-    _SearchPath := _SearchPath +'"';
+    _SearchPath := RemoveDoublePathEntries(_SearchPath);
+    _SearchPath :='"'+_SearchPath +'"';
     _CompilerSwitches := _CompilerSwitches + ' '+'-U'+_SearchPath;
     _CompilerSwitches := _CompilerSwitches + ' '+'-O'+_SearchPath;
     _CompilerSwitches := _CompilerSwitches + ' '+'-I'+_SearchPath;
@@ -1664,6 +1711,57 @@ end;
 procedure TDMMain.actRecompileAllPackagesExecute(Sender: TObject);
 begin
   ReCompileAndInstallAll;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: UpdateProjectFiles
+  Author:    herzogs2
+  Date:      06-Mai-2010
+  Arguments: None
+  Result:    boolean
+  Description: this method tries to update/correct the file dpk/cfg/dproj/bdsproj
+-----------------------------------------------------------------------------}
+function TDMMain.UpdateProjectFiles: boolean;
+resourcestring
+cSaveChanges='Save changes ?';
+cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
+var
+_NewConfigFilename:string;
+_NewPackageFilename:string;
+begin
+  result:=false;
+  if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then exit;    // if DPT is allowed to change the files
+
+// try to update cfg/dproj/bdsproj files.
+  if WriteSettingsToDelphi(FBPGPath,
+                           FCurrentConfigFilename,
+                           FCurrentConditions,
+                           GetGlobalSearchPath,
+                           FCurrentProjectOutputPath,
+                           FCurrentBPLOutputPath,
+                           FCurrentDCUOutputPath,
+                           ApplicationSettings.BoolValue('Application/SilentMode',5),
+                           FCurrentDelphiVersion) then begin // write information to the delphi settings file (cfg,dproj,bdsproj).
+
+    _NewConfigFilename:=ChangeFileExt(FCurrentConfigFilename,ExtractFileExt(FCurrentConfigFilename)+'_new');
+    if Application.MessageBox(pchar(cDPTSuggestsSomeChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
+      if CompareFiles(FCurrentConfigFilename,_NewConfigFilename) then begin
+        if Application.MessageBox(pchar(cSaveChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then result:=CopyFile(pchar(_NewConfigFilename),pchar(FCurrentConfigFilename),false);
+      end;
+    end else result:=CopyFile(pchar(_NewConfigFilename),pchar(FCurrentConfigFilename),false);
+  end;
+
+// try to update dpk/dproj files.
+  if FCurrentProjectType=tp_bpl then begin // it is a package
+    if WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5)) then begin // then prepare a new file.
+      _NewPackageFilename:=ChangeFileExt(FCurrentProjectFilename,ExtractFileExt(FCurrentProjectFilename)+'_new');
+      if Application.MessageBox(pchar(cDPTSuggestsSomeChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin  // ask the user if he wants to review
+        if CompareFiles(FCurrentProjectFilename,_NewPackageFilename) then begin
+          if Application.MessageBox(pchar(cSaveChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then result:=CopyFile(pchar(_NewPackageFilename),pchar(FCurrentProjectFilename),false);
+        end;
+      end else result:=CopyFile(pchar(_NewPackageFilename),pchar(FCurrentProjectFilename),false);
+    end;
+  end;
 end;
 
 end.

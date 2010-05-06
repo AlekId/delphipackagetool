@@ -208,7 +208,8 @@ begin
   else begin
     if FWait then begin
       WaitforSingleObject(FProcessInfo.hProcess,INFINITE);
-      if GetExitCodeProcess(FProcessInfo.hProcess,lpExitCode) then result:=DoError;
+      if GetExitCodeProcess(FProcessInfo.hProcess,lpExitCode) then result:=true
+                                                              else result:=DoError;
     end else result:=true;
   end;
 end;

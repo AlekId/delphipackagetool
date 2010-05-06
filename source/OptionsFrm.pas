@@ -66,6 +66,9 @@ type
     edtSourceEditorParams: TEdit;
     lblSourceEditorParams: TLabel;
     cbxAutoBackup: TCheckBox;
+    lblDiffTool: TLabel;
+    edtDiffTool: TEdit;
+    btnDiffTool: TSpeedButton;
     procedure btnAddPathClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -79,6 +82,7 @@ type
     procedure btnOnAfterInstallAllClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure cbxAutoBackupExit(Sender: TObject);
+    procedure btnDiffToolClick(Sender: TObject);
   private
     FSearchPaths:TStrings;
     function VerifySettings:boolean;
@@ -98,7 +102,7 @@ uses uDPTMisc,
      uDPTDelphiPackage,
      Windows,
      MainDM;
-     
+
 {$R *.dfm}
 
 {-----------------------------------------------------------------------------
@@ -248,12 +252,28 @@ begin
   edtCodeEditor.Text:=OpenDialog1.FileName;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: FormClose
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject; var Action: TCloseAction
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if ModalResult<>mrOk then exit;
   GUIToSettings;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: LoadSearchPathData
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: None
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
 function TFrmOptions.LoadSearchPathData: boolean;
 var
 _filename:string;
@@ -263,6 +283,14 @@ begin
   result:=true;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: FormCreate
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.FormCreate(Sender: TObject);
 begin
   FSearchPaths:=TStringList.Create;
@@ -291,20 +319,33 @@ begin
       if Application.MessageBox(pchar(format(cFileMarkedAsReadOnly,[_filename])),pchar(cWarning),MB_ICONWARNING or MB_YESNO)=IDNo then exit;
       if not RemoveReadOnlyFlag(_filename,true) then exit;
     end;
-    FSearchPaths.SaveToFile(_filename);
-    result:=true;
-  end else begin
-    FSearchPaths.SaveToFile(_filename);
-    result:=true;
   end;
+  FSearchPaths.SaveToFile(_filename);
+  result:=true;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: FormDestroy
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.FormDestroy(Sender: TObject);
 begin
   FSearchPaths.Free;
   DMMain.DPTSearchPath := DMMain.GetGlobalSearchPath(false);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: AddPath
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: _path: string
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
 function TFrmOptions.AddPath(_path: string): boolean;
 begin
   result:=false;
@@ -320,6 +361,14 @@ begin
   result:=true;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: btnAddDefaultPathClick
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.btnAddDefaultPathClick(Sender: TObject);
 var
 _DelphiPlaceHolder:string;
@@ -331,6 +380,14 @@ begin
   if mmoSearchPath.Lines.IndexOf(_DelphiPlaceHolder+'\bin;')=-1          then mmoSearchPath.Lines.insert(0,_DelphiPlaceHolder+'\bin;');
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: btnSelectOnBeforeInstallAllClick
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.btnSelectOnBeforeInstallAllClick(Sender: TObject);
 begin
   OpenDialog1.Filter:='Executeable Files|*.exe;*.bat;*.com';
@@ -338,6 +395,14 @@ begin
   edtBeforeInstallAll.Text:=RelativePath(DMMain.BPGPath,OpenDialog1.FileName,DMMain.CurrentDelphiVersion);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: btnOnAfterInstallAllClick
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.btnOnAfterInstallAllClick(Sender: TObject);
 begin
   OpenDialog1.Filter:='Executeable Files|*.exe;*.bat;*.com';
@@ -378,16 +443,32 @@ begin
     edtCodeEditor.SetFocus;
     exit;
   end;
+
+  if (trim(edtDiffTool.Text)<>'') and
+     (not FileExists(edtDiffTool.Text)) then begin
+    ShowMessage(format('Please check if the File <%s> really exists.', [edtDiffTool.Text]));
+    edtDiffTool.SetFocus;
+    exit;
+  end;
+
   result:=true;
 end;
 
-
+{-----------------------------------------------------------------------------
+  Procedure: GUIToSettings
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: None
+  Result:    None
+  Description: write GUI to settings.
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.GUIToSettings;
 begin
   DMMain.ApplicationSettings.SetString('Application/SourceCodeEditor',9,edtCodeEditor.Text);
   DMMain.ApplicationSettings.SetString('Application/SourceCodeEditorParams',28,edtSourceEditorParams.Text);
   DMMain.ApplicationSettings.SetEnum('Application/Language',16,cbxLanguage.ItemIndex);
   DMMain.ApplicationSettings.SetBoolean('Application/AutomaticSearchFiles', 18,cbxAutomaticShowAddPathDialog.Checked);
+  DMMain.ApplicationSettings.SetFile('Application/DiffTool', 29,edtDiffTool.Text);
   DMMain.ProjectSettings.SetString('Application/Events/OnBeforeInstallAll',1,edtBeforeInstallAll.Text);
   DMMain.ProjectSettings.SetString('Application/Events/OnAfterInstallAll',2,edtAfterInstallAll.Text);
   DMMain.ProjectSettings.SetString('Application/CompilerSwitches',3,edtCompilerSwitches.Text);
@@ -398,6 +479,14 @@ begin
   DMMain.ProjectSettings.SetBoolean('Application/AutoBackup', 12,cbxAutoBackup.checked);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: SettingsToGUI
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: None
+  Result:    None
+  Description:  prepare the GUI.
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.SettingsToGUI;
 var
 _batchfilename:string;
@@ -416,6 +505,7 @@ begin
   if _batchfilename='' then _batchfilename:=DMMain.ApplicationSettings.StringValue('Application/Events/OnAfterInstallAll',14);
   edtAfterInstallAll.Text :=_batchfilename;
   cbxLanguage.ItemIndex:=DMMain.ApplicationSettings.EnumValue('Application/Language',16);
+  edtDiffTool.Text:=     DMMain.ApplicationSettings.FileValue('Application/DiffTool', 29);
   cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18);
   cbxCreateBatchFile.Checked:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
   cbxChangeFiles.Checked:=DMMain.ProjectSettings.BoolValue('Application/ChangeFiles', 8);
@@ -423,14 +513,50 @@ begin
   cbxAutoBackup.checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup', 12);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: FormCloseQuery
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject;var CanClose: Boolean
+  Result:    None
+  Description: check if the settings are ok. If they are ok then allow to close,
+               otherwise not.
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.FormCloseQuery(Sender: TObject;var CanClose: Boolean);
 begin
-  if ModalResult=mrOk then CanClose:=VerifySettings;
+  if ModalResult<>mrOk then exit;
+  CanClose:=VerifySettings;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: cbxAutoBackupExit
+  Author:    herzogs2
+  Date:      05-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: if we want to make a backup, then the compiler switch -Q must be removed
+               -Q (quiet) determs how much output is generated by the compiler.
+-----------------------------------------------------------------------------}
 procedure TFrmOptions.cbxAutoBackupExit(Sender: TObject);
 begin
-  if cbxAutoBackup.checked then edtCompilerSwitches.Text:=StringReplace(edtCompilerSwitches.Text,'-Q','',[]);
+  if not cbxAutoBackup.checked then exit;
+  edtCompilerSwitches.Text:=StringReplace(edtCompilerSwitches.Text,'-Q','',[]);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: btnDiffToolClick
+  Author:    herzogs2
+  Date:      06-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: show file selection dialog to let the user choose his favorite
+               diff-tool.
+-----------------------------------------------------------------------------}
+procedure TFrmOptions.btnDiffToolClick(Sender: TObject);
+begin
+  OpenDialog1.DefaultExt:='.exe';
+  if not OpenDialog1.execute then exit;
+  edtDiffTool.Text:=OpenDialog1.FileName;
 end;
 
 end.
