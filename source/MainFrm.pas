@@ -133,7 +133,7 @@ type
     stgFiles: TStringGrid;
     actShowTraceFile: TAction;
     actShowTraceFile1: TMenuItem;
-    PopupMenu1: TPopupMenu;
+    pmnMessages: TPopupMenu;
     ClearLog1: TMenuItem;
     About1: TMenuItem;
     actShowAbout: TAction;
@@ -209,6 +209,8 @@ type
     ShowProjectGroup1: TMenuItem;
     actAutoBackup: TAction;
     actRecompileAll: TAction;
+    actRevertChanges: TAction;
+    RevertChange1: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -253,6 +255,7 @@ type
     procedure edtPackageBPGFileChange(Sender: TObject);
     procedure ShowProjectGroup1Click(Sender: TObject);
     procedure actRecompileAllExecute(Sender: TObject);
+    procedure actRevertChangesExecute(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -1601,6 +1604,43 @@ procedure TFrmMain.actRecompileAllExecute(Sender: TObject);
 begin
   if not DMMain.ReCompileAndInstallAll then exit;
   DMMain.AutoSaveBackup(mmoLogFile.lines);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: actRevertChangesExecute
+  Author:    herzogs2
+  Date:      07-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: 
+-----------------------------------------------------------------------------}
+procedure TFrmMain.actRevertChangesExecute(Sender: TObject);
+var
+_Seltext:string;
+_pos:integer;
+begin
+  _Seltext:=mmoLogFile.SelText;
+  if not IsFilenameValid(_SelText) then begin
+    _pos:=Pos('''',_SelText);
+    if _pos>0 then begin
+      while _pos>0 do begin
+        delete(_SelText,_pos,1);
+        _pos:=Pos('''',_SelText);
+      end;
+    end else begin
+      _pos:=Pos('(',_SelText);
+      if _pos>0 then begin
+        _SelText:=Copy(_SelText,1,_pos-1);
+        _pos:=Pos(''+#$D,_SelText);
+        while _pos>0 do begin
+          delete(_SelText,_pos,1);
+          _pos:=Pos(''+#$D,_SelText);
+        end;
+      end;
+    end;
+  end;
+
+  DMMain.RevertChange(_Seltext);
 end;
 
 end.

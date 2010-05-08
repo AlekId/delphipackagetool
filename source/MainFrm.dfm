@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
   Left = 0
   Top = 40
-  Width = 800
-  Height = 543
+  Width = 1061
+  Height = 740
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,21 +25,21 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 303
-    Width = 993
+    Top = 516
+    Width = 1053
     Height = 12
     Cursor = crVSplit
     Align = alBottom
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 315
-    Width = 993
+    Top = 528
+    Width = 1053
     Height = 166
     Align = alBottom
     Ctl3D = False
     ParentCtl3D = False
-    PopupMenu = PopupMenu1
+    PopupMenu = pmnMessages
     ReadOnly = True
     ScrollBars = ssBoth
     TabOrder = 0
@@ -48,8 +48,8 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 145
-    Width = 993
-    Height = 158
+    Width = 1053
+    Height = 371
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -74,7 +74,7 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 993
+    Width = 1053
     Height = 145
     Align = alTop
     BevelOuter = bvNone
@@ -356,6 +356,10 @@ object FrmMain: TFrmMain
       Caption = 'actRecompileAll'
       OnExecute = actRecompileAllExecute
     end
+    object actRevertChanges: TAction
+      Caption = 'Revert Change'
+      OnExecute = actRevertChangesExecute
+    end
   end
   object OpenDialog1: TOpenDialog
     DefaultExt = '*.bpg'
@@ -475,7 +479,7 @@ object FrmMain: TFrmMain
       end
     end
   end
-  object PopupMenu1: TPopupMenu
+  object pmnMessages: TPopupMenu
     Left = 176
     Top = 120
     object ClearLog1: TMenuItem
@@ -484,6 +488,9 @@ object FrmMain: TFrmMain
     end
     object Find1: TMenuItem
       Action = actFindFilePath
+    end
+    object RevertChange1: TMenuItem
+      Action = actRevertChanges
     end
     object actSaveLog1: TMenuItem
       Action = actSaveLog

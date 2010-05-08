@@ -131,7 +131,9 @@ type
     NVBAppExec1: TNVBAppExec;
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
-    function UpdateProjectFiles:boolean;
+    procedure ConfirmChanges(_ChangedFiles:string); // present the changed files in the diff-tool and ask the user if he want to save the changes.
+    procedure RevertChange(_filename:string);  // looks if a _old-file exists
+    procedure UpdateProjectFiles;
     function RemoveProjectFromProjectGroup:boolean;
     function ReCompileAndInstallAll:boolean;
     procedure AutoSaveBackup(_Lines:TStrings);
@@ -1718,22 +1720,17 @@ end;
   Author:    herzogs2
   Date:      06-Mai-2010
   Arguments: None
-  Result:    boolean
+  Result:
   Description: this method tries to update/correct the file dpk/cfg/dproj/bdsproj
 -----------------------------------------------------------------------------}
-function TDMMain.UpdateProjectFiles: boolean;
-resourcestring
-cSaveChanges='Save changes ?';
-cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
+procedure TDMMain.UpdateProjectFiles;
 var
-_NewConfigFilename:string;
-_NewPackageFilename:string;
+_ChangedFiles:string;
 begin
-  result:=false;
   if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then exit;    // if DPT is allowed to change the files
 
 // try to update cfg/dproj/bdsproj files.
-  if WriteSettingsToDelphi(FBPGPath,
+  _ChangedFiles:=WriteSettingsToDelphi(FBPGPath,   // prepare the new delphi settings files (cfg,dproj,bdsproj,dof).
                            FCurrentConfigFilename,
                            FCurrentConditions,
                            GetGlobalSearchPath,
@@ -1741,27 +1738,67 @@ begin
                            FCurrentBPLOutputPath,
                            FCurrentDCUOutputPath,
                            ApplicationSettings.BoolValue('Application/SilentMode',5),
-                           FCurrentDelphiVersion) then begin // write information to the delphi settings file (cfg,dproj,bdsproj).
-
-    _NewConfigFilename:=ChangeFileExt(FCurrentConfigFilename,ExtractFileExt(FCurrentConfigFilename)+'_new');
-    if Application.MessageBox(pchar(cDPTSuggestsSomeChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
-      if CompareFiles(FCurrentConfigFilename,_NewConfigFilename) then begin
-        if Application.MessageBox(pchar(cSaveChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then result:=CopyFile(pchar(_NewConfigFilename),pchar(FCurrentConfigFilename),false);
-      end;
-    end else result:=CopyFile(pchar(_NewConfigFilename),pchar(FCurrentConfigFilename),false);
-  end;
+                           FCurrentProjectType,
+                           FCurrentDelphiVersion);
+  ConfirmChanges(_ChangedFiles);
 
 // try to update dpk/dproj files.
   if FCurrentProjectType=tp_bpl then begin // it is a package
-    if WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5)) then begin // then prepare a new file.
-      _NewPackageFilename:=ChangeFileExt(FCurrentProjectFilename,ExtractFileExt(FCurrentProjectFilename)+'_new');
-      if Application.MessageBox(pchar(cDPTSuggestsSomeChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin  // ask the user if he wants to review
-        if CompareFiles(FCurrentProjectFilename,_NewPackageFilename) then begin
-          if Application.MessageBox(pchar(cSaveChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then result:=CopyFile(pchar(_NewPackageFilename),pchar(FCurrentProjectFilename),false);
-        end;
-      end else result:=CopyFile(pchar(_NewPackageFilename),pchar(FCurrentProjectFilename),false);
-    end;
+    _ChangedFiles:= WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5)); // then prepare a new file.
+    ConfirmChanges(_ChangedFiles);
   end;
+end;
+
+
+{-----------------------------------------------------------------------------
+  Procedure: ConfirmChanges
+  Author:    herzogs2
+  Date:      07-Mai-2010
+  Arguments: _ChangedFiles:string
+  Result:    None
+  Description: present the changed files in the diff-tool and ask the user
+               if he want to save the changes.
+-----------------------------------------------------------------------------}
+procedure TDMMain.ConfirmChanges(_ChangedFiles:string);
+resourcestring
+cSaveChanges='Save changes ?';
+cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
+var
+_NewFilename:string;
+_OldFilename:string;
+_NewFileExt:string;
+begin
+  if _ChangedFiles='' then exit;
+  _NewFileExt:=GetField(';',_ChangedFiles);
+  while _NewFileExt<>'' do begin
+    _NewFilename:=ChangeFileExt(FCurrentConfigFilename,_NewFileExt);
+    _OldFilename:=copy(_NewFilename,1,length(_NewFilename)-4);
+    if not ApplicationSettings.BoolValue('Application/SilentMode',5) then
+      if Application.MessageBox(pchar(cDPTSuggestsSomeChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then CompareFiles(_OldFilename,_NewFilename);
+
+    if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
+       ((not ApplicationSettings.BoolValue('Application/SilentMode',5)) and (Application.MessageBox(pchar(cSaveChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
+      if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
+      if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
+                                                                     else WriteLog('Changed the file ''%s''',[_OldFilename]);
+    end;
+    _NewFileExt:=GetField(';',_ChangedFiles);
+  end;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: RevertChange
+  Author:    herzogs2
+  Date:      07-Mai-2010
+  Arguments: _filename: string
+  Result:    None  
+  Description:  look if a '_old' file exists and if so then copy back.
+-----------------------------------------------------------------------------}
+procedure TDMMain.RevertChange(_filename: string);
+begin
+  if not fileexists(_filename+'_old') then exit;
+  if CopyFile(pchar(_filename+'_old'),pchar(_filename),false) then WriteLog('Reverted last changes of file <%s>.',[_filename])
+                                                               else WriteLog('Could not change file <%s>.',[_filename]);
 end;
 
 end.
