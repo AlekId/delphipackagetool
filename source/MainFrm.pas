@@ -4,9 +4,12 @@
  Purpose:
  History:
 
+1.9.0.136 ( 10.05.2010 )
+- SH: added feature to Undo the last changes.
+
 1.9.0.135 ( 06.05.2010 )
 - SH: re-work of functions which change dpk,dproj,bdsproj,cfg,dof files.
-- SH added feature to setup/integrate an external diff-tool. 
+- SH: added feature to setup/integrate an external diff-tool.
 
 1.9.0.134 ( 27.04.2010 )
 - SH: improvements for LIBSuffix.
@@ -211,6 +214,7 @@ type
     actRecompileAll: TAction;
     actRevertChanges: TAction;
     RevertChange1: TMenuItem;
+    mniRevertChanges: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -256,6 +260,7 @@ type
     procedure ShowProjectGroup1Click(Sender: TObject);
     procedure actRecompileAllExecute(Sender: TObject);
     procedure actRevertChangesExecute(Sender: TObject);
+    procedure mniRevertChangesClick(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -275,6 +280,7 @@ type
     procedure SetDelphiVersionCombobox(const _DelphiVersion:integer);
     procedure PrepareHint;
     procedure FillProjectGrid;
+    function  ExtractFilenameFromLog:string;    
     procedure DoWriteLog(Sender:TObject;const _msg:string);
     procedure DoDelphiVersionChangeEvent(Sender:TObject;const _DelphiVersion:integer);
     procedure DoProjectGroupOpen(Sender:TObject);
@@ -1042,6 +1048,39 @@ begin
   end else Application.MessageBox(pchar(format(cProblemToRemoveProject,[DMMain.CurrentProjectFilename])),pchar(cError),MB_ICONERROR or MB_OK);
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: ExtractFilenameFromLog
+  Author:    sam
+  Date:      09-Mai-2010
+  Arguments: None
+  Result:    string
+  Description:
+-----------------------------------------------------------------------------}
+function TFrmMain.ExtractFilenameFromLog:string;
+var
+_pos:integer;
+begin
+  result:=mmoLogFile.SelText;
+  if IsFilenameValid(result) then exit;
+  _pos:=Pos('''',result);
+  if _pos>0 then begin
+    while _pos>0 do begin
+      delete(result,_pos,1);
+      _pos:=Pos('''',result);
+    end;
+    exit;
+  end;
+  _pos:=Pos('(',result);
+  if _pos>0 then begin
+    result:=Copy(result,1,_pos-1);
+    _pos:=Pos(''+#$D,result);
+    while _pos>0 do begin
+      delete(result,_pos,1);
+      _pos:=Pos(''+#$D,result);
+    end;
+  end;
+end;
+
 {-----------------------------------------------------------------------------
   Procedure: SearchFileSelected
   Author:    sam
@@ -1052,40 +1091,21 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.SearchFileSelected;
 var
-_Seltext:string;
+_filename:string;
 _pos:integer;
 _fileExt:string;
 _LineNo:string;
 begin
   FExternalEditorFilename:='';
   FExternalEditorLineNo:=0;
-  _Seltext:=mmoLogFile.SelText;
-  if not IsFilenameValid(_SelText) then begin
-    _pos:=Pos('''',_SelText);
-    if _pos>0 then begin
-      while _pos>0 do begin
-        delete(_SelText,_pos,1);
-        _pos:=Pos('''',_SelText);
-      end;
-    end else begin
-      _pos:=Pos('(',_SelText);
-      if _pos>0 then begin
-        _SelText:=Copy(_SelText,1,_pos-1);
-        _pos:=Pos(''+#$D,_SelText);
-        while _pos>0 do begin
-          delete(_SelText,_pos,1);
-          _pos:=Pos(''+#$D,_SelText);
-        end;
-      end;
-    end;
-  end;
-  FExternalEditorFilename:=trim(_SelText);
+  _filename:=ExtractFilenameFromLog;
+  FExternalEditorFilename:=trim(_filename);
   _fileExt:=ExtractFileExt(FExternalEditorFilename);
   _pos:=pos('(',_FileExt);
   if _pos>0 then begin
     _FileExt:=copy(_FileExt,1,_pos-1);
     FExternalEditorFilename:=ExtractFilenameOnly(FExternalEditorFilename)+_FileExt;
-    _fileExt:=ExtractFileExt(trim(_SelText));
+    _fileExt:=ExtractFileExt(trim(_filename));
     _lineNo:=copy(_FileExt,_pos+1,length(_FileExt)-_pos-1);
     StringToInteger(_lineNo,FExternalEditorLineNo);
     trace(5,'TFrmMain.SearchFileSelected: Extracted LineNo <%d>.',[FExternalEditorLineNo]);
@@ -1612,35 +1632,27 @@ end;
   Date:      07-Mai-2010
   Arguments: Sender: TObject
   Result:    None
-  Description: 
+  Description:
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actRevertChangesExecute(Sender: TObject);
 var
-_Seltext:string;
-_pos:integer;
+_filename:string;
 begin
-  _Seltext:=mmoLogFile.SelText;
-  if not IsFilenameValid(_SelText) then begin
-    _pos:=Pos('''',_SelText);
-    if _pos>0 then begin
-      while _pos>0 do begin
-        delete(_SelText,_pos,1);
-        _pos:=Pos('''',_SelText);
-      end;
-    end else begin
-      _pos:=Pos('(',_SelText);
-      if _pos>0 then begin
-        _SelText:=Copy(_SelText,1,_pos-1);
-        _pos:=Pos(''+#$D,_SelText);
-        while _pos>0 do begin
-          delete(_SelText,_pos,1);
-          _pos:=Pos(''+#$D,_SelText);
-        end;
-      end;
-    end;
-  end;
+  _filename:=ExtractFilenameFromLog;
+  DMMain.RevertChange(_filename);
+end;
 
-  DMMain.RevertChange(_Seltext);
+{*-----------------------------------------------------------------------------
+  Procedure: mniRevertChangesClick
+  Author:    sam
+  Date:      10-Mai-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TFrmMain.mniRevertChangesClick(Sender: TObject);
+begin
+  DMMain.ConfirmChanges('.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;',true);
 end;
 
 end.

@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
   Left = 0
-  Top = 40
+  Top = 0
   Width = 1061
-  Height = 740
+  Height = 648
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,7 +25,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 516
+    Top = 424
     Width = 1053
     Height = 12
     Cursor = crVSplit
@@ -33,7 +33,7 @@ object FrmMain: TFrmMain
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 528
+    Top = 436
     Width = 1053
     Height = 166
     Align = alBottom
@@ -49,7 +49,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 145
     Width = 1053
-    Height = 371
+    Height = 279
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -545,6 +545,10 @@ object FrmMain: TFrmMain
     end
     object actCleanUpDelphi1: TMenuItem
       Action = actResetDelphi
+    end
+    object mniRevertChanges: TMenuItem
+      Caption = 'Revert Changes'
+      OnClick = mniRevertChangesClick
     end
   end
   object SaveDialog1: TSaveDialog

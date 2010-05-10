@@ -131,7 +131,7 @@ type
     NVBAppExec1: TNVBAppExec;
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
-    procedure ConfirmChanges(_ChangedFiles:string); // present the changed files in the diff-tool and ask the user if he want to save the changes.
+    procedure ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
     procedure UpdateProjectFiles;
     function RemoveProjectFromProjectGroup:boolean;
@@ -1740,12 +1740,12 @@ begin
                            ApplicationSettings.BoolValue('Application/SilentMode',5),
                            FCurrentProjectType,
                            FCurrentDelphiVersion);
-  ConfirmChanges(_ChangedFiles);
+  ConfirmChanges(_ChangedFiles,false);
 
 // try to update dpk/dproj files.
   if FCurrentProjectType=tp_bpl then begin // it is a package
     _ChangedFiles:= WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5)); // then prepare a new file.
-    ConfirmChanges(_ChangedFiles);
+    ConfirmChanges(_ChangedFiles,false);
   end;
 end;
 
@@ -1759,28 +1759,38 @@ end;
   Description: present the changed files in the diff-tool and ask the user
                if he want to save the changes.
 -----------------------------------------------------------------------------}
-procedure TDMMain.ConfirmChanges(_ChangedFiles:string);
+procedure TDMMain.ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean);
 resourcestring
-cSaveChanges='Save changes ?';
+cSaveChanges='Save changes to file <%s> ?';
 cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
+cDPTFoundOldVersionOfFile='DelphiPackageTool could undo the latest changes. Do you want to review them in the Diff-Tool ?';
 var
 _NewFilename:string;
 _OldFilename:string;
 _NewFileExt:string;
+_msg:string;
 begin
   if _ChangedFiles='' then exit;
   _NewFileExt:=GetField(';',_ChangedFiles);
   while _NewFileExt<>'' do begin
     _NewFilename:=ChangeFileExt(FCurrentConfigFilename,_NewFileExt);
     _OldFilename:=copy(_NewFilename,1,length(_NewFilename)-4);
-    if not ApplicationSettings.BoolValue('Application/SilentMode',5) then
-      if Application.MessageBox(pchar(cDPTSuggestsSomeChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then CompareFiles(_OldFilename,_NewFilename);
+    if fileexists(_NewFilename) and
+       fileexists(_OldFilename) then begin
+      if _revert then _msg:=cDPTFoundOldVersionOfFile
+                 else _msg:=cDPTSuggestsSomeChanges;
+      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then
+        if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
+          if _Revert then CompareFiles(_NewFilename,_OldFilename)
+                     else CompareFiles(_OldFilename,_NewFilename);
+        end;
 
-    if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
-       ((not ApplicationSettings.BoolValue('Application/SilentMode',5)) and (Application.MessageBox(pchar(cSaveChanges),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
-      if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
-      if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
-                                                                     else WriteLog('Changed the file ''%s''',[_OldFilename]);
+      if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
+         ((not ApplicationSettings.BoolValue('Application/SilentMode',5)) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
+        if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
+        if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
+                                                                       else WriteLog('Changed the file ''%s''',[_OldFilename]);
+      end;
     end;
     _NewFileExt:=GetField(';',_ChangedFiles);
   end;
@@ -1798,7 +1808,7 @@ procedure TDMMain.RevertChange(_filename: string);
 begin
   if not fileexists(_filename+'_old') then exit;
   if CopyFile(pchar(_filename+'_old'),pchar(_filename),false) then WriteLog('Reverted last changes of file <%s>.',[_filename])
-                                                               else WriteLog('Could not change file <%s>.',[_filename]);
+                                                              else WriteLog('Could not change file <%s>.',[_filename]);
 end;
 
 end.
