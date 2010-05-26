@@ -490,7 +490,7 @@ end;
   Date:      05-Jun-2008
   Arguments: const _DelphiVersion:integer
   Result:    boolean
-  Description:
+  Description: this method returns true if an invalid key from the registry gets deleted.
 -----------------------------------------------------------------------------}
 function  VerifyRegistry(const _DelphiVersion:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 begin
@@ -1014,6 +1014,7 @@ end;
   Result:    boolean
   Description: iterate through the known packages and check if the referenced
                file really exists. if not then delete the registry entry.
+               This method returns true if an invalid key get's deleted from the registry.
 -----------------------------------------------------------------------------}
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer):boolean; // find registry-entries without the packages
 var
@@ -1102,9 +1103,9 @@ end;
   Procedure: CleanUpPackagesByBPLPath
   Author:    sam
   Date:      05-Jul-2006
-  Arguments: const _DelphiVersion:integerconst _DelphiBINPath:stringconst _deletefiles:boolean
+  Arguments: const _DelphiVersion:integerconst _BPLPath:stringconst _deletefiles:boolean
   Result:    boolean
-  Description:
+  Description: find all files .dcp/.bpl files in the folder <_BPLPath> and delete them. remove the registry entries also.
 -----------------------------------------------------------------------------}
 function CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 var
@@ -1129,9 +1130,9 @@ begin
       RemoveValueFromRegistry(HKEY_CURRENT_USER ,_PackageKey+'Disabled Packages',_bplpath+_filename);
       RemoveValueFromRegistry(HKEY_LOCAL_MACHINE,_PackageKey+'Disabled Packages',_bplpath+_filename);
       if _deletefiles then begin
-        uDPTDelphiPackage.DeleteFile(_bplpath+_filename);
+        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
         _filename:=changefileext(_filename,'.dcp');
-        uDPTDelphiPackage.DeleteFile(_bplpath+_filename);
+        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
       end;
     end;
     _fileList.clear;
@@ -1139,15 +1140,15 @@ begin
     for i:=0 to _filelist.count-1 do begin
       _filename:=_filelist[i];
       if _deletefiles then begin
-        uDPTDelphiPackage.DeleteFile(_bplpath+_filename);
+        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
         _filename:=changefileext(_filename,'.bpl');
-        uDPTDelphiPackage.DeleteFile(_bplpath+_filename);
+        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
       end;
     end;
   finally
     _fileList.free;
   end;
-  result:=VerifyRegistry(_DelphiVersion);
+  VerifyRegistry(_DelphiVersion);
 end;
 
 

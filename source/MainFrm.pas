@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.137 ( 26.05.2010 )
+- SH: changes to method <CleanUpPackagesByBPLPath> about return value.
+
 1.9.0.136 ( 10.05.2010 )
 - SH: added feature to Undo the last changes.
 
