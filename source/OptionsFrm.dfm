@@ -1,10 +1,10 @@
 object FrmOptions: TFrmOptions
-  Left = 274
-  Top = 51
+  Left = 268
+  Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 717
-  ClientWidth = 710
+  ClientHeight = 701
+  ClientWidth = 707
   Color = clBtnFace
   Constraints.MinHeight = 612
   Constraints.MinWidth = 710
@@ -32,13 +32,13 @@ object FrmOptions: TFrmOptions
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 710
-    Height = 676
+    Width = 707
+    Height = 660
     Align = alClient
     TabOrder = 4
     object btnSelectCodeEditor: TSpeedButton
       Left = 480
-      Top = 456
+      Top = 408
       Width = 23
       Height = 22
       Caption = '...'
@@ -46,7 +46,7 @@ object FrmOptions: TFrmOptions
     end
     object lblSourceCodeEditor: TLabel
       Left = 8
-      Top = 440
+      Top = 392
       Width = 92
       Height = 13
       Caption = 'Source Code Editor'
@@ -60,21 +60,21 @@ object FrmOptions: TFrmOptions
     end
     object lblCompilerSwitches: TLabel
       Left = 8
-      Top = 360
+      Top = 312
       Width = 86
       Height = 13
       Caption = 'Compiler Switches'
     end
     object lblBeforeInstallAll: TLabel
       Left = 8
-      Top = 520
+      Top = 472
       Width = 104
       Height = 13
       Caption = 'On Before <Install All>'
     end
     object btnSelectOnBeforeInstallAll: TSpeedButton
       Left = 656
-      Top = 536
+      Top = 488
       Width = 23
       Height = 22
       Caption = '...'
@@ -82,14 +82,14 @@ object FrmOptions: TFrmOptions
     end
     object lblAfterInstallAll: TLabel
       Left = 8
-      Top = 560
+      Top = 512
       Width = 95
       Height = 13
       Caption = 'On After <Install All>'
     end
     object btnOnAfterInstallAll: TSpeedButton
       Left = 656
-      Top = 536
+      Top = 528
       Width = 23
       Height = 22
       Caption = '...'
@@ -97,36 +97,51 @@ object FrmOptions: TFrmOptions
     end
     object lblLibSuffix: TLabel
       Left = 8
-      Top = 400
+      Top = 352
       Width = 43
       Height = 13
       Caption = 'Lib-Suffix'
     end
     object lblSourceEditorParams: TLabel
       Left = 520
-      Top = 440
+      Top = 392
       Width = 53
       Height = 13
       Caption = 'Parameters'
     end
     object lblDiffTool: TLabel
       Left = 8
-      Top = 480
+      Top = 432
       Width = 40
       Height = 13
       Caption = 'Diff-Tool'
     end
     object btnDiffTool: TSpeedButton
       Left = 656
-      Top = 496
+      Top = 448
       Width = 23
       Height = 22
       Caption = '...'
       OnClick = btnDiffToolClick
     end
+    object lblOnBeforeBuildProject: TLabel
+      Left = 8
+      Top = 552
+      Width = 187
+      Height = 13
+      Caption = 'On Before <Build Project/Package/Dll>'
+    end
+    object btnOnBeforeBuildProject: TSpeedButton
+      Left = 656
+      Top = 568
+      Width = 23
+      Height = 22
+      Caption = '...'
+      OnClick = btnOnBeforeBuildProjectClick
+    end
     object edtCodeEditor: TEdit
       Left = 8
-      Top = 456
+      Top = 408
       Width = 465
       Height = 21
       Hint = 'Define here your favorit source code editor.'
@@ -136,7 +151,7 @@ object FrmOptions: TFrmOptions
     end
     object edtCompilerSwitches: TEdit
       Left = 8
-      Top = 376
+      Top = 328
       Width = 641
       Height = 21
       TabOrder = 1
@@ -144,7 +159,7 @@ object FrmOptions: TFrmOptions
     end
     object btnAddpath: TBitBtn
       Left = 8
-      Top = 320
+      Top = 272
       Width = 233
       Height = 25
       Caption = 'Add Path'
@@ -167,7 +182,7 @@ object FrmOptions: TFrmOptions
     end
     object edtBeforeInstallAll: TEdit
       Left = 8
-      Top = 536
+      Top = 488
       Width = 641
       Height = 21
       Hint = 
@@ -179,7 +194,7 @@ object FrmOptions: TFrmOptions
     end
     object edtAfterInstallAll: TEdit
       Left = 8
-      Top = 576
+      Top = 528
       Width = 641
       Height = 21
       Hint = 
@@ -245,14 +260,14 @@ object FrmOptions: TFrmOptions
     end
     object edtLibSuffix: TEdit
       Left = 8
-      Top = 416
+      Top = 368
       Width = 121
       Height = 21
       TabOrder = 9
     end
     object edtSourceEditorParams: TEdit
       Left = 520
-      Top = 456
+      Top = 408
       Width = 158
       Height = 21
       Hint = 
@@ -281,7 +296,7 @@ object FrmOptions: TFrmOptions
     end
     object edtDiffTool: TEdit
       Left = 8
-      Top = 496
+      Top = 448
       Width = 641
       Height = 21
       Hint = 'Define here your favorit source code editor.'
@@ -289,11 +304,23 @@ object FrmOptions: TFrmOptions
       ShowHint = True
       TabOrder = 12
     end
+    object edtOnBeforeBuildProject: TEdit
+      Left = 8
+      Top = 568
+      Width = 641
+      Height = 21
+      Hint = 
+        'The file defined here will be executed when button <Install All>' +
+        ' is pressed.'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 13
+    end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 676
-    Width = 710
+    Top = 660
+    Width = 707
     Height = 41
     Align = alBottom
     TabOrder = 3
@@ -353,13 +380,13 @@ object FrmOptions: TFrmOptions
     Left = 8
     Top = 24
     Width = 689
-    Height = 289
+    Height = 233
     ScrollBars = ssBoth
     TabOrder = 0
   end
   object btnAddDefaultPath: TBitBtn
     Left = 480
-    Top = 320
+    Top = 272
     Width = 217
     Height = 25
     Caption = 'Add Delphi Default Directories'
@@ -382,7 +409,7 @@ object FrmOptions: TFrmOptions
   end
   object btnVerifyDirectories: TBitBtn
     Left = 248
-    Top = 320
+    Top = 272
     Width = 225
     Height = 25
     Caption = 'Verify Directories'

@@ -3,6 +3,8 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+1.9.0.138 ( 04.08.2010 )
+- SH: started to add functions to set the projects VersionNumber.
 
 1.9.0.137 ( 26.05.2010 )
 - SH: changes to method <CleanUpPackagesByBPLPath> about return value.
@@ -218,6 +220,7 @@ type
     actRevertChanges: TAction;
     RevertChange1: TMenuItem;
     mniRevertChanges: TMenuItem;
+    SetProjectVersion1: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -316,7 +319,7 @@ uses
   BPGEditorFrm,
   StartUpInfoFrm,
   BPLSearchFrm,
-  MainDM;
+  MainDM, VersionFrm;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.actSelectBPGFileExecute
@@ -1657,6 +1660,7 @@ procedure TFrmMain.mniRevertChangesClick(Sender: TObject);
 begin
   DMMain.ConfirmChanges('.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;',true);
 end;
+
 
 end.
 

@@ -15,7 +15,8 @@ uses
   uDPTJclFuncs in 'uDPTJclFuncs.pas',
   uDPTDelphiPackage in 'uDPTDelphiPackage.pas',
   uDPTSettings in 'uDPTSettings.pas',
-  uDPTMisc in 'uDPTMisc.pas';
+  uDPTMisc in 'uDPTMisc.pas',
+  VersionFrm in 'VersionFrm.pas' {FrmVersion};
 
 {$R *.res}
 

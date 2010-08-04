@@ -69,6 +69,9 @@ type
     lblDiffTool: TLabel;
     edtDiffTool: TEdit;
     btnDiffTool: TSpeedButton;
+    lblOnBeforeBuildProject: TLabel;
+    edtOnBeforeBuildProject: TEdit;
+    btnOnBeforeBuildProject: TSpeedButton;
     procedure btnAddPathClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -83,6 +86,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure cbxAutoBackupExit(Sender: TObject);
     procedure btnDiffToolClick(Sender: TObject);
+    procedure btnOnBeforeBuildProjectClick(Sender: TObject);
   private
     FSearchPaths:TStrings;
     function VerifySettings:boolean;
@@ -557,6 +561,21 @@ begin
   OpenDialog1.DefaultExt:='.exe';
   if not OpenDialog1.execute then exit;
   edtDiffTool.Text:=OpenDialog1.FileName;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: btnOnBeforeBuildProjectClick
+  Author:    sam
+  Date:      23-Jul-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TFrmOptions.btnOnBeforeBuildProjectClick(Sender: TObject);
+begin
+  OpenDialog1.Filter:='Executeable Files|*.exe;*.bat;*.com';
+  if not OpenDialog1.execute then exit;
+  edtOnBeforeBuildProject.Text:=RelativePath(DMMain.BPGPath,OpenDialog1.FileName,DMMain.CurrentDelphiVersion);
 end;
 
 end.

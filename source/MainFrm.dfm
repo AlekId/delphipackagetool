@@ -550,6 +550,9 @@ object FrmMain: TFrmMain
       Caption = 'Revert Changes'
       OnClick = mniRevertChangesClick
     end
+    object SetProjectVersion1: TMenuItem
+      Action = DMMain.actSetProjectVersion
+    end
   end
   object SaveDialog1: TSaveDialog
     DefaultExt = '.ini'

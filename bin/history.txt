@@ -1,3 +1,7 @@
+
+1.9.0.138 ( 04.08.2010 )
+- SH: started to add functions to set the projects VersionNumber.
+
 1.9.0.137 ( 26.05.2010 )
 - SH: changes to method <CleanUpPackagesByBPLPath> about return value.
 

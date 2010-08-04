@@ -111,7 +111,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=0
-Build=137
+Build=138
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.0.137
+FileVersion=1.9.0.138
 InternalName=
 LegalCopyright=Samuel Herzog
 LegalTrademarks=
@@ -130,8 +130,6 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.1.7.2
 Comments=
-[Excluded Packages]
-C:\Programme\Intraweb 8.0\LibD7\dclIntraweb_80_70.bpl=Intraweb 8.0 Design Package for Delphi 7
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source

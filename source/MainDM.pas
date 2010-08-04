@@ -46,6 +46,7 @@ type
     actFindDCPandBPL: TAction;
     actDeleteFiles: TAction;
     actRecompileAllPackages: TAction;
+    actSetProjectVersion: TAction;
     procedure DataModuleCreate(Sender: TObject);
     procedure ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
     procedure ApplicationSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
@@ -67,6 +68,7 @@ type
     procedure actFindDCPandBPLExecute(Sender: TObject);
     procedure actDeleteFilesExecute(Sender: TObject);
     procedure actRecompileAllPackagesExecute(Sender: TObject);
+    procedure actSetProjectVersionExecute(Sender: TObject);
   private
     FSuccess: boolean;
     FDelphiWasStartedOnApplicationStart: Boolean;
@@ -131,6 +133,7 @@ type
     NVBAppExec1: TNVBAppExec;
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
+    function GetCurrentPackageVersion:string;
     procedure ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
     procedure UpdateProjectFiles;
@@ -148,6 +151,8 @@ type
     function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
     procedure AbortCompile;
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
+    function  SetProjectVersion(_filename:string;Major,Minor,Release,Build:integer):boolean;
+    function  IncreaseProjectBuildNo(const _filename: string): boolean;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
@@ -194,7 +199,7 @@ uses
   BPLSearchFrm,
   PathSelectionFrm,
   uDPTEnvironmentPath,
-  uDPTMisc;
+  uDPTMisc, VersionFrm;
 
 {$R *.dfm}
 
@@ -1426,7 +1431,7 @@ begin
 
   if FSuccess then
   begin
-    if assigned(FOnCurrentProjectCompileStateChanged) then FOnCurrentProjectCompileStateChanged(self,FCurrentProjectFilename,'Compiled ok!',DateTimeToStr(Now),GetPackageVersion(FCurrentProjectFilename,FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentProjectType),format('%4.3f',[GetPackageSize(FCurrentProjectFilename,FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentProjectType) / (1024*1024)]),FCurrentProjectNo,FCurrentPackageDescription);
+    if assigned(FOnCurrentProjectCompileStateChanged) then FOnCurrentProjectCompileStateChanged(self,FCurrentProjectFilename,'Compiled ok!',DateTimeToStr(Now),GetCurrentPackageVersion,format('%4.3f',[GetPackageSize(FCurrentProjectFilename,FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentProjectType) / (1024*1024)]),FCurrentProjectNo,FCurrentPackageDescription);
     trace(2,'Successfully compiled Project <%s>.',[FCurrentProjectFilename]);
   end
   else begin
@@ -1810,5 +1815,92 @@ begin
   if CopyFile(pchar(_filename+'_old'),pchar(_filename),false) then WriteLog('Reverted last changes of file <%s>.',[_filename])
                                                               else WriteLog('Could not change file <%s>.',[_filename]);
 end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: SetProjectVersion
+  Author:    sam
+  Date:      23-Jul-2010
+  Arguments: const _filename: string
+  Result:    boolean
+  Description: set the project version.
+-----------------------------------------------------------------------------}
+function TDMMain.SetProjectVersion(_filename:string;Major,Minor,Release,Build:integer): boolean;
+begin
+  result:=false;
+  if not fileexists(_filename) then begin
+    trace(2,'Problem in TDMMain.SetProjectVersion: File <%s> not found.',[_filename]);
+    exit;
+  end;
+  NVBAppExec1.ExeName:=cSetVersionApplicationName;
+  NVBAppExec1.ExePath:=extractfilepath(application.exename);
+  NVBAppExec1.ExeParams:=format('-v%d.%d.%d.%d -s "%s"',[Major,Minor,Release,Build,_filename]);
+  if not NVBAppExec1.Execute then exit;
+  result:=true;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: IncreaseProjectBuildNo
+  Author:    sam
+  Date:      04-Aug-2010
+  Arguments: const _filename: string
+  Result:    boolean
+  Description: increase the build no.
+-----------------------------------------------------------------------------}
+function TDMMain.IncreaseProjectBuildNo(const _filename: string): boolean;
+begin
+  result:=false;
+  if not fileexists(_filename) then begin
+    trace(2,'Problem in TDMMain.IncreaseProjectBuildNo: File <%s> not found.',[_filename]);
+    exit;
+  end;
+  NVBAppExec1.ExeName:=cSetVersionApplicationName;
+  NVBAppExec1.ExePath:=extractfilepath(application.exename);
+  NVBAppExec1.ExeParams:='-i -s "'+_filename+'"';
+  if not NVBAppExec1.Execute then exit;
+  result:=true;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: GetCurrentPackageVersion
+  Author:    sam
+  Date:      04-Aug-2010
+  Arguments: None
+  Result:    string
+  Description: read the version number of the current project
+-----------------------------------------------------------------------------}
+function TDMMain.GetCurrentPackageVersion: string;
+begin
+  result:=GetPackageVersion(FCurrentProjectFilename,FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentProjectType)
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: actSetProjectVersionExecute
+  Author:    sam
+  Date:      23-Jul-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: show a version dialog to let the user set a version number
+               for the current project.
+-----------------------------------------------------------------------------}
+procedure TDMMain.actSetProjectVersionExecute(Sender: TObject);
+var
+_Major,_Minor,_Release,_Build:integer;
+_sVersion:string;
+begin
+  _Major:=0;
+  _Minor:=0;
+  _Release:=0;
+  _Build:=0;
+  _sVersion:=GetCurrentPackageVersion;
+  if _sVersion<>cNoVersion then begin
+    StringToInteger(GetField('.',_sVersion),_Major);
+    StringToInteger(GetField('.',_sVersion),_Minor);
+    StringToInteger(GetField('.',_sVersion),_Release);
+    StringToInteger(GetField('.',_sVersion),_Build);
+  end;
+  if not ShowVersionDlg(FCurrentProjectFilename,_Major,_Minor,_Release,_Build) then exit;
+  SetProjectVersion(FCurrentProjectFilename,_Major,_Minor,_Release,_Build);
+end;
+
 
 end.

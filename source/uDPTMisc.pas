@@ -20,6 +20,7 @@ const
   cValidChars=['0','1','2','3','4','5','6','7','8','9','-'];
   cValidFilenameChars=['a'..'z','A'..'Z','0'..'9','.','_','&',' ','#','%','(',')','%','-','+','$'];
   cNoVersion='No Version';
+  cSetVersionApplicationName='SetVersion.exe';
 
 {$H+}
 type
