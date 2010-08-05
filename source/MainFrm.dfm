@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
-  Left = 0
-  Top = 0
+  Left = 128
+  Top = 289
   Width = 1061
   Height = 648
   Caption = 'Package Group Rebuilder/Installer'
@@ -359,6 +359,10 @@ object FrmMain: TFrmMain
     object actRevertChanges: TAction
       Caption = 'Revert Change'
       OnExecute = actRevertChangesExecute
+    end
+    object actSetVersionSelectedProjects: TAction
+      Caption = 'actSetVersionSelectedProjects'
+      OnExecute = actSetVersionSelectedProjectsExecute
     end
   end
   object OpenDialog1: TOpenDialog

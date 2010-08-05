@@ -122,8 +122,10 @@ type
     procedure SetBPGFilename(const Value: string);
     procedure CheckDelphiRunning;
     procedure ExecuteApp;
-    function PrepareEXEParams(_filename:string;_lineNo:integer;_SourceCodeEditorParams:string):string;
+    function  PrepareEXEParams(_filename:string;_lineNo:integer;_SourceCodeEditorParams:string):string;
     procedure AdaptSearchPath; // replace $(DELPHI) with $(BDS) when the user switches delphi version
+    function  SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer):boolean;
+    function  GetProjectVersionOfFile(_filename:string;var Major,Minor,Release,Build:integer):boolean;
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -151,7 +153,7 @@ type
     function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
     procedure AbortCompile;
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
-    function  SetProjectVersion(_filename:string;Major,Minor,Release,Build:integer):boolean;
+    procedure SetProjectVersion(_filename:string);
     function  IncreaseProjectBuildNo(const _filename: string): boolean;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
@@ -193,6 +195,7 @@ implementation
 
 uses
   Forms,
+  dialogs,
   Windows,
   Controls,
   RemovePackagesQuestionFrm,
@@ -243,7 +246,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CompareFiles
-  Author:    herzogs2
+  Author:    
   Date:      06-Mai-2010
   Arguments: _filename1,_filename2:string
   Result:    None
@@ -465,7 +468,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TDMMain.GetSearchPath
-  Author:    herzogs2
+  Author:    
   Date:      27-Sep-2002
   Arguments: None
   Result:    string
@@ -1008,8 +1011,8 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: TDMMain.ReCompileAndInstallAll:boolean;
-  Author:    herzogs2
+  Procedure: ReCompileAndInstallAll:boolean;
+  Author:    sam
   Date:      22-Aug-2002
   Arguments: Sender: TObject
   Result:    None
@@ -1328,7 +1331,7 @@ begin
 end;
 
 {*-----------------------------------------------------------------------------
-  Procedure: 
+  Procedure: actUninstallAllPackagesExecute
   Author:    sam
   Date:      12-Mrz-2008
   Arguments: Not available
@@ -1382,7 +1385,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CompilePackage
-  Author:    herzogs2
+  Author:    sam
   Date:      29-Mai-2008
   Arguments: const _updateCursor: boolean
   Result:    boolean
@@ -1722,7 +1725,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: UpdateProjectFiles
-  Author:    herzogs2
+  Author:    sam
   Date:      06-Mai-2010
   Arguments: None
   Result:
@@ -1757,7 +1760,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ConfirmChanges
-  Author:    herzogs2
+  Author:    sam
   Date:      07-Mai-2010
   Arguments: _ChangedFiles:string
   Result:    None
@@ -1803,7 +1806,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: RevertChange
-  Author:    herzogs2
+  Author:    sam
   Date:      07-Mai-2010
   Arguments: _filename: string
   Result:    None  
@@ -1817,18 +1820,18 @@ begin
 end;
 
 {*-----------------------------------------------------------------------------
-  Procedure: SetProjectVersion
+  Procedure: SetProjectVersionOfFile
   Author:    sam
   Date:      23-Jul-2010
   Arguments: const _filename: string
   Result:    boolean
   Description: set the project version.
 -----------------------------------------------------------------------------}
-function TDMMain.SetProjectVersion(_filename:string;Major,Minor,Release,Build:integer): boolean;
+function TDMMain.SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer): boolean;
 begin
   result:=false;
   if not fileexists(_filename) then begin
-    trace(2,'Problem in TDMMain.SetProjectVersion: File <%s> not found.',[_filename]);
+    trace(2,'Problem in TDMMain.SetProjectVersionOfFile: File <%s> not found.',[_filename]);
     exit;
   end;
   NVBAppExec1.ExeName:=cSetVersionApplicationName;
@@ -1873,6 +1876,33 @@ begin
   result:=GetPackageVersion(FCurrentProjectFilename,FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentProjectType)
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: SetProjectVersion
+  Author:    sam
+  Date:      05-Aug-2010
+  Arguments: _filename:string;Major,Minor,Release,Build:integer
+  Result:    None
+  Description: set the version of .dpr/.dpk/.dproj file.
+-----------------------------------------------------------------------------}
+procedure TDMMain.SetProjectVersion(_filename:string);
+resourcestring
+cNoVersionInfo='The project <%s> does not contain version information. Open the project in the Delphi IDE and edit the project options.';
+var
+_Major,_Minor,_Release,_Build:integer;
+begin
+  _Major:=0;
+  _Minor:=0;
+  _Release:=0;
+  _Build:=0;
+  if not GetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build) then begin
+    if ApplicationSettings.BoolValue('Application/SilentMode',5) then exit;
+    Application.MessageBox(pChar(format(cNoVersionInfo,[_filename])),pchar(cInformation),MB_ICONWARNING or MB_OK);
+    exit;
+  end;
+  if not ShowVersionDlg(_filename,_Major,_Minor,_Release,_Build) then exit;
+  SetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build);
+end;
+
 {*-----------------------------------------------------------------------------
   Procedure: actSetProjectVersionExecute
   Author:    sam
@@ -1883,24 +1913,59 @@ end;
                for the current project.
 -----------------------------------------------------------------------------}
 procedure TDMMain.actSetProjectVersionExecute(Sender: TObject);
-var
-_Major,_Minor,_Release,_Build:integer;
-_sVersion:string;
 begin
-  _Major:=0;
-  _Minor:=0;
-  _Release:=0;
-  _Build:=0;
-  _sVersion:=GetCurrentPackageVersion;
-  if _sVersion<>cNoVersion then begin
-    StringToInteger(GetField('.',_sVersion),_Major);
-    StringToInteger(GetField('.',_sVersion),_Minor);
-    StringToInteger(GetField('.',_sVersion),_Release);
-    StringToInteger(GetField('.',_sVersion),_Build);
-  end;
-  if not ShowVersionDlg(FCurrentProjectFilename,_Major,_Minor,_Release,_Build) then exit;
-  SetProjectVersion(FCurrentProjectFilename,_Major,_Minor,_Release,_Build);
+  SetProjectVersion(FCurrentProjectFilename);
 end;
 
+
+{-----------------------------------------------------------------------------
+  Procedure: GetProjectVersionOfFile
+  Author:    sam
+  Date:      05-Aug-2010
+  Arguments: _filename: string; var Major, Minor, Release, Build: integer
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
+function TDMMain.GetProjectVersionOfFile(_filename: string; var Major,Minor, Release, Build: integer): boolean;
+const
+cResTag='.res:';
+var
+_returnValue:cardinal;
+_Output:string;
+_Pos:integer;
+_sMajor,_sMinor,_sRelease,_sBuild:string;
+begin
+  result:=false;
+  if not fileexists(changefileext(_filename,'.res')) then begin
+    trace(2,'Problem in TDMMain.GetProjectVersionOfFile: File <%s> not found.',[changefileext(_filename,'.res')]);
+    exit;
+  end;
+  _returnValue:=WinExecAndWait(extractfilepath(application.exename)+cSetVersionApplicationName,
+                     '-p -s "'+_filename+'"',
+                     extractfilepath(application.exename),
+                     SW_HIDE,
+                     _Output);
+  if _returnValue<>0 then begin
+    trace(2,'Problem in TDMMain.GetProjectVersionOfFile: <%s> did not work correctly.',[extractfilepath(application.exename)+cSetVersionApplicationName]);
+    exit;
+  end;
+  _Output:=lowercase(_Output);
+  _pos:=Pos(cResTag,_Output);
+  if _pos=0 then begin
+    trace(2,'Problem in TDMMain.GetProjectVersionOfFile: Could not find Tag <%s> in output <%s>.',[cResTag,_Output]);
+    exit;
+  end;
+  delete(_output,1,_pos+4);
+  _Output:=trim(_output);
+  _sMajor:=GetField('.',_Output);
+  _sMinor:=GetField('.',_Output);
+  _sRelease:=GetField('.',_Output);
+  _sBuild:=GetField('.',_Output);
+  if not StringToInteger(_sMajor,Major) then exit;
+  if not StringToInteger(_sMinor,Minor) then exit;
+  if not StringToInteger(_sRelease,Release) then exit;
+  if not StringToInteger(_sBuild,Build) then exit;
+  result:=true;
+end;
 
 end.

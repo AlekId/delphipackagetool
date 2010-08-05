@@ -221,6 +221,7 @@ type
     RevertChange1: TMenuItem;
     mniRevertChanges: TMenuItem;
     SetProjectVersion1: TMenuItem;
+    actSetVersionSelectedProjects: TAction;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -267,6 +268,7 @@ type
     procedure actRecompileAllExecute(Sender: TObject);
     procedure actRevertChangesExecute(Sender: TObject);
     procedure mniRevertChangesClick(Sender: TObject);
+    procedure actSetVersionSelectedProjectsExecute(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -323,7 +325,7 @@ uses
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.actSelectBPGFileExecute
-  Author:    herzogs2
+  Author:    
   Date:      22-Aug-2002
   Arguments: Sender: TObject
   Result:    None
@@ -347,7 +349,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.FormShow
-  Author:    herzogs2
+  Author:    
   Date:      05-Dez-2002
   Arguments: Sender: TObject
   Result:    None
@@ -386,7 +388,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.FormCreate
-  Author:    herzogs2
+  Author:    
   Date:      29-Aug-2002
   Arguments: Sender: TObject
   Result:    None
@@ -434,7 +436,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.FormClose
-  Author:    herzogs2
+  Author:    
   Date:      05-Dez-2002
   Arguments: Sender: TObject; var Action: TCloseAction
   Result:    None
@@ -1321,7 +1323,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: actShowDOFFileExecute
-  Author:    HerzogS2
+  Author:    sam
   Date:      06-Jun-2007
   Arguments: Sender: TObject
   Result:    None
@@ -1375,7 +1377,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: actBackupAllExecute
-  Author:    herzogs2
+  Author:    
   Date:      16-Okt-2007
   Arguments: Sender: TObject
   Result:    None
@@ -1607,7 +1609,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ShowProjectGroup1Click
-  Author:    s.herzog
+  Author:    sam
   Date:      24-Feb-2010
   Arguments: Sender: TObject
   Result:    None
@@ -1634,7 +1636,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: actRevertChangesExecute
-  Author:    herzogs2
+  Author:    sam
   Date:      07-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -1661,6 +1663,39 @@ begin
   DMMain.ConfirmChanges('.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;',true);
 end;
 
+
+{-----------------------------------------------------------------------------
+  Procedure: actSetVersionSelectedProjectsExecute
+  Author:    sam
+  Date:      05-Aug-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TFrmMain.actSetVersionSelectedProjectsExecute(Sender: TObject);
+resourcestring
+cAbortedByUser='Aborted by User.';
+var
+i:integer;
+_SelectedRows:TNVBRowArray;
+_success:boolean;
+_AbortCompile:boolean;
+begin
+  _AbortCompile:=false;
+  _SelectedRows:=GetSelectedRows(stgFiles);
+  for i:=0 to length(_SelectedRows)-1 do begin
+    SetCurrentPackage(stgFiles.cells[1, _SelectedRows[i]]);
+    DMMain.actUninstallPackage.Execute;
+    _success:=DMMain.CompilePackage(false);
+    if ((not _success) and (cbxStopOnFailure.checked)) then break;
+    if _AbortCompile then begin
+      writelog(cAbortedByUser,[]);
+      break;
+    end;
+    DMMain.actInstallPackage.Execute;
+    Application.ProcessMessages;
+  end;
+end;
 
 end.
 

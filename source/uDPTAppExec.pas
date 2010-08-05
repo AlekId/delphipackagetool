@@ -154,6 +154,7 @@ const
 
 
 implementation
+uses dialogs;
 
 constructor TNVBAppExec.Create(AOwner: TComponent);
 begin
@@ -228,18 +229,16 @@ const
   Mode: array[wsNormal..wsMaximized] of Word =
     (SW_SHOWNORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED);
 begin
-  if FWindowState <> AWindowState then
-  begin
-    FMode := Mode[AWindowState];
-    FWindowState := AWindowState;
-  end;
+  if FWindowState = AWindowState then exit;
+  FMode := Mode[AWindowState];
+  FWindowState := AWindowState;
 end;
 
 
 procedure TNVBAppExec.SetExePath(AExePath: String);
 begin
-  if FExePath <> AExePath then
-    FExePath := ExtractFilePath(AExePath);
+  if FExePath = AExePath then exit;
+  FExePath := ExtractFilePath(AExePath);
 end;
 
 
