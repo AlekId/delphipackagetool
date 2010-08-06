@@ -1,3 +1,10 @@
+{*-----------------------------------------------------------------------------
+ Unit Name: VersionFrm
+ Author:    sam
+ Date:      06-Aug-2010
+ Purpose:   version number dialog.
+ History:
+-----------------------------------------------------------------------------}
 unit VersionFrm;
 
 interface
@@ -31,17 +38,18 @@ type
     lblMinor: TLabel;
     lblRelease: TLabel;
     lblBuild: TLabel;
+    cbxVersionForAll: TCheckBox;
   private
   public
   end;
 
-function ShowVersionDlg(_filename:string;var Major,Minor,Release,Build:integer):boolean;
+function ShowVersionDlg(_filename:string;var Major,Minor,Release,Build:integer;var ShowVersionDialog:boolean):boolean;
 
 implementation
 
 {$R *.dfm}
 
-function ShowVersionDlg(_filename:string;var Major,Minor,Release,Build:integer):boolean;
+function ShowVersionDlg(_filename:string;var Major,Minor,Release,Build:integer;var ShowVersionDialog:boolean):boolean;
 resourcestring
 cSetVersion='Set Version of File <%s>.';
 var
@@ -54,12 +62,14 @@ begin
     _FrmVersion.edtMinor.value:=Minor;
     _FrmVersion.edtRelease.value:=Release;
     _FrmVersion.edtBuild.value:=Build;
+    _FrmVersion.cbxVersionForAll.Checked:=ShowVersionDialog;
     result:=(_FrmVersion.showmodal=mrOk);
     if not result then exit;
     Major:=_FrmVersion.edtMajor.Value;
     Minor:=_FrmVersion.edtMinor.value;
     Release:=_FrmVersion.edtRelease.value;
     Build:=_FrmVersion.edtBuild.value;
+    ShowVersionDialog:=_FrmVersion.cbxVersionForAll.Checked;
   finally
     _FrmVersion.free;
   end;

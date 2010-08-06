@@ -153,7 +153,7 @@ type
     function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
     procedure AbortCompile;
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
-    procedure SetProjectVersion(_filename:string);
+    function SetProjectVersion(_filename:string;var ShowVersionDialog:boolean):boolean;
     function  IncreaseProjectBuildNo(const _filename: string): boolean;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
@@ -1884,12 +1884,13 @@ end;
   Result:    None
   Description: set the version of .dpr/.dpk/.dproj file.
 -----------------------------------------------------------------------------}
-procedure TDMMain.SetProjectVersion(_filename:string);
+function TDMMain.SetProjectVersion(_filename:string;var ShowVersionDialog:boolean):boolean;
 resourcestring
 cNoVersionInfo='The project <%s> does not contain version information. Open the project in the Delphi IDE and edit the project options.';
 var
 _Major,_Minor,_Release,_Build:integer;
 begin
+  result:=false;
   _Major:=0;
   _Minor:=0;
   _Release:=0;
@@ -1899,8 +1900,10 @@ begin
     Application.MessageBox(pChar(format(cNoVersionInfo,[_filename])),pchar(cInformation),MB_ICONWARNING or MB_OK);
     exit;
   end;
-  if not ShowVersionDlg(_filename,_Major,_Minor,_Release,_Build) then exit;
-  SetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build);
+  if ShowVersionDialog then begin
+    if not ShowVersionDlg(_filename,_Major,_Minor,_Release,_Build,ShowVersionDialog) then exit;
+  end;  
+  result:=SetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1913,10 +1916,12 @@ end;
                for the current project.
 -----------------------------------------------------------------------------}
 procedure TDMMain.actSetProjectVersionExecute(Sender: TObject);
+var
+_ShowVersionDialog:boolean;
 begin
-  SetProjectVersion(FCurrentProjectFilename);
+  _ShowVersionDialog:=true;
+  SetProjectVersion(FCurrentProjectFilename,_ShowVersionDialog);
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: GetProjectVersionOfFile

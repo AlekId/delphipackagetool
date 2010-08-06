@@ -88,6 +88,16 @@ object FrmVersion: TFrmVersion
       TabOrder = 3
       Value = 0
     end
+    object cbxVersionForAll: TCheckBox
+      Left = 32
+      Top = 80
+      Width = 313
+      Height = 17
+      Caption = 'Don'#39't ask again'
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+    end
   end
   object pnlBottom: TPanel
     Left = 0

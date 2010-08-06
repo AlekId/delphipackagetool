@@ -179,14 +179,11 @@ end;
 -----------------------------------------------------------------------------}
 function TNVBAppExec.Execute:boolean;
 var
- { InstanceID : THandle; S.H.}
   StartupInfo:TStartupInfo;
-
   IpApplicationname,lpCommandLine:string;
   lpExitCode:DWord;
 begin
   { Création de la ligne de commande }
-  result:=False;
   if FExePath='' then FExePath:=ExtractFilePath(Paramstr(0));
   IpApplicationname:=FExePath+FExeName;
   CloseRunningInstance;

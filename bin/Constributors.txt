@@ -3,3 +3,4 @@ Markus Müller
 JVCL Team (portions for package handling)
 Jason Penny  (SetVersion.exe) http://www.jasontpenny.com/
 Colin Wilson (SetVersion.exe contains some code from C.Wilson) http://www.wilsonc.demon.co.uk/delphi.htm
+TAPPExec by Patrick Brisacier and Jean-Fabien Connault

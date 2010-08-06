@@ -21,6 +21,7 @@ Name: desktopicon; Description: Create a &desktop icon; GroupDescription: Additi
 Source: ..\Bin\DelphiPackageTool.exe; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\SetVersion.exe; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\ReadMe.txt; DestDir: {app}; Flags: ignoreversion
+Source: ..\Bin\Constributors.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\TheDelphiPackageTool.pdf; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\History.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\Lies_mich.txt; DestDir: {app}; Flags: ignoreversion

@@ -1670,7 +1670,7 @@ end;
   Date:      05-Aug-2010
   Arguments: Sender: TObject
   Result:    None
-  Description:
+  Description: set the version for the selected projects/packages.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actSetVersionSelectedProjectsExecute(Sender: TObject);
 resourcestring
@@ -1680,19 +1680,19 @@ i:integer;
 _SelectedRows:TNVBRowArray;
 _success:boolean;
 _AbortCompile:boolean;
+_ShowVersionDialog:boolean;
 begin
   _AbortCompile:=false;
+  _ShowVersionDialog:=true;
   _SelectedRows:=GetSelectedRows(stgFiles);
   for i:=0 to length(_SelectedRows)-1 do begin
     SetCurrentPackage(stgFiles.cells[1, _SelectedRows[i]]);
-    DMMain.actUninstallPackage.Execute;
-    _success:=DMMain.CompilePackage(false);
+    _success:=DMMain.SetProjectVersion(DMMain.CurrentProjectFilename,_ShowVersionDialog);
     if ((not _success) and (cbxStopOnFailure.checked)) then break;
     if _AbortCompile then begin
       writelog(cAbortedByUser,[]);
       break;
     end;
-    DMMain.actInstallPackage.Execute;
     Application.ProcessMessages;
   end;
 end;

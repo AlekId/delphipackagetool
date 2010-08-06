@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
-  Left = 128
-  Top = 289
+  Left = 105
+  Top = 79
   Width = 1061
   Height = 648
   Caption = 'Package Group Rebuilder/Installer'
@@ -361,7 +361,7 @@ object FrmMain: TFrmMain
       OnExecute = actRevertChangesExecute
     end
     object actSetVersionSelectedProjects: TAction
-      Caption = 'actSetVersionSelectedProjects'
+      Caption = 'Set Version'
       OnExecute = actSetVersionSelectedProjectsExecute
     end
   end
@@ -555,7 +555,7 @@ object FrmMain: TFrmMain
       OnClick = mniRevertChangesClick
     end
     object SetProjectVersion1: TMenuItem
-      Action = DMMain.actSetProjectVersion
+      Action = actSetVersionSelectedProjects
     end
   end
   object SaveDialog1: TSaveDialog
