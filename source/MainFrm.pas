@@ -3,6 +3,10 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+1.9.0.139 ( 08.08.2010 )
+- SH: it's now possible to set the version of one/many/all packages/projects due to integration
+      of the application SetVersion.exe from Jason Penny.
+ 
 1.9.0.138 ( 04.08.2010 )
 - SH: started to add functions to set the projects VersionNumber.
 
