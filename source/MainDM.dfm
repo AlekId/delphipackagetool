@@ -2,8 +2,8 @@ object DMMain: TDMMain
   OldCreateOrder = False
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  Left = 390
-  Top = 161
+  Left = 392
+  Top = 185
   Height = 239
   Width = 261
   object ActionList: TActionList
@@ -88,10 +88,6 @@ object DMMain: TDMMain
     object actRecompileAllPackages: TAction
       Caption = 'actRecompileAllPackages'
       OnExecute = actRecompileAllPackagesExecute
-    end
-    object actSetProjectVersion: TAction
-      Caption = 'Set Version'
-      OnExecute = actSetProjectVersionExecute
     end
   end
 end

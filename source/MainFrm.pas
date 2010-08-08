@@ -222,6 +222,7 @@ type
     mniRevertChanges: TMenuItem;
     SetProjectVersion1: TMenuItem;
     actSetVersionSelectedProjects: TAction;
+    actSelectAll: TAction;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -269,6 +270,7 @@ type
     procedure actRevertChangesExecute(Sender: TObject);
     procedure mniRevertChangesClick(Sender: TObject);
     procedure actSetVersionSelectedProjectsExecute(Sender: TObject);
+    procedure actSelectAllExecute(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -1663,7 +1665,6 @@ begin
   DMMain.ConfirmChanges('.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;',true);
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: actSetVersionSelectedProjectsExecute
   Author:    sam
@@ -1678,23 +1679,38 @@ cAbortedByUser='Aborted by User.';
 var
 i:integer;
 _SelectedRows:TNVBRowArray;
-_success:boolean;
-_AbortCompile:boolean;
 _ShowVersionDialog:boolean;
+_Files:TStringList;
+_ProjectName:string;
+_filename:string;
 begin
-  _AbortCompile:=false;
   _ShowVersionDialog:=true;
   _SelectedRows:=GetSelectedRows(stgFiles);
-  for i:=0 to length(_SelectedRows)-1 do begin
-    SetCurrentPackage(stgFiles.cells[1, _SelectedRows[i]]);
-    _success:=DMMain.SetProjectVersion(DMMain.CurrentProjectFilename,_ShowVersionDialog);
-    if ((not _success) and (cbxStopOnFailure.checked)) then break;
-    if _AbortCompile then begin
-      writelog(cAbortedByUser,[]);
-      break;
+  if length(_SelectedRows)=0 then exit;
+  _Files:=TStringList.create;
+  try
+    for i:=0 to length(_SelectedRows)-1 do begin
+      _ProjectName:=stgFiles.cells[1, _SelectedRows[i]];
+       _filename:=AbsoluteFilename(DMMain.BPGPath,_ProjectName);
+      _Files.add(_filename);
     end;
-    Application.ProcessMessages;
+    DMMain.SetProjectVersion(_Files,_ShowVersionDialog);
+  finally
+    _Files.Free;
   end;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: actSelectAllExecute
+  Author:    sam
+  Date:      08-Aug-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: ctrl+a to select all projects.
+-----------------------------------------------------------------------------}
+procedure TFrmMain.actSelectAllExecute(Sender: TObject);
+begin
+//todo
 end;
 
 end.

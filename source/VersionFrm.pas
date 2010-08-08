@@ -69,7 +69,7 @@ begin
     Minor:=_FrmVersion.edtMinor.value;
     Release:=_FrmVersion.edtRelease.value;
     Build:=_FrmVersion.edtBuild.value;
-    ShowVersionDialog:=_FrmVersion.cbxVersionForAll.Checked;
+    ShowVersionDialog:=not _FrmVersion.cbxVersionForAll.Checked;
   finally
     _FrmVersion.free;
   end;

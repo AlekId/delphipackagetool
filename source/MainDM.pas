@@ -46,7 +46,6 @@ type
     actFindDCPandBPL: TAction;
     actDeleteFiles: TAction;
     actRecompileAllPackages: TAction;
-    actSetProjectVersion: TAction;
     procedure DataModuleCreate(Sender: TObject);
     procedure ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
     procedure ApplicationSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
@@ -68,7 +67,6 @@ type
     procedure actFindDCPandBPLExecute(Sender: TObject);
     procedure actDeleteFilesExecute(Sender: TObject);
     procedure actRecompileAllPackagesExecute(Sender: TObject);
-    procedure actSetProjectVersionExecute(Sender: TObject);
   private
     FSuccess: boolean;
     FDelphiWasStartedOnApplicationStart: Boolean;
@@ -153,7 +151,7 @@ type
     function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
     procedure AbortCompile;
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
-    function SetProjectVersion(_filename:string;var ShowVersionDialog:boolean):boolean;
+    function  SetProjectVersion(_filenames:TStringList;var ShowVersionDialog:boolean):boolean;
     function  IncreaseProjectBuildNo(const _filename: string): boolean;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
@@ -1834,6 +1832,7 @@ begin
     trace(2,'Problem in TDMMain.SetProjectVersionOfFile: File <%s> not found.',[_filename]);
     exit;
   end;
+  BackupFile(changefileext(_filename,'.res'),'.res_old','',false);
   NVBAppExec1.ExeName:=cSetVersionApplicationName;
   NVBAppExec1.ExePath:=extractfilepath(application.exename);
   NVBAppExec1.ExeParams:=format('-v%d.%d.%d.%d -s "%s"',[Major,Minor,Release,Build,_filename]);
@@ -1884,10 +1883,12 @@ end;
   Result:    None
   Description: set the version of .dpr/.dpk/.dproj file.
 -----------------------------------------------------------------------------}
-function TDMMain.SetProjectVersion(_filename:string;var ShowVersionDialog:boolean):boolean;
+function TDMMain.SetProjectVersion(_filenames:TStringList;var ShowVersionDialog:boolean):boolean;
 resourcestring
 cNoVersionInfo='The project <%s> does not contain version information. Open the project in the Delphi IDE and edit the project options.';
 var
+i:integer;
+_filename:string;
 _Major,_Minor,_Release,_Build:integer;
 begin
   result:=false;
@@ -1895,32 +1896,18 @@ begin
   _Minor:=0;
   _Release:=0;
   _Build:=0;
-  if not GetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build) then begin
-    if ApplicationSettings.BoolValue('Application/SilentMode',5) then exit;
-    Application.MessageBox(pChar(format(cNoVersionInfo,[_filename])),pchar(cInformation),MB_ICONWARNING or MB_OK);
-    exit;
+  for i:=0 to _filenames.count-1 do begin
+    _filename:=_filenames[i];
+    if ShowVersionDialog then begin
+      if not GetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build) then begin
+        if ApplicationSettings.BoolValue('Application/SilentMode',5) then exit;
+        Application.MessageBox(pChar(format(cNoVersionInfo,[_filename])),pchar(cInformation),MB_ICONWARNING or MB_OK);
+        exit;
+      end;
+      if not ShowVersionDlg(_filename,_Major,_Minor,_Release,_Build,ShowVersionDialog) then exit;
+    end;
+    result:=SetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build);
   end;
-  if ShowVersionDialog then begin
-    if not ShowVersionDlg(_filename,_Major,_Minor,_Release,_Build,ShowVersionDialog) then exit;
-  end;  
-  result:=SetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build);
-end;
-
-{*-----------------------------------------------------------------------------
-  Procedure: actSetProjectVersionExecute
-  Author:    sam
-  Date:      23-Jul-2010
-  Arguments: Sender: TObject
-  Result:    None
-  Description: show a version dialog to let the user set a version number
-               for the current project.
------------------------------------------------------------------------------}
-procedure TDMMain.actSetProjectVersionExecute(Sender: TObject);
-var
-_ShowVersionDialog:boolean;
-begin
-  _ShowVersionDialog:=true;
-  SetProjectVersion(FCurrentProjectFilename,_ShowVersionDialog);
 end;
 
 {-----------------------------------------------------------------------------

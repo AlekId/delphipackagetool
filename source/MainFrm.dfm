@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
-  Left = 105
-  Top = 79
-  Width = 1061
-  Height = 648
+  Left = 2
+  Top = 1
+  Width = 638
+  Height = 450
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,16 +25,16 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 424
-    Width = 1053
+    Top = 226
+    Width = 993
     Height = 12
     Cursor = crVSplit
     Align = alBottom
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 436
-    Width = 1053
+    Top = 238
+    Width = 993
     Height = 166
     Align = alBottom
     Ctl3D = False
@@ -48,8 +48,8 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 145
-    Width = 1053
-    Height = 279
+    Width = 993
+    Height = 81
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -74,7 +74,7 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 1053
+    Width = 993
     Height = 145
     Align = alTop
     BevelOuter = bvNone
@@ -363,6 +363,10 @@ object FrmMain: TFrmMain
     object actSetVersionSelectedProjects: TAction
       Caption = 'Set Version'
       OnExecute = actSetVersionSelectedProjectsExecute
+    end
+    object actSelectAll: TAction
+      Caption = 'actSelectAll'
+      OnExecute = actSelectAllExecute
     end
   end
   object OpenDialog1: TOpenDialog
