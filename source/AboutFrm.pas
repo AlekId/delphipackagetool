@@ -67,11 +67,14 @@ class procedure TFrmAbout.ShowDialog(_Caption,_Company,_Homepage: string);
 var
 _FileDateTime:TDateTime;
 _Form:TFrmAbout;
+_filename:string;
 begin
+  _filename:=extractfilepath(application.exename)+'Constributors.txt';
   _Form:=TFrmAbout.create(nil);
   try
     with _Form do begin
       Caption:=_Caption;
+      if fileexists(_filename) then mmoCredits.Lines.LoadFromFile(_filename);
       lblApplicationValue.Caption:=Application.Title;
       lblVersionValue.Caption:=GetVersion;
       if GetFileDateTime(application.ExeName,_FileDateTime) then lblBuildValue.Caption:=DateToStr(_FileDateTime);

@@ -1,6 +1,12 @@
+The sourcecode of the DelphiPackageTool (DPT) is available at sourceforge.net
+
+Autor of this Application:
 Samuel Herzog
-Markus Müller
-JVCL Team (portions for package handling)
-Jason Penny  (SetVersion.exe) http://www.jasontpenny.com/
-Colin Wilson (SetVersion.exe contains some code from C.Wilson) http://www.wilsonc.demon.co.uk/delphi.htm
-TAPPExec by Patrick Brisacier and Jean-Fabien Connault
+
+Thanks to:
+***********
+- Markus Müller
+- JCL/JVCL Team (portions for package handling)
+- Jason Penny  (SetVersion.exe) http://www.jasontpenny.com/
+- Colin Wilson (SetVersion.exe contains some code from C.Wilson) http://www.wilsonc.demon.co.uk/delphi.htm
+- Patrick Brisacier and Jean-Fabien Connault for Component TAPPExec.

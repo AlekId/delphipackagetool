@@ -3,6 +3,9 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+1.9.0.140 ( 10.08.2010 )
+- SH: better error handling in case SetVersion.exe is not available.
+
 1.9.0.139 ( 08.08.2010 )
 - SH: it's now possible to set the version of one/many/all packages/projects due to integration
       of the application SetVersion.exe from Jason Penny.

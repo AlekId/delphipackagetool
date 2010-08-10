@@ -1828,6 +1828,10 @@ end;
 function TDMMain.SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer): boolean;
 begin
   result:=false;
+  if not fileexists(extractfilepath(application.exename)+cSetVersionApplicationName) then begin
+    trace(2,'Problem in TDMMain.SetProjectVersionOfFile: File <%s> not found.',[extractfilepath(application.exename)+cSetVersionApplicationName]);
+    exit;
+  end;
   if not fileexists(_filename) then begin
     trace(2,'Problem in TDMMain.SetProjectVersionOfFile: File <%s> not found.',[_filename]);
     exit;
@@ -1851,6 +1855,10 @@ end;
 function TDMMain.IncreaseProjectBuildNo(const _filename: string): boolean;
 begin
   result:=false;
+  if not fileexists(extractfilepath(application.exename)+cSetVersionApplicationName) then begin
+    trace(2,'Problem in TDMMain.IncreaseProjectBuildNo: File <%s> not found.',[extractfilepath(application.exename)+cSetVersionApplicationName]);
+    exit;
+  end;
   if not fileexists(_filename) then begin
     trace(2,'Problem in TDMMain.IncreaseProjectBuildNo: File <%s> not found.',[_filename]);
     exit;
@@ -1886,12 +1894,20 @@ end;
 function TDMMain.SetProjectVersion(_filenames:TStringList;var ShowVersionDialog:boolean):boolean;
 resourcestring
 cNoVersionInfo='The project <%s> does not contain version information. Open the project in the Delphi IDE and edit the project options.';
+cSetVersionNotFound='The file <%s> was not found. Please download and install the latest Setup of Delphi Package Tool.';
 var
 i:integer;
 _filename:string;
+_filenameSetVersion:string;
 _Major,_Minor,_Release,_Build:integer;
 begin
   result:=false;
+  _filenameSetVersion:=extractfilepath(application.exename)+cSetVersionApplicationName;
+  if not fileexists(_filenameSetVersion) then begin
+    trace(2,'Problem in TDMMain.SetProjectVersion: File <%s> not found.',[_filenameSetVersion]);
+    Application.MessageBox(pChar(format(cSetVersionNotFound,[_filenameSetVersion])),pchar(cInformation),MB_ICONWARNING or MB_OK);
+    exit;
+  end;
   _Major:=0;
   _Minor:=0;
   _Release:=0;

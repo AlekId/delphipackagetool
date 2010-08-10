@@ -3,8 +3,8 @@ object frmAbout: TfrmAbout
   Top = 185
   BorderStyle = bsDialog
   Caption = 'frmBaseAbout'
-  ClientHeight = 277
-  ClientWidth = 476
+  ClientHeight = 366
+  ClientWidth = 549
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,13 +18,13 @@ object frmAbout: TfrmAbout
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 476
-    Height = 240
+    Width = 549
+    Height = 329
     Align = alClient
     TabOrder = 0
     DesignSize = (
-      476
-      240)
+      549
+      329)
     object lblApplicationName: TLabel
       Left = 32
       Top = 16
@@ -167,33 +167,33 @@ object frmAbout: TfrmAbout
     end
     object mmoCredits: TMemo
       Left = 8
-      Top = 144
-      Width = 457
-      Height = 89
+      Top = 136
+      Width = 530
+      Height = 186
       Cursor = crArrow
       Anchors = [akLeft, akTop, akRight, akBottom]
-      Enabled = False
       Lines.Strings = (
         'The source code is available at sourceforge.net.'
         ''
         'Thanks to:'
         'It contains some portions of JCL code.')
       ReadOnly = True
+      ScrollBars = ssBoth
       TabOrder = 0
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 240
-    Width = 476
+    Top = 329
+    Width = 549
     Height = 37
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      476
+      549
       37)
     object btnClose: TBitBtn
-      Left = 200
+      Left = 236
       Top = 6
       Width = 75
       Height = 25
