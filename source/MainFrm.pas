@@ -724,7 +724,7 @@ begin
   NVBAppExecExternalCommand.ExeName:='NVBUpdater.exe';
   NVBAppExecExternalCommand.ExePath:='';
   NVBAppExecExternalCommand.Wait:=false;
-  NVBAppExecExternalCommand.ExeParams:=format('"-d" -h"www.novabit.ch" -p"/downloads/delphipackagetool/update/" -f"%s;%s" -l"%s"',[_applicationName,'history.txt',_currentVersion]);
+  NVBAppExecExternalCommand.ExeParams:=format('"-d" -h"www.novabit.ch" -p"/downloads/delphipackagetool/update/" -f"%s;%s;%s" -l"%s"',[_applicationName,'history.txt','setversion.exe',_currentVersion]);
   _path1:='..\NVBUpdater\';
   _path2:=extractFilePath(Application.ExeName);
   _path3:=GetSystemPath(spProgFiles)+'Novabit Software\NVBUpdater\';
