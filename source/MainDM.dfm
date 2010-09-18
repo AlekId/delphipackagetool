@@ -83,11 +83,16 @@ object DMMain: TDMMain
     end
     object actDeleteFiles: TAction
       Caption = 'Delete all files'
+      Hint = 'Delete all bpl,dcp files.'
       OnExecute = actDeleteFilesExecute
     end
     object actRecompileAllPackages: TAction
       Caption = 'actRecompileAllPackages'
       OnExecute = actRecompileAllPackagesExecute
+    end
+    object actRevertChanges: TAction
+      Caption = 'Revert Changes'
+      OnExecute = actRevertChangesExecute
     end
   end
 end

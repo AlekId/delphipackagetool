@@ -76,7 +76,7 @@ function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
 function  VersionNoToIDEName(const _version:integer):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
-function  CleanUpPackagesByRegistery(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
+function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer):boolean; // find registry-entries without the packages
 function  CheckDirectory(const _name:string):boolean; // check if the directory exists. if not then ask the user and create it.
@@ -1153,7 +1153,7 @@ end;
 
 
 {-----------------------------------------------------------------------------
-  Procedure: CleanUpPackagesByRegistery
+  Procedure: CleanUpPackagesByRegistry
   Author:    sam
   Date:      28-Jun-2006
   Arguments: const _DelphiVersion:integer
@@ -1164,7 +1164,7 @@ end;
   the packages located in the path <_DelphiBINPath>.
   if <_deletefiles> is set to true, then the corresponding dcp and bpl files will be deleted.
 -----------------------------------------------------------------------------}
-function CleanUpPackagesByRegistery(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; //
+function CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; //
 var
 i:integer;
 _DelphiRootDirKey:string;
@@ -1174,7 +1174,7 @@ _packageName:string;
 begin
   result:=false;
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
-    trace(3,'Problem in CleanUpPackagesByRegistery: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
+    trace(3,'Problem in CleanUpPackagesByRegistry: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
 
@@ -1184,7 +1184,7 @@ begin
     _Reg.RootKey := _ROOTKEY;
     _DelphiRootDirKey:=_DelphiRootDirKey+_DelphiSubKey;
     if not _Reg.OpenKey(_DelphiRootDirKey,false) then begin
-      trace(3,'Warning in CleanUpPackagesByRegistery: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
+      trace(3,'Warning in CleanUpPackagesByRegistry: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
       exit;
     end;
     _Reg.GetValueNames(_ValueNames);
@@ -1194,18 +1194,18 @@ begin
         _packageName:=ReplaceTag(_packageName,_DelphiVersion);
         if pos(lowercase(_DelphiBINPath),lowercase(_packageName))<>0 then continue;
         if not _Reg.DeleteValue(_packageName) then begin
-          trace(3,'Problem in CleanUpPackagesByRegistery: Could not delete package <%s> for delphi <%d>.',[_packageName,_DelphiVersion]);
+          trace(3,'Problem in CleanUpPackagesByRegistry: Could not delete package <%s> for delphi <%d>.',[_packageName,_DelphiVersion]);
           continue;
         end;
-        trace(5,'CleanUpPackagesByRegistery: Deleted Package <%s> for delphi version <%d> from registry.',[_packageName,_DelphiVersion]);
+        trace(5,'CleanUpPackagesByRegistry: Deleted Package <%s> for delphi version <%d> from registry.',[_packageName,_DelphiVersion]);
         if _deletefiles then begin
-          if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistery: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
+          if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistry: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
           _packageName:=ChangeFileExt(_packageName,'.dcp');
-          if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistery: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
+          if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistry: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
         end;
       end;
     except
-      on e:exception do trace(1,'Warning in CleanUpPackagesByRegistery: Could not delete the key <%s> for delphi version <%s>.You need to have Admin rights for this computer.%s',[_DelphiRootDirKey,_DelphiVersion,e.message]);
+      on e:exception do trace(1,'Warning in CleanUpPackagesByRegistry: Could not delete the key <%s> for delphi version <%s>.You need to have Admin rights for this computer.%s',[_DelphiRootDirKey,_DelphiVersion,e.message]);
     end;
     _Reg.CloseKey;
     result:=true;
@@ -3209,10 +3209,16 @@ begin
     Result:='-';
     exit;
   end;
+  if _PackageLibSuffix<>'' then _BplFilename:=lowercase(_PackageDirectory+ExtractFilenameOnly(_PackageName)+_PackageLibSuffix+'.bpl')
+                           else _BplFilename:=lowercase(_PackageDirectory+ExtractFilenameOnly(_PackageName)+'.bpl');
+
+  if not fileexists(_BplFilename) then begin
+    trace(5,'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.',[_PackageName]);
+    exit;
+  end;
+
   _RegFile:=TStringList.create;
   try
-    if _PackageLibSuffix<>'' then _BplFilename:=lowercase(_PackageDirectory+ExtractFilenameOnly(_PackageName)+_PackageLibSuffix+'.bpl')
-                             else _BplFilename:=lowercase(_PackageDirectory+ExtractFilenameOnly(_PackageName)+'.bpl');
     _RegFile.add('Windows Registry Editor Version 5.00');
     _RegFile.add('');
     _PackageKey:=_PackageKey+'Known Packages';
@@ -3257,7 +3263,6 @@ end;
 -----------------------------------------------------------------------------}
 function UnInstallPackage(_PackageName,_PackageDirectory,_PackageLibSuffix:String;_DelphiVersion:Integer):boolean;
 var
-_sDelphiVersion:String;
 _PackageBaseKey:String;
 _PackageKey:string;
 _PackageValue:string;
@@ -3270,7 +3275,8 @@ begin
   _PackageName:=ReadProjectFilenameFromDProj(_PackageName);
   if lowercase(ExtractFileExt(_PackageName))<>'.dpk' then exit;
 //  trace(1,'Removed Package <%s>,<%s> from Registry for Delphi %d.',[_PackageName,_PackageDirectory,_DelphiVersion]);
-  _sDelphiVersion:=inttostr(_DelphiVersion)+'.0';
+
+
   if not GetIDERootKey(_DelphiVersion,_PackageBaseKey) then begin
     trace(3,'Problem in UnInstallPackage: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;

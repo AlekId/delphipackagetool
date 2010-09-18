@@ -46,6 +46,7 @@ type
     actFindDCPandBPL: TAction;
     actDeleteFiles: TAction;
     actRecompileAllPackages: TAction;
+    actRevertChanges: TAction;
     procedure DataModuleCreate(Sender: TObject);
     procedure ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
     procedure ApplicationSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
@@ -67,6 +68,7 @@ type
     procedure actFindDCPandBPLExecute(Sender: TObject);
     procedure actDeleteFilesExecute(Sender: TObject);
     procedure actRecompileAllPackagesExecute(Sender: TObject);
+    procedure actRevertChangesExecute(Sender: TObject);
   private
     FSuccess: boolean;
     FDelphiWasStartedOnApplicationStart: Boolean;
@@ -124,6 +126,7 @@ type
     procedure AdaptSearchPath; // replace $(DELPHI) with $(BDS) when the user switches delphi version
     function  SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer):boolean;
     function  GetProjectVersionOfFile(_filename:string;var Major,Minor,Release,Build:integer):boolean;
+    function  OldFilesExist(_ChangedFiles:string):boolean;
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -204,6 +207,8 @@ uses
 
 {$R *.dfm}
 
+const
+cModifiedFileExtentions='.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;';
 
 {-----------------------------------------------------------------------------
   Procedure: ReadCurrentProjectType
@@ -392,16 +397,19 @@ begin
   FCurrentProjectNo:=FProjectList.IndexOf(_ProjectName);
   FCurrentConfigFilename:=GetConfigFilename(FCurrentProjectFilename,FCurrentDelphiVersion);
   ReadCurrentProjectType(FCurrentDelphiVersion); // check if it is a package or not
+  actRevertChanges.Enabled:=OldFilesExist(cModifiedFileExtentions);
   case FCurrentProjectType of
     tp_bpl:begin
              actInstallPackage.Enabled:=true;
              actUninstallPackage.Enabled:=true;
              actExecuteApp.Enabled:=false;
              actFindDCPandBPL.Enabled:=true;
+             actDeleteBPL.Enabled:=true;
            end;
     tp_exe:begin
              actInstallPackage.Enabled:=false;
              actUninstallPackage.Enabled:=false;
+             actDeleteBPL.Enabled:=false;
              actExecuteApp.Enabled:=true;
              actFindDCPandBPL.Enabled:=false;
            end;
@@ -409,6 +417,7 @@ begin
              actInstallPackage.Enabled:=false;
              actUninstallPackage.Enabled:=false;
              actExecuteApp.Enabled:=false;
+             actDeleteBPL.Enabled:=false;
              actFindDCPandBPL.Enabled:=false;
            end;
   end;
@@ -646,7 +655,7 @@ begin
   FCurrentDCUOutputPath:='';
   FApplicationIniFilename:=changefileext(application.ExeName,'.ini');
   if not fileexists(FApplicationIniFilename) then begin  // on the first start, ask if the filetypes shall be registered.
-    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)            = IdYes then RegisterFileType('bpg'      ,Application.ExeName);
+    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)           = IdYes then RegisterFileType('bpg'      ,Application.ExeName);
     if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName);
     if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName);
   end;
@@ -888,7 +897,7 @@ begin
   FWriteMsg:=nil;
 {$ifdef withTrace}
   NVBTraceFile.CloseFile;
-{$endif}  
+{$endif}
   FInstalledDelphiVersions.free;
   FProjectList.free;
 end;
@@ -1002,10 +1011,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpAllExecute(Sender: TObject);
 begin
-  CleanUpPackagesByRegistery(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true);
-  CleanUpPackagesByRegistery(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true);
-  CleanUpPackagesByRegistery(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true);
-  CleanUpPackagesByRegistery(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1130,18 +1139,18 @@ end;
   Date:      15-Mrz-2008
   Arguments: None
   Result:    None
-  Description:
+  Description: if delphi IDE is running, then close it.
 -----------------------------------------------------------------------------}
 procedure TDMMain.CheckDelphiRunning;
 resourcestring
 cPleaseCloseDelphiFirst='Please close Delphi before running this application.';
 begin
   if not isDelphiStarted(FCurrentDelphiVersion) then exit;
-  if ApplicationSettings.BoolValue('Application/SilentMode',5) then
+  if ApplicationSettings.BoolValue('Application/SilentMode',5) then   // if silent mode then just close it.
     ShutDownDelphi(FCurrentDelphiVersion, false)
   else
   begin
-    Application.MessageBox(pchar(cPleaseCloseDelphiFirst),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+    Application.MessageBox(pchar(cPleaseCloseDelphiFirst),pchar(cInformation),MB_ICONINFORMATION or MB_OK);  // if not silent mode, then ask the user to close delphi IDE.
     actShutDownDelphi.execute;
   end;
 end;
@@ -1155,12 +1164,20 @@ end;
   Description:  delete bpl and dcp file.
 -----------------------------------------------------------------------------}
 procedure TDMMain.actDeleteBPLExecute(Sender: TObject);
+resourcestring
+cDeleteBPL_and_DCP_Files='Do you want to delete the file <%s> and <%s>?';
 var
+_bplFilename:string;
 _dcpFilename:string;
 begin
-  uDPTDelphiPackage.DeleteFile(FCurrentBPLFilename);
-  _dcpFilename:=FCurrentBPLOutputPath+ChangeFileExt(ExtractFilename(FCurrentProjectFilename),'.dcp');
-  uDPTDelphiPackage.DeleteFile(_dcpFilename);
+  if FCurrentProjectType<>tp_bpl then exit;
+  _bplFilename:=FCurrentBPLFilename;
+  _dcpFilename:=FCurrentBPLOutputPath+ChangeFileExt(ExtractFilename(_bplFilename),'.dcp');
+  if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
+    if MessageBox(0,pchar(format(cDeleteBPL_and_DCP_Files,[_bplFilename,_dcpFilename])),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  <> IdYes then exit;
+  end;
+  if uDPTDelphiPackage.DeleteFile(_bplFilename) then WriteLog('Deleted file <%s>.',[_bplFilename]);
+  if uDPTDelphiPackage.DeleteFile(_dcpFilename) then WriteLog('Deleted file <%s>.',[_dcpFilename]);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1241,10 +1258,10 @@ begin
   case _RemoveType of
     tpr_3rdparty:  begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesNotInBIN),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByRegistery(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
-                      CleanUpPackagesByRegistery(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
-                      CleanUpPackagesByRegistery(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
-                      CleanUpPackagesByRegistery(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
                    end;
     tpr_projectsbpl:begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesInBPL),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
@@ -1817,6 +1834,32 @@ begin
                                                               else WriteLog('Could not change file <%s>.',[_filename]);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: OldFilesExist
+  Author:    herzogs2
+  Date:      16-Sep-2010
+  Arguments: _ChangedFiles:string
+  Result:    boolean
+  Description: check if an old file exists.
+-----------------------------------------------------------------------------}
+function TDMMain.OldFilesExist(_ChangedFiles:string):boolean;
+var
+_FileExt:string;
+_Filename:string;
+begin
+  result:=false;
+  if _ChangedFiles='' then exit;
+  _FileExt:=GetField(';',_ChangedFiles);
+  while _FileExt<>'' do begin
+    _Filename:=ChangeFileExt(FCurrentConfigFilename,_FileExt);
+    if fileexists(_Filename) then begin
+      result:=true;
+      exit;
+    end;
+    _FileExt:=GetField(';',_ChangedFiles);
+  end;
+end;
+
 {*-----------------------------------------------------------------------------
   Procedure: SetProjectVersionOfFile
   Author:    sam
@@ -1974,6 +2017,19 @@ begin
   if not StringToInteger(_sRelease,Release) then exit;
   if not StringToInteger(_sBuild,Build) then exit;
   result:=true;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: actRevertChangesExecute
+  Author:    sam
+  Date:      16-Sep-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TDMMain.actRevertChangesExecute(Sender: TObject);
+begin
+  ConfirmChanges(cModifiedFileExtentions,true);
 end;
 
 end.

@@ -25,7 +25,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 226
+    Top = 210
     Width = 993
     Height = 12
     Cursor = crVSplit
@@ -33,7 +33,7 @@ object FrmMain: TFrmMain
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 238
+    Top = 222
     Width = 993
     Height = 166
     Align = alBottom
@@ -49,7 +49,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 145
     Width = 993
-    Height = 81
+    Height = 65
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -455,9 +455,6 @@ object FrmMain: TFrmMain
       object actResetDelphi1: TMenuItem
         Action = DMMain.actResetDelphi
       end
-      object actShowTraceFile1: TMenuItem
-        Action = actShowTraceFile
-      end
       object Find2: TMenuItem
         Action = actFindFilePath
       end
@@ -535,9 +532,6 @@ object FrmMain: TFrmMain
     object ExecuteApplication1: TMenuItem
       Action = DMMain.actExecuteApp
     end
-    object PackageGroupEditor1: TMenuItem
-      Action = actShowBPGEditor
-    end
     object FileExplorer1: TMenuItem
       Action = actShowProjectDir
     end
@@ -554,12 +548,11 @@ object FrmMain: TFrmMain
     object actCleanUpDelphi1: TMenuItem
       Action = actResetDelphi
     end
-    object mniRevertChanges: TMenuItem
-      Caption = 'Revert Changes'
-      OnClick = mniRevertChangesClick
-    end
     object SetProjectVersion1: TMenuItem
       Action = actSetVersionSelectedProjects
+    end
+    object actRevertChanges1: TMenuItem
+      Action = DMMain.actRevertChanges
     end
   end
   object SaveDialog1: TSaveDialog

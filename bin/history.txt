@@ -1,3 +1,6 @@
+1.9.0.141 ( 18.09.2010 )
+- SH: some minor GUI tweaks.
+
 1.9.0.140 ( 10.08.2010 )
 - SH: better error handling in case SetVersion.exe is not available.
 

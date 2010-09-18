@@ -3,6 +3,9 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+1.9.0.141 ( 18.09.2010 )
+- SH: some minor GUI tweaks.
+
 1.9.0.140 ( 10.08.2010 )
 - SH: better error handling in case SetVersion.exe is not available.
 
@@ -147,7 +150,6 @@ type
     actCheckDelphiRunning: TAction;
     stgFiles: TStringGrid;
     actShowTraceFile: TAction;
-    actShowTraceFile1: TMenuItem;
     pmnMessages: TPopupMenu;
     ClearLog1: TMenuItem;
     About1: TMenuItem;
@@ -186,7 +188,6 @@ type
     SaveDialog1: TSaveDialog;
     actShowBPGEditor: TAction;
     BPGEditor1: TMenuItem;
-    PackageGroupEditor1: TMenuItem;
     actNewBPGFile: TAction;
     NewPackageGroup1: TMenuItem;
     actShowCFGFile: TAction;
@@ -226,10 +227,10 @@ type
     actRecompileAll: TAction;
     actRevertChanges: TAction;
     RevertChange1: TMenuItem;
-    mniRevertChanges: TMenuItem;
     SetProjectVersion1: TMenuItem;
     actSetVersionSelectedProjects: TAction;
     actSelectAll: TAction;
+    actRevertChanges1: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -275,7 +276,6 @@ type
     procedure ShowProjectGroup1Click(Sender: TObject);
     procedure actRecompileAllExecute(Sender: TObject);
     procedure actRevertChangesExecute(Sender: TObject);
-    procedure mniRevertChangesClick(Sender: TObject);
     procedure actSetVersionSelectedProjectsExecute(Sender: TObject);
     procedure actSelectAllExecute(Sender: TObject);
   private
@@ -564,7 +564,6 @@ begin
   stgfiles.RowCount:=2;
   for i:=0 to stgfiles.colcount-1 do stgfiles.Cells[i,1]:='';
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: actFindFilePathExecute
@@ -1657,19 +1656,6 @@ _filename:string;
 begin
   _filename:=ExtractFilenameFromLog;
   DMMain.RevertChange(_filename);
-end;
-
-{*-----------------------------------------------------------------------------
-  Procedure: mniRevertChangesClick
-  Author:    sam
-  Date:      10-Mai-2010
-  Arguments: Sender: TObject
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-procedure TFrmMain.mniRevertChangesClick(Sender: TObject);
-begin
-  DMMain.ConfirmChanges('.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;',true);
 end;
 
 {-----------------------------------------------------------------------------
