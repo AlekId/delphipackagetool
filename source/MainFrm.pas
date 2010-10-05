@@ -3,6 +3,10 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+
+1.9.0.142 ( 05.10.2010 )
+- SH: new function to write DPT-Path settings into the project files.
+
 1.9.0.141 ( 18.09.2010 )
 - SH: some minor GUI tweaks.
 
@@ -231,6 +235,7 @@ type
     actSetVersionSelectedProjects: TAction;
     actSelectAll: TAction;
     actRevertChanges1: TMenuItem;
+    actWriteDPTPathsToProject1: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);

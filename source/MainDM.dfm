@@ -94,5 +94,12 @@ object DMMain: TDMMain
       Caption = 'Revert Changes'
       OnExecute = actRevertChangesExecute
     end
+    object actWriteDPTPathsToProject: TAction
+      Caption = 'Write DPT-Path'#39's to project'
+      Hint = 
+        'This will write the Path-Settings from Delphi Package Tool into ' +
+        'the project files.'
+      OnExecute = actWriteDPTPathsToProjectExecute
+    end
   end
 end

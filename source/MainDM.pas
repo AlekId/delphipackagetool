@@ -47,6 +47,7 @@ type
     actDeleteFiles: TAction;
     actRecompileAllPackages: TAction;
     actRevertChanges: TAction;
+    actWriteDPTPathsToProject: TAction;
     procedure DataModuleCreate(Sender: TObject);
     procedure ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
     procedure ApplicationSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
@@ -69,6 +70,7 @@ type
     procedure actDeleteFilesExecute(Sender: TObject);
     procedure actRecompileAllPackagesExecute(Sender: TObject);
     procedure actRevertChangesExecute(Sender: TObject);
+    procedure actWriteDPTPathsToProjectExecute(Sender: TObject);
   private
     FSuccess: boolean;
     FDelphiWasStartedOnApplicationStart: Boolean;
@@ -137,9 +139,9 @@ type
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
     function GetCurrentPackageVersion:string;
-    procedure ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
+    procedure ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean;const _ShowQuestions:boolean=false); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
-    procedure UpdateProjectFiles;
+    procedure UpdateProjectFiles(const _ForceWrite:boolean=false);
     function RemoveProjectFromProjectGroup:boolean;
     function ReCompileAndInstallAll:boolean;
     procedure AutoSaveBackup(_Lines:TStrings);
@@ -1746,11 +1748,13 @@ end;
   Result:
   Description: this method tries to update/correct the file dpk/cfg/dproj/bdsproj
 -----------------------------------------------------------------------------}
-procedure TDMMain.UpdateProjectFiles;
+procedure TDMMain.UpdateProjectFiles(const _ForceWrite:boolean=false);
 var
 _ChangedFiles:string;
 begin
-  if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then exit;    // if DPT is allowed to change the files
+  if not _ForceWrite then begin
+    if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then exit;    // if DPT is allowed to change the files
+  end;  
 
 // try to update cfg/dproj/bdsproj files.
   _ChangedFiles:=WriteSettingsToDelphi(FBPGPath,   // prepare the new delphi settings files (cfg,dproj,bdsproj,dof).
@@ -1763,7 +1767,7 @@ begin
                            ApplicationSettings.BoolValue('Application/SilentMode',5),
                            FCurrentProjectType,
                            FCurrentDelphiVersion);
-  ConfirmChanges(_ChangedFiles,false);
+  ConfirmChanges(_ChangedFiles,false,true);
 
 // try to update dpk/dproj files.
   if FCurrentProjectType=tp_bpl then begin // it is a package
@@ -1782,7 +1786,7 @@ end;
   Description: present the changed files in the diff-tool and ask the user
                if he want to save the changes.
 -----------------------------------------------------------------------------}
-procedure TDMMain.ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean);
+procedure TDMMain.ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean;const _ShowQuestions:boolean=false);
 resourcestring
 cSaveChanges='Save changes to file <%s> ?';
 cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
@@ -1802,14 +1806,14 @@ begin
        fileexists(_OldFilename) then begin
       if _revert then _msg:=cDPTFoundOldVersionOfFile
                  else _msg:=cDPTSuggestsSomeChanges;
-      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then
+      if not ApplicationSettings.BoolValue('Application/SilentMode',5) or _ShowQuestions then
         if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
           if _Revert then CompareFiles(_NewFilename,_OldFilename)
                      else CompareFiles(_OldFilename,_NewFilename);
         end;
 
       if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
-         ((not ApplicationSettings.BoolValue('Application/SilentMode',5)) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
+         ((not ApplicationSettings.BoolValue('Application/SilentMode',5) or _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
         if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
         if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
                                                                        else WriteLog('Changed the file ''%s''',[_OldFilename]);
@@ -2030,6 +2034,19 @@ end;
 procedure TDMMain.actRevertChangesExecute(Sender: TObject);
 begin
   ConfirmChanges(cModifiedFileExtentions,true);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: actWriteDPTPathsToProjectExecute
+  Author:    herzogs2
+  Date:      04-Okt-2010
+  Arguments: Sender: TObject
+  Result:    None
+  Description: write the path-settings from DPT into the current project files.
+-----------------------------------------------------------------------------}
+procedure TDMMain.actWriteDPTPathsToProjectExecute(Sender: TObject);
+begin
+  UpdateProjectFiles(true);
 end;
 
 end.

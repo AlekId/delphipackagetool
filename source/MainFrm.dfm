@@ -25,7 +25,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 210
+    Top = 226
     Width = 993
     Height = 12
     Cursor = crVSplit
@@ -33,7 +33,7 @@ object FrmMain: TFrmMain
   end
   object mmoLogFile: TMemo
     Left = 0
-    Top = 222
+    Top = 238
     Width = 993
     Height = 166
     Align = alBottom
@@ -49,7 +49,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 145
     Width = 993
-    Height = 65
+    Height = 81
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -528,6 +528,9 @@ object FrmMain: TFrmMain
     end
     object UninstallPackagefromIDE1: TMenuItem
       Action = DMMain.actUninstallPackage
+    end
+    object actWriteDPTPathsToProject1: TMenuItem
+      Action = DMMain.actWriteDPTPathsToProject
     end
     object ExecuteApplication1: TMenuItem
       Action = DMMain.actExecuteApp
