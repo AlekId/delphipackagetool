@@ -40,6 +40,7 @@ const
   cDelphiKey='SOFTWARE\BORLAND\DELPHI';
   cBorlandBDSKey='SOFTWARE\BORLAND\BDS';
   cCodeGearBDSKey='SOFTWARE\CODEGEAR\BDS';
+  cEmbarcaderoBDSKey='SOFTWARE\EMBARCADERO\BDS\';
   cDelphiTag='$(DELPHI)';
   cBDSTag='$(BDS)';
   cBDSCommonDirTag='$(BDSCOMMONDIR)';
@@ -58,7 +59,7 @@ const
   cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';
   cProjectGroupFilter='*.bpg;*.groupproj;*.bdsgroup';
 
-  DelphiVersions: array [1..14] of TDelphiVersionInfo = (
+  DelphiVersions: array [1..15] of TDelphiVersionInfo = (
     (
       Name: cDelphiName;
       VersionStr: '1.0';
@@ -170,6 +171,14 @@ const
       IDEVersionStr: '7.0';
       CoreIdeVersion: '140';
       ShortName: 'D2010';
+      Supported: True),
+    (
+      Name: cRSName;
+      VersionStr: 'XE';
+      IDEVersion: 8;
+      IDEVersionStr: '8.0';
+      CoreIdeVersion: '150';
+      ShortName: 'D2011';
       Supported: True)
   );
 

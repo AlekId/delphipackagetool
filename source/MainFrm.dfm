@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
-  Left = 2
-  Top = 1
-  Width = 638
-  Height = 450
+  Left = 926
+  Top = -10
+  Width = 1216
+  Height = 997
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,31 +25,17 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 226
-    Width = 993
+    Top = 746
+    Width = 1208
     Height = 12
     Cursor = crVSplit
     Align = alBottom
   end
-  object mmoLogFile: TMemo
-    Left = 0
-    Top = 238
-    Width = 993
-    Height = 166
-    Align = alBottom
-    Ctl3D = False
-    ParentCtl3D = False
-    PopupMenu = pmnMessages
-    ReadOnly = True
-    ScrollBars = ssBoth
-    TabOrder = 0
-    OnDblClick = mmoLogFileDblClick
-  end
   object stgFiles: TStringGrid
     Left = 0
     Top = 145
-    Width = 993
-    Height = 81
+    Width = 1208
+    Height = 601
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -58,7 +44,7 @@ object FrmMain: TFrmMain
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect]
     ParentCtl3D = False
     PopupMenu = ppmFilesGrid
-    TabOrder = 1
+    TabOrder = 0
     OnClick = stgFilesClick
     OnDblClick = stgFilesDblClick
     ColWidths = (
@@ -74,11 +60,11 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 993
+    Width = 1208
     Height = 145
     Align = alTop
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 1
     object lblDelphiVersion: TLabel
       Left = 240
       Top = 48
@@ -220,8 +206,48 @@ object FrmMain: TFrmMain
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
-    TabOrder = 3
+    TabOrder = 2
     OnChange = edtPackageBPGFileChange
+  end
+  object pgcInfo: TPageControl
+    Left = 0
+    Top = 758
+    Width = 1208
+    Height = 193
+    ActivePage = TabSheet1
+    Align = alBottom
+    TabOrder = 3
+    object TabSheet1: TTabSheet
+      Caption = 'Information'
+      object mmoLogFile: TMemo
+        Left = 0
+        Top = 0
+        Width = 1200
+        Height = 165
+        Align = alClient
+        Ctl3D = False
+        ParentCtl3D = False
+        PopupMenu = pmnMessages
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        OnDblClick = mmoLogFileDblClick
+      end
+    end
+    object TabSheet2: TTabSheet
+      Caption = 'Trace'
+      ImageIndex = 1
+      object mmoTrace: TMemo
+        Left = 0
+        Top = 0
+        Width = 1200
+        Height = 165
+        Align = alClient
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+      end
+    end
   end
   object ActionList1: TActionList
     Left = 496

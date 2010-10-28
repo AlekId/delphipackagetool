@@ -45,7 +45,7 @@ TDelphiLibraryPath=record
 end;
 
 function  GetDelphiPackageDir(const _DelphiVersion:integer):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
-function SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
+function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
 procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer); // create a bpg-file or bdsproj-file.
 function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer):string; // add package into the regitstry.
 function  UninstallPackage(_PackageName,_PackageDirectory,_PackageLibSuffix:String;_DelphiVersion:Integer):boolean;  // remove package from regeistry.
@@ -2025,14 +2025,14 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: GetInstalledBorlandBDSVersions
+  Procedure: GetInstalledBDSVersions
   Author:    sam
   Date:      25-Feb-2006
   Arguments: _list:TStrings
   Result:    boolean
   Description: read the registry to try to find the installed bds versions 1-6
 -----------------------------------------------------------------------------}
-function GetInstalledBorlandBDSVersions(_list:TStrings):boolean;
+function GetInstalledBDSVersions(_basekey:string;_list:TStrings):boolean;
 var
 i:integer;
 _reg: TRegistry;
@@ -2045,7 +2045,7 @@ begin
       with _reg do begin     // first search in local machine
         CloseKey;
         RootKey := HKEY_LOCAL_MACHINE;
-        if OpenKeyReadOnly(cBorlandBDSKey) then
+        if OpenKeyReadOnly(_basekey) then
           if HasSubKeys then GetKeyNames(_list);
         CloseKey;
       end;
@@ -2054,7 +2054,7 @@ begin
         with _reg do begin
           CloseKey;
           RootKey := HKEY_CURRENT_USER;
-          if OpenKeyReadOnly(cBorlandBDSKey) then
+          if OpenKeyReadOnly(_basekey) then
             if HasSubKeys then GetKeyNames(_list);
           CloseKey;
         end;
@@ -2066,52 +2066,6 @@ begin
     on e:exception do trace(1,'Error in GetInstalledBDSVersions: <%s>.',[e.Message]);
   end;
   for i:=0 to _list.count-1 do trace(5,'GetInstalledBDSVersions: Found <%s>.',[_list[i]]);
-  result:=(_list.count>0);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: GetInstalledCodeGearBDSVersions
-  Author:    herzogs2
-  Date:      26-Mai-2008
-  Arguments: _list:TStrings
-  Result:    boolean
-  Description: 
------------------------------------------------------------------------------}
-function GetInstalledCodeGearBDSVersions(_list:TStrings):boolean;
-var
-i:integer;
-_reg: TRegistry;
-begin
-  result:=false;
-  if not assigned(_list) then exit;
-  try
-    _reg := TRegistry.Create;
-
-    try
-      with _reg do begin     // first search in local machine
-        CloseKey;
-        RootKey := HKEY_LOCAL_MACHINE;
-        if OpenKeyReadOnly(cCodeGearBDSKey) then
-          if HasSubKeys then GetKeyNames(_list);
-        CloseKey;
-      end;
-
-      if _list.Count=0 then begin // if nothing is found then lookup the current user.
-        with _reg do begin
-          CloseKey;
-          RootKey := HKEY_CURRENT_USER;
-          if OpenKeyReadOnly(cCodeGearBDSKey) then
-            if HasSubKeys then GetKeyNames(_list);
-          CloseKey;
-        end;
-      end;
-    finally
-      if Assigned(_reg) then FreeAndNil(_reg);
-    end;
-  except
-    on e:exception do trace(1,'Error in GetInstalledCodeGearBDSVersions: <%s>.',[e.Message]);
-  end;
-  for i:=0 to _list.count-1 do trace(5,'GetInstalledCodeGearBDSVersions: Found <%s>.',[_list[i]]);
   result:=(_list.count>0);
 end;
 
@@ -2136,14 +2090,15 @@ begin
   GetInstalledDelphiVersions(_list);
   _tmp:=TStringList.create;
   try
-    GetInstalledBorlandBDSVersions(_tmp);
+    GetInstalledBDSVersions(cBorlandBDSKey,_tmp);
     for i:=0 to _tmp.Count-1 do begin
       _sVersion:=_tmp[i];
       if not StringToFloat(_sversion,_fVersion) then continue;
       _list.Add(inttostr(trunc(_fVersion)+6)+'.0');
     end;
     _tmp.Clear;
-    GetInstalledCodeGearBDSVersions(_tmp);
+    GetInstalledBDSVersions(cCodeGearBDSKey,_tmp);
+    GetInstalledBDSVersions(cEmbarcaderoBDSKey,_tmp);
     for i:=0 to _tmp.Count-1 do begin
       _sVersion:=_tmp[i];
       if not StringToFloat(_sversion,_fVersion) then continue;

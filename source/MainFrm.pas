@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.142 ( 28.10.2010 )
+- SH: started work to make the tool also runing with Delphi XE.
+- SH: added a trace memo to display what DPT is doing. 
+
 1.9.0.142 ( 05.10.2010 )
 - SH: new function to write DPT-Path settings into the project files.
 
@@ -120,7 +124,7 @@ uses
   uDPTAppExec,
   ExtCtrls,
   uDPTDelphiPackage,
-  uDPTDefinitions;
+  uDPTDefinitions, ComCtrls;
 
 type
 
@@ -144,7 +148,6 @@ type
     F1: TMenuItem;
     mitOpenFile: TMenuItem;
     ReInstallAllPackages1: TMenuItem;
-    mmoLogFile: TMemo;
     OpenDialog1: TOpenDialog;
     actShowOptions: TAction;
     O1: TMenuItem;
@@ -236,6 +239,11 @@ type
     actSelectAll: TAction;
     actRevertChanges1: TMenuItem;
     actWriteDPTPathsToProject1: TMenuItem;
+    pgcInfo: TPageControl;
+    TabSheet1: TTabSheet;
+    TabSheet2: TTabSheet;
+    mmoLogFile: TMemo;
+    mmoTrace: TMemo;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -312,6 +320,7 @@ type
     procedure DoPackageUnInstallEvent(Sender:TObject;const _PackageName:string;const _Message:string;const _ProjectNumber:integer);
     procedure DoCurrentProjectCompileStateChanged(Sender:TObject;const _ProjectName:string;const _CompileState:string;const _CompileDateTime:string;const _ProjectVersion:string;const _ProjectSize:string;const _ProjectNumber:integer;const _Description:string);
     procedure DoCurrentProjectChanged(Sender:TObject;const _ProjectName:string;const _ProjectNumber:integer);
+    function  DoWriteTrace(_level:byte;_msg:String;_params:Array of Const):boolean;
   public
     NVBAppExecExternalCommand: TNVBAppExec;
     procedure SetLastUsedFile(_filename: string);
@@ -410,6 +419,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
+  FWriteMsg:=DoWriteTrace;
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
   NVBAppExecExternalCommand.Wait := True;
@@ -1709,6 +1719,20 @@ end;
 procedure TFrmMain.actSelectAllExecute(Sender: TObject);
 begin
 //todo
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: DoWriteTrace
+  Author:    sam
+  Date:      28-Okt-2010
+  Arguments: _level: byte; _msg: String;_params: array of Const
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
+function TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const): boolean;
+begin
+  mmoTrace.Lines.Insert(0,datetimetostr(now)+': '+format(_msg,_params));
+  result:=true;
 end;
 
 end.
