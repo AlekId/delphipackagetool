@@ -906,10 +906,17 @@ begin
     _sDelphiVersion:=inttostr(_version-6)+'.0\';
     RootKey:=cBorlandBDSKey+'\'+_sDelphiVersion;
     result:=true;
-  end else begin           // for delphi 2008 (aka bds 6.0) and later
+  end else
+  if (_version>11) and
+     (_version<15) then begin // for delphi 2008 (aka bds 6.0) til D2010
     if _version<7 then _sDelphiVersion:=inttostr(_version-6)+'.0\'
                   else _sDelphiVersion:=inttostr(_version-7)+'.0\';
     RootKey:=cCodeGearBDSKey+'\'+_sDelphiVersion;
+    result:=true;
+  end
+  else begin  // for Delphi 2011 (aka XE) and later.
+    _sDelphiVersion:=inttostr(_version-7)+'.0\';
+    RootKey:=cEmbarcaderoBDSKey+'\'+_sDelphiVersion;
     result:=true;
   end;
   trace(5,'Leave GetIDERootKey with value <%s>.',[RootKey]);
@@ -1234,6 +1241,7 @@ begin
                11:result:='CodeGear Developer Studio 2007/CodeGear Delphi 2007 for Win32';
                12:result:='Delphi 2009';
                14:result:='Embarcadero RAD Studio 2010';
+               15:result:='Embarcadero RAD Studio XE';
   end;
 end;
 
@@ -3304,6 +3312,10 @@ begin
     exit;
   end;
   _PackageName:=ReadProjectFilenameFromDProj(_PackageName);
+  if not fileExists(_PackageName) then begin
+    trace(5,'ReadPackageInfo: Could not find the file <%s>.',[_PackageName]);
+    exit;
+  end;
   _DPKFile:=TStringList.Create;
   try
     _DPKFile.LoadFromFile(_PackageName);
