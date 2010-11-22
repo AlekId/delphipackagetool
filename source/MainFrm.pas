@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.143 ( 22.11.2010 )
+- SH: delete log before starting to re-comile all projects. 
+
 1.9.0.142 ( 28.10.2010 )
 - SH: started work to make the tool also runing with Delphi XE.
 - SH: added a trace memo to display what DPT is doing. 
@@ -312,6 +315,7 @@ type
     procedure FillProjectGrid;
     function  ExtractFilenameFromLog:string;    
     procedure DoWriteLog(Sender:TObject;const _msg:string);
+    procedure DoDeleteLog(Sender: TObject);
     procedure DoDelphiVersionChangeEvent(Sender:TObject;const _DelphiVersion:integer);
     procedure DoProjectGroupOpen(Sender:TObject);
     procedure DoProjectGroupClose(Sender:TObject);
@@ -427,6 +431,7 @@ begin
   NVBAppExecExternalCommand.Priority := ppNormal;
   NVBAppExecExternalCommand.CloseRunningProcess := False;
   DMMain.OnWriteLog:=DoWriteLog;
+  DMMain.OnDeleteLog:=DoDeleteLog;
   DMMain.OnDelphiVersionChange:=DoDelphiVersionChangeEvent;
   DMMain.OnBPGOpen:=DoProjectGroupOpen;
   DMMain.OnBPGClose:=DoProjectGroupClose;
@@ -1452,6 +1457,11 @@ end;
 procedure TFrmMain.DoWriteLog(Sender: TObject; const _msg: string);
 begin
   WriteLog(_msg,[]);
+end;
+
+procedure TFrmMain.DoDeleteLog(Sender: TObject);
+begin
+  mmoLogFile.clear;
 end;
 
 {*-----------------------------------------------------------------------------

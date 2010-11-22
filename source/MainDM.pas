@@ -110,10 +110,12 @@ type
     FOnCurrentProjectChanged: TOnCurrentProjectChanged;
     FOnCurrentProjectCompileStateChanged: TOnCurrentProjectCompileStateChanged;
     FDelphiLibraryPath:TDelphiLibraryPath;
-    FCurrentPackageSuffix: string; // information read from the registery.
+    FCurrentPackageSuffix: string;
+    FOnDeleteLog: TNotifyEvent; // information read from the registery.
     procedure ReadCurrentProjectType(const _DelphiVersion:integer);
     function  GetLibSuffix(_ProjectType:TProjectType;_LibSuffix:string): string;
     procedure WriteLog(_msg: string;const _params:array of const);
+    procedure DeleteLog;
     procedure FireDelphiVersionChange(const _version:integer);
     procedure FireCurrentProjectChanged;
     procedure SetApplicationState(const _newState:TApplicationState);
@@ -142,12 +144,12 @@ type
     procedure ConfirmChanges(_ChangedFiles:string;const _Revert:Boolean;const _ShowQuestions:boolean=false); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
     procedure UpdateProjectFiles(const _ForceWrite:boolean=false);
-    function RemoveProjectFromProjectGroup:boolean;
-    function ReCompileAndInstallAll:boolean;
+    function  RemoveProjectFromProjectGroup:boolean;
+    function  ReCompileAndInstallAll:boolean;
     procedure AutoSaveBackup(_Lines:TStrings);
     procedure ShowProjectDir; // open the file explorer and show the current project directory.
     procedure ShowOutputDir;
-    function CompareFiles(_filename1,_filename2:string):boolean; // start the external diff-tool
+    function  CompareFiles(_filename1,_filename2:string):boolean; // start the external diff-tool
     procedure SetCurrentProject(const _ProjectName:string);
     procedure ShowFile(_filename:string;_lineno:integer);
     function  CompilePackage(const _updateCursor: boolean):boolean;
@@ -180,6 +182,7 @@ type
     property  InstalledDelphiVersions:TStrings read FInstalledDelphiVersions;
     property  ApplicationState:TApplicationState read FApplicationState write SetApplicationState;
     property  OnWriteLog:TOnWriteLogEvent read FOnWriteLog write FOnWriteLog;
+    property  OnDeleteLog:TNotifyEvent read FOnDeleteLog write FOnDeleteLog;
     property  OnDelphiVersionChange:TOnDelphiVersionChangeEvent read FOnDelphiVersionChangeEvent write FOnDelphiVersionChangeEvent;
     property  OnBPGOpen:TNotifyEvent  read FOnBPGOpen write FOnBPGOpen;
     property  OnBPGClose:TNotifyEvent read FOnBPGClose write FOnBPGClose;
@@ -878,6 +881,12 @@ begin
   if assigned(FOnWriteLog) then FOnWriteLog(self,_msg);
 end;
 
+procedure TDMMain.DeleteLog;
+begin
+  if assigned(FOnDeleteLog) then FOnDeleteLog(self);
+end;
+
+
 procedure TDMMain.ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
 begin
   trace(5,ErrorMsg,[]);
@@ -1058,6 +1067,7 @@ begin
     if NVBAppExecExternalCommand.Execute then trace(2,'Executed batch file <%s>.',[_batchfilename]);
   end;
   _start:=gettickcount;
+  deletelog;
   writelog('Start to compile all projects of file <%s>.',[FBPGFilename]);
   writelog('%s',[FBPGFilename]);
   InitBatchFile(FBPGPath+changeFileExt(ExtractFilename(FBPGFilename),'.bat'));

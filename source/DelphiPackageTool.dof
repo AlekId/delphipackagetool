@@ -131,7 +131,9 @@ ProductName=
 ProductVersion=1.1.7.2
 Comments=
 [Excluded Packages]
-C:\Program Files\Boldsoft\BfDR40D7Arch\Bin\Bold40D7UDPProp.bpl=Bold for Delphi 4.0 (UDP Based Propagation)
+c:\programme\borland\delphi7\projects\bpl\dpkiectrl7.bpl=ImageEn Control
+c:\programme\borland\delphi7\projects\bpl\dpkiedb7.bpl=ImageEn DB Control
+c:\programme\borland\delphi7\projects\bpl\dclflexcompressd7.bpl=FlexCompress Package
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source
