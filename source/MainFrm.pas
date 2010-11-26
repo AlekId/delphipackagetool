@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.144 ( 26.11.2010 )
+- SH: recent addition of tracing-stuff slows down the application.
+      So I have added a setting to turn it on/off. default=off.
+
 1.9.0.143 ( 22.11.2010 )
 - SH: delete log before starting to re-comile all projects. 
 
@@ -423,7 +427,8 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
-  FWriteMsg:=DoWriteTrace;
+  if DMMain.ProjectSettings.BoolValue('Application/Trace',13) then FWriteMsg:=DoWriteTrace
+                                                              else FWriteMsg:=nil;
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
   NVBAppExecExternalCommand.Wait := True;
@@ -458,6 +463,8 @@ begin
   try
     _FrmOptions.showmodal;
     FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
+    if DMMain.ProjectSettings.BoolValue('Application/Trace',13) then FWriteMsg:=DoWriteTrace
+                                                                else FWriteMsg:=nil;
   finally
     _FrmOptions.free;
   end;
@@ -534,6 +541,7 @@ end;
 procedure TFrmMain.ClearLog1Click(Sender: TObject);
 begin
   mmoLogFile.Clear;
+  mmoTrace.Clear;
 end;
 
 procedure TFrmMain.WriteLog(_msg: string;_params:array of const);
@@ -1462,6 +1470,7 @@ end;
 procedure TFrmMain.DoDeleteLog(Sender: TObject);
 begin
   mmoLogFile.clear;
+  mmoTrace.Clear;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1741,7 +1750,7 @@ end;
 -----------------------------------------------------------------------------}
 function TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const): boolean;
 begin
-  mmoTrace.Lines.Insert(0,datetimetostr(now)+': '+format(_msg,_params));
+  mmoTrace.Lines.add(datetimetostr(now)+': '+format(_msg,_params));
   result:=true;
 end;
 

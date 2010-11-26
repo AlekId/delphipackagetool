@@ -573,6 +573,7 @@ begin
   ProjectSettings.GetStringValue('Application/LibSuffix',10,cLIBNoneTag,'Defines the Lib-Suffix for the Package-Names.',true,false,false);
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath',11,'','Defines last used Backup Path.',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup', 12, true,'If set to <True>, then DelphiPackageTool creates a backup zip-file after succeessfull run of "Install All".', true,false,false);
+  ProjectSettings.GetBoolValue('Application/Trace',13,false,'If set to <True>, then Program internals are written into the trace-memo.',true,false,false);
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName])
                           else ProjectSettings.SetInteger('Application/DelphiVersion',5,CurrentDelphiVersion);
   CurrentDelphiVersion:=ProjectSettings.IntegerValue('Application/DelphiVersion',5);

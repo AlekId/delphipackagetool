@@ -1,5 +1,13 @@
+1.9.0.144 ( 26.11.2010 )
+- SH: recent addition of tracing-stuff slows down the application.
+      So I have added a setting to turn it on/off. default=off.
+
+1.9.0.143 ( 22.11.2010 )
+- SH: delete log before starting to re-compile all projects. 
+
 1.9.0.142 ( 05.10.2010 )
 - SH: new function to write DPT-Path settings into the project files.
+- SH: added memo to display log.
 
 1.9.0.141 ( 18.09.2010 )
 - SH: some minor GUI tweaks.

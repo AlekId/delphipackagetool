@@ -316,6 +316,17 @@ object FrmOptions: TFrmOptions
       ShowHint = True
       TabOrder = 13
     end
+    object cbxTrace: TCheckBox
+      Left = 544
+      Top = 632
+      Width = 185
+      Height = 17
+      Hint = 'Disable/Enable Trace'
+      Caption = 'Trace'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 14
+    end
   end
   object pnlBottom: TPanel
     Left = 0

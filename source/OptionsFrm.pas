@@ -72,6 +72,7 @@ type
     lblOnBeforeBuildProject: TLabel;
     edtOnBeforeBuildProject: TEdit;
     btnOnBeforeBuildProject: TSpeedButton;
+    cbxTrace: TCheckBox;
     procedure btnAddPathClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -481,6 +482,7 @@ begin
   DMMain.ProjectSettings.SetBoolean('Application/ChangeFiles', 8,cbxChangeFiles.Checked);
   DMMain.ProjectSettings.SetBoolean('Application/ModifyEnvironmentPath', 9,cbxModifyEnvironment.Checked);
   DMMain.ProjectSettings.SetBoolean('Application/AutoBackup', 12,cbxAutoBackup.checked);
+  DMMain.ProjectSettings.SetBoolean('Application/Trace',13,cbxTrace.checked);  
 end;
 
 {-----------------------------------------------------------------------------
@@ -515,6 +517,7 @@ begin
   cbxChangeFiles.Checked:=DMMain.ProjectSettings.BoolValue('Application/ChangeFiles', 8);
   cbxModifyEnvironment.Checked:=DMMain.ProjectSettings.BoolValue('Application/ModifyEnvironmentPath', 9);
   cbxAutoBackup.checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup', 12);
+  cbxTrace.checked:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
 end;
 
 {-----------------------------------------------------------------------------
