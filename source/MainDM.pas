@@ -1824,7 +1824,7 @@ begin
         end;
 
       if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
-         ((not ApplicationSettings.BoolValue('Application/SilentMode',5) or _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
+         ((not ApplicationSettings.BoolValue('Application/SilentMode',5) and _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
         if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
         if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
                                                                        else WriteLog('Changed the file ''%s''',[_OldFilename]);

@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.145 ( 29.12.2010 )
+- SH: if silentMode is <on>, then don't ask the user if he want's to review the changes
+      with the Diff tool.
+
 1.9.0.144 ( 26.11.2010 )
 - SH: recent addition of tracing-stuff slows down the application.
       So I have added a setting to turn it on/off. default=off.
