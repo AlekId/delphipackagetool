@@ -916,7 +916,7 @@ begin
   end
   else begin  // for Delphi 2011 (aka XE) and later.
     _sDelphiVersion:=inttostr(_version-7)+'.0\';
-    RootKey:=cEmbarcaderoBDSKey+'\'+_sDelphiVersion;
+    RootKey:=cEmbarcaderoBDSKey+_sDelphiVersion;
     result:=true;
   end;
   trace(5,'Leave GetIDERootKey with value <%s>.',[RootKey]);

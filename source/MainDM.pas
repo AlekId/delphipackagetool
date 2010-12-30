@@ -1817,7 +1817,7 @@ begin
        fileexists(_OldFilename) then begin
       if _revert then _msg:=cDPTFoundOldVersionOfFile
                  else _msg:=cDPTSuggestsSomeChanges;
-      if not ApplicationSettings.BoolValue('Application/SilentMode',5) or _ShowQuestions then
+      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then
         if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
           if _Revert then CompareFiles(_NewFilename,_OldFilename)
                      else CompareFiles(_OldFilename,_NewFilename);

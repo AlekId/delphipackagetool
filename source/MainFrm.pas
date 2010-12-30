@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.146 ( 30.12.2010 )
+- SH: fix for detection of Delphi XE.
+
 1.9.0.145 ( 29.12.2010 )
 - SH: if silentMode is <on>, then don't ask the user if he want's to review the changes
       with the Diff tool.
