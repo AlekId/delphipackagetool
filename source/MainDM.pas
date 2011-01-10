@@ -1782,7 +1782,7 @@ begin
 
 // try to update dpk/dproj files.
   if FCurrentProjectType=tp_bpl then begin // it is a package
-    _ChangedFiles:= WritePackageFile(FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5)); // then prepare a new file.
+    _ChangedFiles:= WritePackageFile(FCurrentDelphiVersion,FCurrentProjectFilename,FCurrentPackageSuffix,ApplicationSettings.BoolValue('Application/SilentMode',5)); // then prepare a new file.
     ConfirmChanges(_ChangedFiles,false);
   end;
 end;

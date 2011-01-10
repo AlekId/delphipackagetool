@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0147  ( 10.01.2011 )
+- SH: automatic correct vcljpg/vclimg in .dpk-file.
+- SH: added AppLocation in About-Dialog.
+
 1.9.0.146 ( 30.12.2010 )
 - SH: fix for detection of Delphi XE.
 

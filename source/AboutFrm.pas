@@ -41,6 +41,8 @@ type
     mmoCredits: TMemo;
     lblHomepage: TLabel;
     lblHomepageValue: TLabel;
+    lblFileLocation: TLabel;
+    lblAppLocationValue: TLabel;
     procedure lblHomepageValueClick(Sender: TObject);
   private
   public    
@@ -81,6 +83,7 @@ begin
       lblHomepageValue.Caption:=_Homepage;
       lblCompanyValue.Caption:=_Company;
       Image1.Picture.Icon.Assign(Application.Icon);
+      lblAppLocationValue.Caption:=Application.exename;
     end;
     _Form.ShowModal;
   finally

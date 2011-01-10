@@ -82,8 +82,8 @@ function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;cons
 function  CheckDirectory(const _name:string):boolean; // check if the directory exists. if not then ask the user and create it.
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings):THashedStringList; // extract filenames from the dcc32.exe output.
-function  WritePackageFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
-function  WriteDPKFile(_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dpk-file.
+function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
+function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dpk-file.
 function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dproj-file.
 function  DeleteFile(const _Filename:String):boolean;  // delete the file <_filename>.
 function  RemoveProjectFromProjectGroup(const _GroupFilename,_ProjectFilename:string;const _ProjectType:TProjectType):boolean;
@@ -534,10 +534,10 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function  WritePackageFile(const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
+function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
 begin
   result:='';
-  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_filename,_libsuffix,_silent) else
+  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_DelphiVersion,_filename,_libsuffix,_silent) else
   if lowercase(ExtractFileExt(_filename))='.dproj' then result:=WriteDprojFile(_filename,_libsuffix,_silent);
 end;
 
@@ -549,7 +549,7 @@ end;
   Result:    boolean
   Description: write libsuffix into dpk-file.
 -----------------------------------------------------------------------------}
-function  WriteDPKFile(_filename:string;const _LibSuffix:string;const _silent:boolean):string;
+function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean):string;
 resourcestring
 cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
@@ -558,16 +558,9 @@ _index:integer;
 _OldText:string;
 _NewText:string;
 _FileChanged:boolean;
-begin
-  result:='';
-  _FileChanged:=false;
-  if not fileexists(_filename) then begin
-    trace(1,'Problem in WriteDPKFile: Could not find the file <%s>. Nothing to do.',[_filename]);
-    exit;
-  end;
-  _File:=TStringList.create;
-  try
-    _File.LoadFromFile(_filename);
+
+  procedure UpdateLibSuffix;
+  begin
     _index:=FindLine(_File,'{$LIBSUFFIX',_OldText);
     if _LibSuffix='' then begin
       if _index>-1 then begin // no libsuffix to be set but there is one already in the file.
@@ -591,6 +584,31 @@ begin
         _FileChanged:=true;
       end;
     end;
+  end;
+
+  procedure UpdateImageLib;
+  begin
+    _index:=FindLine(_File,'vcljpg',_OldText);
+    if _index=-1 then _index:=FindLine(_File,'vclimg',_OldText);
+    if _index=-1 then exit; // none of them is in the file, so nothing to do.
+    _NewText:=_File[_index];
+    if _DelphiVersion<=7 then _newText:=stringreplace(_NewText,'vclimg','vcljpg',[rfIgnoreCase])
+                         else _newText:=stringreplace(_NewText,'vcljpg','vclimg',[rfIgnoreCase]);
+    _File[_index]:=_newText;
+    _FileChanged:=true;
+  end;
+begin
+  result:='';
+  _FileChanged:=false;
+  if not fileexists(_filename) then begin
+    trace(1,'Problem in WriteDPKFile: Could not find the file <%s>. Nothing to do.',[_filename]);
+    exit;
+  end;
+  _File:=TStringList.create;
+  try
+    _File.LoadFromFile(_filename);
+    UpdateLibSuffix;
+    UpdateImageLib;
     if not _FileChanged then exit;
     if not BackupFile(_filename,'.dpk_old','',false) then exit;
     _filename:=changefileext(_filename,'.dpk_new');
@@ -624,17 +642,9 @@ _OldText:string;
 _NewText:string;
 _FileChanged:boolean;
 _LibSuffixAlreadyInFile:boolean;
-begin
-  result:='';
-  _FileChanged:=false;
-  _LibSuffixAlreadyInFile:=false;
-  if not fileexists(_filename) then begin
-    trace(1,'Problem in WriteDprojFile: Could not find the file <%s>. Nothing to do.',[_filename]);
-    exit;
-  end;
-  _File:=TStringList.create;
-  try
-    _File.LoadFromFile(_filename);
+
+  procedure UpdateLibSuffix;
+  begin
     _index:=FindLine(_File,'<Package_Options Name="LibSuffix">',_OldText);
     if _index=-1 then begin
       _index:=FindLine(_File,'</Package_Options>',_OldText);
@@ -653,6 +663,20 @@ begin
       _FileChanged:=true;
       trace(3,'Succsessfully written <%s> into file <%s>.',[_NewText,_filename]);
     end;
+  end;
+
+begin
+  result:='';
+  _FileChanged:=false;
+  _LibSuffixAlreadyInFile:=false;
+  if not fileexists(_filename) then begin
+    trace(1,'Problem in WriteDprojFile: Could not find the file <%s>. Nothing to do.',[_filename]);
+    exit;
+  end;
+  _File:=TStringList.create;
+  try
+    _File.LoadFromFile(_filename);
+    UpdateLibSuffix;
     if not _FileChanged then exit;
     if not BackupFile(_filename,'.dproj_old','',false) then exit;
     _filename:=changefileext(_filename,'.dproj_new');

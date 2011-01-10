@@ -4,7 +4,7 @@ object frmAbout: TfrmAbout
   BorderStyle = bsDialog
   Caption = 'frmBaseAbout'
   ClientHeight = 366
-  ClientWidth = 549
+  ClientWidth = 598
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,12 +18,12 @@ object frmAbout: TfrmAbout
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 549
+    Width = 598
     Height = 329
     Align = alClient
     TabOrder = 0
     DesignSize = (
-      549
+      598
       329)
     object lblApplicationName: TLabel
       Left = 32
@@ -106,10 +106,11 @@ object frmAbout: TfrmAbout
       Caption = '-'
     end
     object Image1: TImage
-      Left = 344
+      Left = 480
       Top = 16
       Width = 65
       Height = 57
+      Anchors = [akTop, akRight]
       Picture.Data = {
         055449636F6E0000010001002020100000000000E80200001600000028000000
         2000000040000000010004000000000000020000000000000000000000000000
@@ -165,11 +166,31 @@ object frmAbout: TfrmAbout
       ParentFont = False
       OnClick = lblHomepageValueClick
     end
+    object lblFileLocation: TLabel
+      Left = 32
+      Top = 136
+      Width = 27
+      Height = 13
+      Caption = 'App:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lblAppLocationValue: TLabel
+      Left = 140
+      Top = 136
+      Width = 17
+      Height = 13
+      Caption = '-'
+    end
     object mmoCredits: TMemo
       Left = 8
-      Top = 136
-      Width = 530
-      Height = 186
+      Top = 168
+      Width = 579
+      Height = 154
       Cursor = crArrow
       Anchors = [akLeft, akTop, akRight, akBottom]
       Lines.Strings = (
@@ -185,15 +206,15 @@ object frmAbout: TfrmAbout
   object pnlBottom: TPanel
     Left = 0
     Top = 329
-    Width = 549
+    Width = 598
     Height = 37
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      549
+      598
       37)
     object btnClose: TBitBtn
-      Left = 236
+      Left = 260
       Top = 6
       Width = 75
       Height = 25
