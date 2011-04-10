@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0148  ( 10.04.2011 )
+- SH: added CompilerVersion to Info-Hint. e.g. VER220 for Delphi XE
+
 1.9.0147  ( 10.01.2011 )
 - SH: automatic correct vcljpg/vclimg in .dpk-file.
 - SH: added AppLocation in About-Dialog.
@@ -142,7 +145,8 @@ uses
   uDPTAppExec,
   ExtCtrls,
   uDPTDelphiPackage,
-  uDPTDefinitions, ComCtrls;
+  uDPTDefinitions,
+  ComCtrls;
 
 type
 
@@ -850,6 +854,7 @@ begin
   if _ItemIndex>-1 then begin
     cbxDelphiVersions.ItemIndex:=_ItemIndex;
     cbxDelphiVersions.Hint:='IDE: '+VersionNoToIDEName(_DelphiVersion)+#10+#13+
+                            'CompilerVersion: '+DelphiVersions[_DelphiVersion].CompilerVersionStr+#10+#13+
                             'Compiler: '+DMMain.Compiler;
   end
   else begin

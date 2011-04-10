@@ -32,6 +32,8 @@ type
     IDEVersionStr: string;
     CoreIdeVersion: string;
     ShortName:string;
+    CompilerVersion:double;
+    CompilerVersionStr:string;
     Supported: Boolean;
   end;
 
@@ -107,6 +109,8 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '60';
       ShortName: 'D6';
+      CompilerVersion:14;
+      CompilerVersionStr: 'VER140';
       Supported: True),
     (
       Name: cDelphiName;
@@ -115,6 +119,8 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '70';
       ShortName: 'D7';
+      CompilerVersion:15;
+      CompilerVersionStr:'VER150';
       Supported: True),
     (
       Name: cDelphiName;
@@ -123,6 +129,8 @@ const
       IDEVersionStr: '2.0';
       CoreIdeVersion: '71';
       ShortName: 'D8';
+      CompilerVersion:16;
+      CompilerVersionStr: 'VER160';
       Supported: True),
     (
       Name: cDelphiName;
@@ -131,6 +139,8 @@ const
       IDEVersionStr: '3.0';
       CoreIdeVersion: '90';
       ShortName: 'D2005';
+      CompilerVersion:17;
+      CompilerVersionStr:'VER170';
       Supported: True),
     (
       Name: cBDSName;
@@ -139,6 +149,8 @@ const
       IDEVersionStr: '4.0';
       CoreIdeVersion: '100';
       ShortName: 'D2006';
+      CompilerVersion:18;
+      CompilerVersionStr:'VER180';
       Supported: True),
     (
       Name: cRSName;
@@ -147,6 +159,8 @@ const
       IDEVersionStr: '5.0';
       CoreIdeVersion: '100';
       ShortName: 'D2007';
+      CompilerVersion:18.5;
+      CompilerVersionStr:'VER185';
       Supported: True),
     (
       Name: cRSName;
@@ -155,6 +169,8 @@ const
       IDEVersionStr: '6.0';
       CoreIdeVersion: '120';
       ShortName: 'D2009';
+      CompilerVersion:20;
+      CompilerVersionStr:'VER200';
       Supported: True),
     (
       Name: cRSName;
@@ -171,6 +187,8 @@ const
       IDEVersionStr: '7.0';
       CoreIdeVersion: '140';
       ShortName: 'D2010';
+      CompilerVersion:21;
+      CompilerVersionStr:'Ver210';
       Supported: True),
     (
       Name: cRSName;
@@ -179,6 +197,8 @@ const
       IDEVersionStr: '8.0';
       CoreIdeVersion: '150';
       ShortName: 'D2011';
+      CompilerVersion:22;
+      CompilerVersionStr:'VER220';
       Supported: True)
   );
 
