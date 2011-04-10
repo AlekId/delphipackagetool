@@ -63,47 +63,57 @@ const
 
   DelphiVersions: array [1..15] of TDelphiVersionInfo = (
     (
-      Name: cDelphiName;
+      Name: cDelphiName;           //1
       VersionStr: '1.0';
       IDEVersion: 0;
       IDEVersionStr: '';
       CoreIdeVersion: '10';
       ShortName: 'D1';
+      CompilerVersion:8;
+      CompilerVersionStr: 'VER80';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //2
       VersionStr: '2.0';
       IDEVersion: 0;
       IDEVersionStr: '';
       CoreIdeVersion: '20';
       ShortName: 'D2';
+      CompilerVersion:9;
+      CompilerVersionStr: 'VER90';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //3
       VersionStr: '3.0';
       IDEVersion: 0;
       IDEVersionStr: '';
       CoreIdeVersion: '30';
       ShortName: 'D3';
+      CompilerVersion:10;
+      CompilerVersionStr: 'VER100';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //4
       VersionStr: '4.0';
       IDEVersion: 0;
       IDEVersionStr: '';
       CoreIdeVersion: '40';
       ShortName: 'D4';
+      CompilerVersion:12;
+      CompilerVersionStr: 'VER120';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //5
       VersionStr: '5.0';
       IDEVersion: 0;
       IDEVersionStr: '';
       CoreIdeVersion: '50';
       ShortName: 'D5';
+      CompilerVersion:13;
+      CompilerVersionStr: 'VER130';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //6
       VersionStr: '6.0';
       IDEVersion: 0;
       IDEVersionStr: '';
@@ -113,7 +123,7 @@ const
       CompilerVersionStr: 'VER140';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //7
       VersionStr: '7.0';
       IDEVersion: 0;
       IDEVersionStr: '';
@@ -123,7 +133,7 @@ const
       CompilerVersionStr:'VER150';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //8
       VersionStr: '8';
       IDEVersion: 2;
       IDEVersionStr: '2.0';
@@ -133,7 +143,7 @@ const
       CompilerVersionStr: 'VER160';
       Supported: True),
     (
-      Name: cDelphiName;
+      Name: cDelphiName;          //9
       VersionStr: '2005';
       IDEVersion: 3;
       IDEVersionStr: '3.0';
@@ -143,7 +153,7 @@ const
       CompilerVersionStr:'VER170';
       Supported: True),
     (
-      Name: cBDSName;
+      Name: cBDSName;             //10
       VersionStr: '2006';
       IDEVersion: 4;
       IDEVersionStr: '4.0';
@@ -153,7 +163,7 @@ const
       CompilerVersionStr:'VER180';
       Supported: True),
     (
-      Name: cRSName;
+      Name: cRSName;              //11
       VersionStr: '2007';
       IDEVersion: 5;
       IDEVersionStr: '5.0';
@@ -163,7 +173,15 @@ const
       CompilerVersionStr:'VER185';
       Supported: True),
     (
-      Name: cRSName;
+      Name: cRSName;              //12
+      VersionStr: '2008';
+      IDEVersion: 0;
+      IDEVersionStr: '';
+      CoreIdeVersion: '0';
+      ShortName: 'n/a';
+      Supported: False),
+    (
+      Name: cRSName;              //13
       VersionStr: '2009';
       IDEVersion: 6;
       IDEVersionStr: '6.0';
@@ -173,15 +191,7 @@ const
       CompilerVersionStr:'VER200';
       Supported: True),
     (
-      Name: cRSName;
-      VersionStr: '';
-      IDEVersion: 0;
-      IDEVersionStr: '';
-      CoreIdeVersion: '0';
-      ShortName: 'n/a';
-      Supported: False),
-    (
-      Name: cRSName;
+      Name: cRSName;              //14
       VersionStr: '2010';
       IDEVersion: 7;
       IDEVersionStr: '7.0';
@@ -191,7 +201,7 @@ const
       CompilerVersionStr:'Ver210';
       Supported: True),
     (
-      Name: cRSName;
+      Name: cRSName;              //15
       VersionStr: 'XE';
       IDEVersion: 8;
       IDEVersionStr: '8.0';

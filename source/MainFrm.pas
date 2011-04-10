@@ -4,10 +4,13 @@
  Purpose:
  History:
 
-1.9.0148  ( 10.04.2011 )
+1.9.0.149  ( 10.04.2011 )
+- SH: Version mix up because of D2008.
+
+1.9.0.148  ( 10.04.2011 )
 - SH: added CompilerVersion to Info-Hint. e.g. VER220 for Delphi XE
 
-1.9.0147  ( 10.01.2011 )
+1.9.0.147  ( 10.01.2011 )
 - SH: automatic correct vcljpg/vclimg in .dpk-file.
 - SH: added AppLocation in About-Dialog.
 
