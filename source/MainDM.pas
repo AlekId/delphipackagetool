@@ -480,7 +480,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TDMMain.GetSearchPath
-  Author:    
+  Author:
   Date:      27-Sep-2002
   Arguments: None
   Result:    string
@@ -1811,7 +1811,7 @@ begin
   if _ChangedFiles='' then exit;
   _NewFileExt:=GetField(';',_ChangedFiles);
   while _NewFileExt<>'' do begin
-    _NewFilename:=ChangeFileExt(FCurrentConfigFilename,_NewFileExt);
+    _NewFilename:=ChangeFileExt(FCurrentProjectFilename,_NewFileExt);
     _OldFilename:=copy(_NewFilename,1,length(_NewFilename)-4);
     if fileexists(_NewFilename) and
        fileexists(_OldFilename) then begin
@@ -1824,7 +1824,9 @@ begin
         end;
 
       if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
-         ((not ApplicationSettings.BoolValue('Application/SilentMode',5) and _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
+         ( not _ShowQuestions) or
+         ((not ApplicationSettings.BoolValue('Application/SilentMode',5) and
+           _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
         if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
         if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
                                                                        else WriteLog('Changed the file ''%s''',[_OldFilename]);

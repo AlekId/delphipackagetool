@@ -6,6 +6,7 @@
 
 1.9.0.149  ( 10.04.2011 )
 - SH: Version mix up because of D2008.
+- SH: fix for updating Lib-Suffix in Version >D7
 
 1.9.0.148  ( 10.04.2011 )
 - SH: added CompilerVersion to Info-Hint. e.g. VER220 for Delphi XE
