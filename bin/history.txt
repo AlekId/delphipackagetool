@@ -1,3 +1,12 @@
+1.9.0.151  ( 23.04.2011 )
+- SH: changes to write search path and bpl,dcp-output path into the dproj-file of Delphi XE.
+      At the moment this settings will only be written into the "Release" configuration. (not debug).
+      I have not decided yet how to handle this new possiblities.
+
+1.9.0.150  ( 18.04.2011 )
+- SH: improved error handling in case the global environment path can not be written
+      because of access rights issues.
+
 1.9.0.149  ( 10.04.2011 )
 - SH: Version mix up because of D2008.
 - SH: fix for updating Lib-Suffix in Version >D7

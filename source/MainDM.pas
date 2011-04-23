@@ -1219,6 +1219,7 @@ end;
 procedure TDMMain.actInstallPackageExecute(Sender: TObject);
 resourcestring
 cPathIsNotInEnv='The path <%s> not yet in your Environments Path. Do you want to add it? If you do not add it, then the Delphi IDE might compilain about Packages not found when starting the IDE.';
+cCouldNotAddEnvPath='Could not add the Path <%s> to the Environments Variable. Please try to add it manually be using Windows Path Editor.';
 var
 _message:string;
 begin
@@ -1229,8 +1230,10 @@ begin
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FCurrentProjectFilename,_message,FCurrentProjectNo);
   if not ProjectSettings.BoolValue('Application/ModifyEnvironmentPath', 9) then exit;
   if IsPathInEnvironmentPath(FCurrentProjectOutputPath) then exit;
-  if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FCurrentProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then AddGlobalEnvironmentPath(FCurrentProjectOutputPath)
-                                                                                                           else ProjectSettings.SetBoolean('Application/ModifyEnvironmentPath', 9,false);
+  if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FCurrentProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then begin
+    if not AddGlobalEnvironmentPath(FCurrentProjectOutputPath) then Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FCurrentProjectOutputPath])),pchar(cInformation),MB_OK);
+  end
+  else ProjectSettings.SetBoolean('Application/ModifyEnvironmentPath', 9,false);
 end;
 
 {*-----------------------------------------------------------------------------

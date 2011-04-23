@@ -199,7 +199,10 @@ begin
       _Reg.RootKey := HKEY_LOCAL_MACHINE;
       Result  := _Reg.OpenKey(REG_MACHINE_LOCATION, True);
     end;
-    if not Result then exit;
+    if not Result then begin
+      trace(1,'Problem in SetGlobalEnvironment: Could not open Key <HKEY_LOCAL_MACHINE,%s> with writing access. The key does either not exist or you have not enough access rights.',[REG_MACHINE_LOCATION]);
+      exit;
+    end;
     _Reg.WriteString(VarName, Value); { Write Registry for Global Environment }
     result:=SetEnvironmentVariable(PChar(VarName), PChar(Value)); { Update Current Process Environment Variable }
     if not result then exit;
@@ -223,7 +226,7 @@ begin
     Reg := TRegistry.Create;
     try
         Reg.rootkey :=  HKEY_LOCAL_MACHINE ;
-        if Reg.OpenKey(REG_MACHINE_LOCATION ,False) then
+        if Reg.OpenKeyReadOnly(REG_MACHINE_LOCATION) then
         begin
             if Reg.ValueExists(VarName) then
             begin

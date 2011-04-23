@@ -2972,12 +2972,16 @@ end;
   Description: write the path-settings from the delphipackagetool into the .dproj-file.
 -----------------------------------------------------------------------------}
 function  WriteDProjSettings(const _bpgPath:string;_dprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):string;
+const
+cTagConfig1='<PropertyGroup Condition="''$(Cfg_1)';
+cTagConfig2='<PropertyGroup Condition="''$(Cfg_2)';
 var
 _DProjFile:TStrings;
-_index:integer;
 _FileChanged:boolean;
-_temp:string;
-_pos:integer;
+_IndexConfig1:integer;
+_posConfig1:integer;
+_IndexConfig2:integer;
+_posConfig2:integer;
   function FindText(const _s:string;var position:integer):integer;
   var
   i:integer;
@@ -2992,6 +2996,36 @@ _pos:integer;
     end;
   end;
 
+  procedure ChangeSetting(_tag:string;_value:string);
+  var
+  i:integer;
+  _index:integer;
+  _temp:string;
+  _closeTag:string;
+  _pos:integer;
+  begin
+    _index:=FindText(_tag,_pos);
+    _closeTag:=_tag;
+    delete(_CloseTag,1,1);
+    _CloseTag:='</'+_CloseTag;
+    if _index>-1 then begin // if tag exists, then modify it
+      _temp:=copy(_DProjFile[_index],1,_pos-1);
+      if _DProjFile[_index]<>_temp+_tag+_value+_CloseTag then begin
+        _DProjFile[_index]:=_temp +_tag+_value+_CloseTag;
+        trace(4,'WriteDProjSettings: Changed Setting <%s> to <%s> to file <%s>.',[_tag,_value,_dprojFilename]);
+        _FileChanged:=true;
+      end;
+    end
+    else begin // if it does not exist, then insert it
+      if _searchPath<>'' then begin
+        _temp:='';
+        for i:=1 to _posConfig1 do _temp:=_temp+#9;
+        _DProjFile.insert(_IndexConfig1+2,_temp+_tag+_value+_CloseTag);
+        trace(4,'WriteDProjSettings: Changed Setting <%s> to <%s> to file <%s>.',[_tag,_value,_dprojFilename]);
+        _FileChanged:=true;
+      end;
+    end;
+  end;
 
 begin
   Result:='';
@@ -3011,54 +3045,19 @@ begin
   _DProjFile:=TStringList.Create;
   try
     _DProjFile.LoadFromFile(_dprojFilename);
-    _index:=FindText('<DCC_UnitSearchPath>',_pos);
-    if _index>-1 then begin
-      _temp:=copy(_DProjFile[_index],1,_pos-1);
-      if _DProjFile[_index]<>_temp+'<DCC_UnitSearchPath>'+_searchPath+'</DCC_UnitSearchPath>' then begin
-        _DProjFile[_index]:=_temp+'<DCC_UnitSearchPath>'+_searchPath+'</DCC_UnitSearchPath>';
-        trace(4,'WriteDProjSettings: Write search path <%s> to file <%s>.',[_searchPath,_dprojFilename]);
-        _FileChanged:=true;
-      end;
-    end;
 
-    _index:=FindText('<Directories Name="OutputDir">',_pos);
-    if _index>-1 then begin
-      _temp:=copy(_DProjFile[_index],1,_pos-1);
-      if _DProjFile[_index]<>_temp+'<Directories Name="OutputDir">'+_ProjectOutputPath+'</Directories>' then begin
-        _DProjFile[_index]:=_temp+'<Directories Name="OutputDir">'+_ProjectOutputPath+'</Directories>';
-        trace(4,'WriteDProjSettings: Write output path <%s> to file <%s>.',[_ProjectOutputPath,_dprojFilename]);
-        _FileChanged:=true;
-      end;
-    end;
+    _IndexConfig1:=FindText(cTagConfig1,_posConfig1);
+    _IndexConfig2:=FindText(cTagConfig2,_posConfig2);
 
-    _index:=FindText('<DCC_ResourcePath>',_pos);
-    if _index>-1 then begin
-      _temp:=copy(_DProjFile[_index],1,_pos-1);
-      if _DProjFile[_index]<>_temp+'<DCC_ResourcePath>'+_ProjectOutputPath+'</DCC_ResourcePath>' then begin
-        _DProjFile[_index]:=_temp+'<DCC_ResourcePath>'+_ProjectOutputPath+'</DCC_ResourcePath>';
-        trace(4,'WriteDProjSettings: Write dll output path <%s> to file <%s>.',[_ProjectOutputPath,_dprojFilename]);
-        _FileChanged:=true;
-      end;
-    end;
+    ChangeSetting('<DCC_UnitSearchPath>',_searchPath);
+    ChangeSetting('<DCC_ResourcePath>',_ProjectOutputPath);
+    ChangeSetting('<DCC_ObjPath>',_DCUOutputPath);
+    ChangeSetting('<DCC_BplOutput>',_BPLOutputPath);
+    ChangeSetting('<DCC_DcpOutput>',_BPLOutputPath);
+    ChangeSetting('<DCC_DcuOutput>',_DCUOutputPath);
+    ChangeSetting('<DCC_ObjOutput>',_DCUOutputPath);
+    ChangeSetting('<DCC_HppOutput>',_DCUOutputPath);
 
-    _index:=FindText('<DCC_ObjPath>',_pos);
-    if _index>-1 then begin
-      _temp:=copy(_DProjFile[_index],1,_pos-1);
-      if _DProjFile[_index]<>_temp+'<DCC_ObjPath>'+_DCUOutputPath+'</DCC_ObjPath>' then begin
-        _DProjFile[_index]:=_temp+'<DCC_ObjPath>'+_DCUOutputPath+'</DCC_ObjPath>';
-        trace(4,'WriteDProjSettings: Write unit output path <%s> to file <%s>.',[_DCUOutputPath,_dprojFilename]);
-        _FileChanged:=true;
-      end;
-    end;
-    _index:=FindText('<DCC_IncludePath>',_pos);
-    if _index>-1 then begin
-      _temp:=copy(_DProjFile[_index],1,_pos-1);
-      if _DProjFile[_index]<>_temp+'<DCC_IncludePath>'+_BPLOutputPath+'</DCC_IncludePath>' then begin
-        _DProjFile[_index]:=_temp+'<DCC_IncludePath>'+_BPLOutputPath+'</DCC_IncludePath>';
-        trace(4,'WriteDProjSettings: Write package output path <%s> to file <%s>.',[_BPLOutputPath,_dprojFilename]);
-        _FileChanged:=true;
-      end;
-    end;
     if not _FileChanged then exit;
     if not BackupFile(_dprojFilename,'.dproj_old','',false) then exit;
     _dprojFilename:=changefileext(_dprojFilename,'.dproj_new');
