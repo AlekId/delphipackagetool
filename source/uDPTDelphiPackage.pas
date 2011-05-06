@@ -3056,8 +3056,7 @@ begin
     ChangeSetting('<DCC_DcpOutput>',_BPLOutputPath);
     ChangeSetting('<DCC_DcuOutput>',_DCUOutputPath);
     ChangeSetting('<DCC_ObjOutput>',_DCUOutputPath);
-    ChangeSetting('<DCC_HppOutput>',_DCUOutputPath);
-
+    if _DelphiVersion>=20 then ChangeSetting('<DCC_HppOutput>',_DCUOutputPath);  // Im not sure in which Version this was introduced. But I know it does not work with D2007.
     if not _FileChanged then exit;
     if not BackupFile(_dprojFilename,'.dproj_old','',false) then exit;
     _dprojFilename:=changefileext(_dprojFilename,'.dproj_new');
