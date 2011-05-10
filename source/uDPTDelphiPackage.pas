@@ -3048,7 +3048,7 @@ begin
 
     _IndexConfig1:=FindText(cTagConfig1,_posConfig1);
     _IndexConfig2:=FindText(cTagConfig2,_posConfig2);
-
+    if (_IndexConfig1=-1) and (_IndexConfig2=-1) then exit; // if the tag was not found, then leave.
     ChangeSetting('<DCC_UnitSearchPath>',_searchPath);
     ChangeSetting('<DCC_ResourcePath>',_ProjectOutputPath);
     ChangeSetting('<DCC_ObjPath>',_DCUOutputPath);
@@ -3056,7 +3056,7 @@ begin
     ChangeSetting('<DCC_DcpOutput>',_BPLOutputPath);
     ChangeSetting('<DCC_DcuOutput>',_DCUOutputPath);
     ChangeSetting('<DCC_ObjOutput>',_DCUOutputPath);
-    if _DelphiVersion>=20 then ChangeSetting('<DCC_HppOutput>',_DCUOutputPath);  // Im not sure in which Version this was introduced. But I know it does not work with D2007.
+    ChangeSetting('<DCC_HppOutput>',_DCUOutputPath);
     if not _FileChanged then exit;
     if not BackupFile(_dprojFilename,'.dproj_old','',false) then exit;
     _dprojFilename:=changefileext(_dprojFilename,'.dproj_new');
