@@ -193,7 +193,17 @@ begin
     i:=0;
     while i<=count do begin
       _path:=trim(lowercase(mmoSearchPath.Lines[i]));
+      if _path='' then begin
+        mmoSearchPath.Lines.delete(i);
+        inc(i);
+        continue;
+      end;
       _path:=RemoveTrailingSemikolon(_path);
+      if _path='' then begin
+        mmoSearchPath.Lines.delete(i);
+        inc(i);
+        continue;
+      end;
       _path:=IncludeTrailingPathDelimiter(_path);
       for j:=i+1 to mmoSearchPath.Lines.Count-1 do begin
         _curpath:=trim(lowercase(mmoSearchPath.Lines[j]));
@@ -354,8 +364,8 @@ end;
 function TFrmOptions.AddPath(_path: string): boolean;
 begin
   result:=false;
-  if trim(_path)='' then exit;
   _path:=RemoveTrailingSemikolon(lowercase(_path));
+  if trim(_path)='' then exit;
   _path:=_path+';';
   if FSearchPaths.IndexOf(_path)<>-1 then begin
     trace(5,'TFrmOptions.AddPath: The path <%s> is already in the list.',[_path]);

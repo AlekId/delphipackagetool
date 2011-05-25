@@ -208,7 +208,8 @@ uses
   BPLSearchFrm,
   PathSelectionFrm,
   uDPTEnvironmentPath,
-  uDPTMisc, VersionFrm;
+  uDPTMisc,
+  VersionFrm;
 
 {$R *.dfm}
 
@@ -512,12 +513,12 @@ begin
       if _absolutePaths then begin
         _currentPath:=ReplaceTag(_currentpath,FCurrentDelphiVersion);
         _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion);
-        if (DirectoryExists(_currentPath)) then begin
+        if (_currentPath<>'') and (DirectoryExists(_currentPath)) then begin
           Result := Result + _currentPath + ';';
           trace(5,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
         end else trace(3, 'Problem in GetGlobalSearchPath: Could not find path <%s>.', [_currentPath]);
       end
-      else Result := Result + _currentPath + ';';
+      else if _currentPath<>'' then Result := Result + _currentPath + ';';
     end;
   finally
     _SearchPath.free;

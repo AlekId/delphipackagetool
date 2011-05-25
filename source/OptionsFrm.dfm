@@ -3,7 +3,7 @@ object FrmOptions: TFrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 701
+  ClientHeight = 712
   ClientWidth = 707
   Color = clBtnFace
   Constraints.MinHeight = 612
@@ -33,7 +33,7 @@ object FrmOptions: TFrmOptions
     Left = 0
     Top = 0
     Width = 707
-    Height = 660
+    Height = 671
     Align = alClient
     TabOrder = 4
     object btnSelectCodeEditor: TSpeedButton
@@ -330,7 +330,7 @@ object FrmOptions: TFrmOptions
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 660
+    Top = 671
     Width = 707
     Height = 41
     Align = alBottom

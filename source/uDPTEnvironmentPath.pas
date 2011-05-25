@@ -51,7 +51,8 @@ begin
   _pathList:=GetGlobalEnvironmentPathList;
   try
     _entry:=lowercase(_path);
-    if IsLastChar('\',_entry) then Delete(_entry,length(_entry),1);
+    _entry:=ExcludeTrailingPathDelimiter(_entry);
+    if _entry='' then exit;
     if (_pathList.IndexOf(_entry)=-1) and
        (_pathList.IndexOf(IncludeTrailingPathDelimiter(_entry))=-1) then exit;
     result:=true;
@@ -69,9 +70,9 @@ begin
   _s:=GetGlobalEnvironment('PATH');
   while _s<>'' do begin
     _path:=lowercase(trim(GetField(';',_s)));
-    if _path<>'' then begin
-      if result.IndexOf(_path)=-1 then result.add(_path);
-    end;
+    if _path='' then continue;
+    _path:=ExcludeTrailingPathDelimiter(_path);
+    if result.IndexOf(_path)=-1 then result.add(_path);
   end;
 end;
 
@@ -144,6 +145,7 @@ var
 _pathList:TStrings;
 begin
   result:=false;
+  if _path='' then exit;
   _pathList:=GetGlobalEnvironmentPathList;
   try
     if _pathList.IndexOf(lowercase(_path))>-1 then exit;
@@ -220,7 +222,7 @@ var
     Reg : TRegistry;
     NotFound : Boolean;
 begin
-
+    result:='';
     NotFound := True;
     {Open registry key and return ValueData}
     Reg := TRegistry.Create;
@@ -237,7 +239,7 @@ begin
         end;
         if NotFound then
         begin
-            ShowMessage('The Key'
+            ShowMessage('The Key '
                         +  REG_MACHINE_LOCATION + ' - '
                         + VarName
                         + ', Could not be found in the registry.');

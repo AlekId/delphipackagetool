@@ -808,7 +808,7 @@ begin
     _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion);
     if DirectoryExists(_absolutepath) then begin
       _path:=RelativePath(_basepath,_path,_DelphiVersion);
-      result:=result+_path+';';
+      if _path<>'' then result:=result+_path+';';
     end
     else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[]);
     _path:=Getfield(';',_paths);
