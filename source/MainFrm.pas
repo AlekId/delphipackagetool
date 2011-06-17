@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.155  ( 17.06.2011 )
+- SH: re-compiled aftter improvement in method <RegisterFileType>. Could give an AV
+      when not possible to write because of non-admin rights on Win7.
+
 1.9.0.154  ( 25.05.2011 )
 - SH: some tweaks to avoid emtpy path entries in search-path and environment variable.
 

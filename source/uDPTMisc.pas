@@ -34,7 +34,7 @@ type
   TNVBTraceProcedure=function(_level:byte;_msg:String;_params:Array of Const):boolean of object;
   TNVBSendTrace     =function (_to:string='';_subject:string='';_attachementFilename:string=''):boolean of object;
 
-procedure RegisterFileType(ExtName:String; AppName:String) ;
+procedure RegisterFileType(_ExtName:String;_AppName:String) ;
 function GetWindowsPath:String;  // returns the windows directory name
 function IsFilenameValid(_filename:string):boolean; // check if the given name <_filename> can be used as filename.
 procedure Trace(const _level:byte;const _msg:String;const _params:array of const);
@@ -178,27 +178,49 @@ begin
   end;
 end;
 
-procedure RegisterFileType(ExtName:String; AppName:String) ;
+{*-----------------------------------------------------------------------------
+  Procedure: RegisterFileType
+  Author:    sam
+  Date:      17-Jun-2011
+  Arguments: _ExtName:String;_AppName:String
+  Result:    None
+  Description: try to register the file extenstion <_ExtName> with application <_AppName>.
+-----------------------------------------------------------------------------}
+procedure RegisterFileType(_ExtName:String;_AppName:String);
+resourcestring
+cRegisterFileTypeProblem='Could not register File-Extension <%s> for application <%s>. <%s>. You might need Admin-Rights for this Operation.';
 var
   reg:TRegistry;
 begin
-  reg := TRegistry.Create;
   try
-    reg.RootKey:=HKEY_CLASSES_ROOT;
-    reg.OpenKey('.' + ExtName, True) ;
-    reg.WriteString('', ExtName + 'file') ;
-    reg.CloseKey;
-    reg.CreateKey(ExtName + 'file') ;
-    reg.OpenKey(ExtName + 'file\DefaultIcon', True) ;
-    reg.WriteString('', AppName + ',0') ;
-    reg.CloseKey;
-    reg.OpenKey(ExtName + 'file\shell\open\command', True) ;
-    reg.WriteString('',AppName+' "%1"') ;
-    reg.CloseKey;
-  finally
-    reg.Free;
+    reg := TRegistry.Create;
+    try
+      reg.RootKey:=HKEY_CLASSES_ROOT;
+      if reg.OpenKey('.' + _ExtName, True) then reg.WriteString('', _ExtName + 'file') ;
+    finally
+      reg.CloseKey;
+      reg.Free;
+    end;
+    reg := TRegistry.Create;
+    try
+      if reg.CreateKey(_ExtName + 'file') then begin
+        if reg.OpenKey(_ExtName + 'file\DefaultIcon', True) then reg.WriteString('', _AppName + ',0') ;
+      end;
+    finally
+      reg.CloseKey;
+      reg.free;
+    end;
+    reg := TRegistry.Create;
+    try
+      if reg.OpenKey(_ExtName + 'file\shell\open\command', True) then reg.WriteString('',_AppName+' "%1"');
+    finally
+      reg.CloseKey;
+      reg.free;
+    end;
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil) ;
+  except
+    on e:exception do ShowmessageFmt(cRegisterFileTypeProblem,[_ExtName,_AppName,e.message]);
   end;
-  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil) ;
 end;
 
 {-----------------------------------------------------------------------------
