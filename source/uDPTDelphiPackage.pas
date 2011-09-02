@@ -703,11 +703,11 @@ end;
 -----------------------------------------------------------------------------}
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings):THashedStringList;
 var
-i,j,k,l:integer;
+i,k,l:integer;
 _ExtensionsOfInterest:TStringList;
 _line:string;
 _ext:string;
-_filename,_lastfilename:string;
+_filename:string;
 _pos:integer;
 _files:THashedStringList;
 _workPath:string;
@@ -745,39 +745,34 @@ begin
     _ExtensionsOfInterest.add('.bdsproj');
     _ExtensionsOfInterest.add('.bdsgroup');
     _ExtensionsOfInterest.add('.groupproj');
-    for i:=0 to _CompilerOutput.Count-1 do begin
+    for i:=0 to _CompilerOutput.Count-1 do begin   // iterate through all lines of the compiler output
       _line:=lowercase(_CompilerOutput[i]);
       _ext:=ExtractFileExt(_line);
       if length(_ext)<4 then continue;
       _ext:=GetField('(',_ext);
-      if _ext='' then continue;
-      for j:=0 to _ExtensionsOfInterest.count-1 do begin
-        if _ext<>_ExtensionsOfInterest[j] then continue;
-         _pos:=pos('(',_line);
-        _lastfilename:=_filename;
-        if _pos>0 then _filename:=copy(_line,1,_pos-1)
-                  else _filename:=_line;
-        _filename:=AbsoluteFilename(_BasePath,_filename);
-        if _filename=_lastfilename then break;
-        if result.indexof(_filename)<0 then begin
+      if _ext='' then continue;   // if the line does not contain a fileextension, then continue
+      if _ExtensionsOfInterest.IndexOf(_ext)=-1 then continue; // if the fileextension is not in the list of interesting fileextensions then continue.
+      _pos:=pos('(',_line);
+      if _pos>0 then _filename:=copy(_line,1,_pos-1)
+                else _filename:=_line;
+      _filename:=AbsoluteFilename(_BasePath,_filename);  // create an absolute filename
+      if not fileexists(_filename) then continue;        // check if the file exists
+      if result.indexof(_filename)=-1 then begin         // only add the file to the list, if it is not already in the list.
+        result.add(_filename);
+        trace(5,'Added file <%s> to backup list.',[_filename]);
+      end;
+      for k:=0 to _ExtensionsOfInterest.count-1 do begin  // now check all other fileextensions
+        _files.Clear;
+        _workPath:=extractFilePath(_filename);
+        trace(5,'Searching for files in path <%s> for files <%s>.',[_workPath,'*'+_ExtensionsOfInterest[k]]);
+        AllFilesOfPath(_workPath,'*'+_ExtensionsOfInterest[k],_files);
+        Application.ProcessMessages;
+        for l:=0 to _files.count-1 do begin
+          _filename:=_workPath+_files[l];
+          if result.indexof(_filename)<>-1 then continue;
           result.add(_filename);
           trace(5,'Added file <%s> to backup list.',[_filename]);
         end;
-        for k:=0 to _ExtensionsOfInterest.count-1 do begin
-          _files.Clear;
-          _workPath:=extractFilePath(_filename);
-          trace(5,'Searching for files in path <%s> for files <%s>.',[_workPath,'*'+_ExtensionsOfInterest[k]]);
-          AllFilesOfPath(_workPath,'*'+_ExtensionsOfInterest[k],_files);
-          Application.ProcessMessages;
-          for l:=0 to _files.count-1 do begin
-            _filename:=_workPath+_files[l];
-            if result.indexof(_filename)<0 then begin
-              result.add(_filename);
-              trace(5,'Added file <%s> to backup list.',[_filename]);
-            end;
-          end;
-        end;
-        break;
       end;
     end;
   finally

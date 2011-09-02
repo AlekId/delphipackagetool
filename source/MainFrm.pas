@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.156  ( 14.07.2011 )
+- SH: improving the backup-function.
+
 1.9.0.155  ( 17.06.2011 )
 - SH: re-compiled aftter improvement in method <RegisterFileType>. Could give an AV
       when not possible to write because of non-admin rights on Win7.

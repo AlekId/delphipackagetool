@@ -1451,7 +1451,8 @@ begin
   trace(5,'CompilePackage: Compiler switch --> %s.',[_CompilerSwitches]);
   trace(5,'Length= %d.',[length(_CompilerSwitches)]);
   WriteLog('*************************************************************************',[]);
-  WriteLog('Compiling Project <%s>. Please wait...',[FCurrentProjectOutputPath+OutputFileName(FCurrentProjectFilename,FCurrentProjectType)]);
+  WriteLog('Compiling Project <%s>. Please wait...',[FCurrentProjectFilename]);
+  WriteLog('Output Target <%s>.',[FCurrentProjectOutputPath+OutputFileName(FCurrentProjectFilename,FCurrentProjectType)]);
   screen.Cursor := crHourGlass;
   if assigned(FOnCurrentProjectCompileStateChanged) then FOnCurrentProjectCompileStateChanged(self,FCurrentProjectFilename,'Compiling...',DateTimeToStr(Now),'','',FCurrentProjectNo,FCurrentPackageDescription);
   FSuccess := CompileProject(FDelphiCompilerFile,
