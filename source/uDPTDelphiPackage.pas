@@ -1261,6 +1261,7 @@ begin
                12:result:='Delphi 2009';
                14:result:='Embarcadero RAD Studio 2010';
                15:result:='Embarcadero RAD Studio XE';
+               16:result:='Embarcadero RAD Studio XE2';
   end;
 end;
 

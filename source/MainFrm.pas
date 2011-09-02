@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.157  ( 02.09.2011 )
+- SH: add definitions for Delphi XE2.
+
 1.9.0.156  ( 14.07.2011 )
 - SH: improving the backup-function.
 

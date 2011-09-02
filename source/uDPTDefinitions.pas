@@ -61,7 +61,7 @@ const
   cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';
   cProjectGroupFilter='*.bpg;*.groupproj;*.bdsgroup';
 
-  DelphiVersions: array [1..15] of TDelphiVersionInfo = (
+  DelphiVersions: array [1..16] of TDelphiVersionInfo = (
     (
       Name: cDelphiName;           //1
       VersionStr: '1.0';
@@ -209,6 +209,16 @@ const
       ShortName: 'D2011';
       CompilerVersion:22;
       CompilerVersionStr:'VER220';
+      Supported: True),
+    (
+      Name: cRSName;              //16
+      VersionStr: 'XE2';
+      IDEVersion: 9;
+      IDEVersionStr: '9.0';
+      CoreIdeVersion: '160';
+      ShortName: 'D2012';
+      CompilerVersion:23;
+      CompilerVersionStr:'VER230';
       Supported: True)
   );
 
