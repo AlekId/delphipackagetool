@@ -14,7 +14,8 @@ uses Classes,
      Windows,
      StdCtrls,
      IniFiles,
-     Registry;
+     Registry,
+     uDPTDefinitions;
 
 resourcestring
 cConfirm='Confirm';
@@ -44,7 +45,7 @@ TDelphiLibraryPath=record
   PackagePath:string
 end;
 
-function  GetDelphiPackageDir(const _DelphiVersion:integer):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
+function  GetDelphiPackageDir(const _DelphiVersion:integer;const _Platform:TDelphiPlatform=tdp_win32):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
 procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer); // create a bpg-file or bdsproj-file.
 function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer):string; // add package into the regitstry.
@@ -97,6 +98,8 @@ function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
 function  MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
 function  RemoveTrailingSemikolon(const _path:string):string;
+function  PlatformTypeAsString(const _platform:TDelphiPlatform):string;
+function  PlatformStringToType(_platform:string):TDelphiPlatform;
 
 var
 FCreateBatchFile:boolean;
@@ -108,6 +111,7 @@ uses uDPTMisc,
      Messages,
      StrUtils,
      TlHelp32,
+     TypInfo,
      Forms,
      XMLDoc,
      XMLIntf,
@@ -115,7 +119,6 @@ uses uDPTMisc,
      Dialogs,
      ShellApi,
      uDPTXMLReader,
-     uDPTDefinitions,
      uDPTJclFuncs,
      MSXML_TLB;
 
@@ -123,6 +126,39 @@ uses uDPTMisc,
 var
 FBatchFile:TStrings;
 FBatchFilename:string;
+
+
+{*-----------------------------------------------------------------------------
+  Procedure: PlatformTypeAsString
+  Author:    sam
+  Date:      03-Sep-2011
+  Arguments: const _platform:TDelphiPlatform
+  Result:    string
+  Description: convert platform-type <_platform> into a string.
+-----------------------------------------------------------------------------}
+function  PlatformTypeAsString(const _platform:TDelphiPlatform):string;
+begin
+  result:=GetEnumName(TypeInfo(TDelphiPlatform),ord(_Platform));
+  delete(result,1,4);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: PlatformStringToType
+  Author:    sam
+  Date:      03-Sep-2011
+  Arguments: _platform:string
+  Result:    TDelphiPlatform
+  Description: convert a the <_platform> string into a platform-type.
+-----------------------------------------------------------------------------}
+function  PlatformStringToType(_platform:string):TDelphiPlatform;
+begin
+  result:=tdp_win32;
+  _platform:=lowercase(_platform);
+  if _platform='win32' then result:=tdp_win32 else
+  if _platform='win64' then result:=tdp_win64 else
+  if _platform='osx'   then result:=tdp_osx;
+end;
+
 
 {-----------------------------------------------------------------------------
   Procedure: RemoveDoublePathEntries
@@ -2224,7 +2260,7 @@ end;
   Result:    string
   Description: get the bpl-folder from the registry.
 -----------------------------------------------------------------------------}
-function GetDelphiPackageDir(const _DelphiVersion:integer):string;
+function GetDelphiPackageDir(const _DelphiVersion:integer;const _Platform:TDelphiPlatform=tdp_win32):string;
 var
 _DelphiRootDirKey:string;
 _DelphiPackageDirKey:string;

@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
-  Left = 64
-  Top = 0
+  Left = 35
+  Top = 119
   Width = 1216
   Height = 676
   Caption = 'Package Group Rebuilder/Installer'
@@ -92,6 +92,14 @@ object FrmMain: TFrmMain
       Width = 135
       Height = 13
       Caption = 'Output Path for the dcu-files.'
+    end
+    object lblPlatform: TLabel
+      Left = 240
+      Top = 96
+      Width = 38
+      Height = 13
+      Caption = 'Platform'
+      Visible = False
     end
     object btnStart: TBitBtn
       Left = 8
@@ -248,6 +256,23 @@ object FrmMain: TFrmMain
         TabOrder = 0
       end
     end
+  end
+  object cbxPlatform: TComboBox
+    Left = 240
+    Top = 112
+    Width = 145
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    ItemIndex = 0
+    TabOrder = 4
+    Text = 'Win32'
+    Visible = False
+    OnChange = cbxPlatformChange
+    Items.Strings = (
+      'Win32'
+      'Win64'
+      'OSX')
   end
   object ActionList1: TActionList
     Left = 496

@@ -4,6 +4,12 @@
  Purpose:
  History:
 
+1.9.0.158  ( 03.09.2011 )
+- SH: started work to support platforms.
+      This is needed because in delphi xe2 the path's defined in the registry
+      are on different locations for the different platforms. Note! this feature
+      is not finished yet and un-tested.
+
 1.9.0.157  ( 02.09.2011 )
 - SH: add definitions for Delphi XE2.
 
@@ -300,6 +306,8 @@ type
     TabSheet2: TTabSheet;
     mmoLogFile: TMemo;
     mmoTrace: TMemo;
+    cbxPlatform: TComboBox;
+    lblPlatform: TLabel;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -347,6 +355,7 @@ type
     procedure actRevertChangesExecute(Sender: TObject);
     procedure actSetVersionSelectedProjectsExecute(Sender: TObject);
     procedure actSelectAllExecute(Sender: TObject);
+    procedure cbxPlatformChange(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -364,6 +373,7 @@ type
     procedure SearchFile(_filename:string;_lineno:integer;_compilerOutput:string);
     procedure PrepareRecentFiles;
     procedure SetDelphiVersionCombobox(const _DelphiVersion:integer);
+    procedure SetPlatformCombobox(const _Platform:TDelphiPlatform);
     procedure PrepareHint;
     procedure FillProjectGrid;
     function  ExtractFilenameFromLog:string;    
@@ -378,6 +388,7 @@ type
     procedure DoCurrentProjectCompileStateChanged(Sender:TObject;const _ProjectName:string;const _CompileState:string;const _CompileDateTime:string;const _ProjectVersion:string;const _ProjectSize:string;const _ProjectNumber:integer;const _Description:string);
     procedure DoCurrentProjectChanged(Sender:TObject;const _ProjectName:string;const _ProjectNumber:integer);
     function  DoWriteTrace(_level:byte;_msg:String;_params:Array of Const):boolean;
+    procedure DoPlatformChangeEvent(Sender:TObject;const _Platform:TDelphiPlatform);
   public
     NVBAppExecExternalCommand: TNVBAppExec;
     procedure SetLastUsedFile(_filename: string);
@@ -402,7 +413,7 @@ uses
   StartUpInfoFrm,
   BPLSearchFrm,
   MainDM,
-  VersionFrm;
+  VersionFrm, TypInfo;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.actSelectBPGFileExecute
@@ -488,6 +499,7 @@ begin
   DMMain.OnWriteLog:=DoWriteLog;
   DMMain.OnDeleteLog:=DoDeleteLog;
   DMMain.OnDelphiVersionChange:=DoDelphiVersionChangeEvent;
+  DMMain.OnPlatformChangeEvent:=DoPlatformChangeEvent;
   DMMain.OnBPGOpen:=DoProjectGroupOpen;
   DMMain.OnBPGClose:=DoProjectGroupClose;
   DMMain.OnApplicationStateChange:=DoApplicationStateChange;
@@ -539,6 +551,7 @@ begin
   DMMain.CloseBPG;
   DMMain.OnWriteLog:=nil;
   DMMain.OnDelphiVersionChange:=nil;
+  DMMain.OnPlatformChangeEvent:=nil;
   if not DirectoryExists(DMMain.BPGPath) then exit;
   _filename:=ChangeFileExt(DMMain.BPGFilename, '.log');
   try
@@ -1536,7 +1549,9 @@ procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersi
 begin
   SetDelphiVersionCombobox(_DelphiVersion);
   if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
-  actShowDOFFile.Visible:=(_DelphiVersion<8)
+  actShowDOFFile.Visible:=(_DelphiVersion<8);
+  lblPlatform.Visible:=(_DelphiVersion>=16);
+  cbxPlatform.Visible:=(_DelphiVersion>=16);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1803,6 +1818,64 @@ function TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Cons
 begin
   mmoTrace.Lines.add(datetimetostr(now)+': '+format(_msg,_params));
   result:=true;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: DoPlatformChangeEvent
+  Author:    sam
+  Date:      02-Sep-2011
+  Arguments: Sender: TObject;const _Platform: TDelphiPlatform
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TFrmMain.DoPlatformChangeEvent(Sender: TObject;const _Platform: TDelphiPlatform);
+begin
+  SetPlatformCombobox(_Platform);
+  if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(DMMain.CurrentDelphiVersion,_Platform);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: SetPlatformCombobox
+  Author:    sam
+  Date:      02-Sep-2011
+  Arguments: const _Platform: TDelphiPlatform
+  Result:    None
+  Description: update the platform combobox.
+-----------------------------------------------------------------------------}
+procedure TFrmMain.SetPlatformCombobox(const _Platform: TDelphiPlatform);
+var
+_sPlatform:string;
+_itemIndex:integer;
+begin
+  cbxPlatform.OnChange:=nil;
+  try
+    cbxPlatform.Items.Assign(DMMain.GetAvailablePlatforms);
+    _sPlatform:=PlatformTypeAsString(_Platform);
+    _itemIndex:=cbxPlatform.Items.IndexOf(_sPlatform);
+    if _ItemIndex>-1 then begin
+      cbxPlatform.ItemIndex:=_ItemIndex;
+    end
+    else begin
+      if cbxPlatform.Items.Count>0 then begin
+        cbxPlatform.ItemIndex:=0;
+      end;
+    end;
+  finally
+    cbxPlatform.OnChange:=cbxPlatformChange;
+  end;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: cbxPlatformChange
+  Author:    sam
+  Date:      03-Sep-2011
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TFrmMain.cbxPlatformChange(Sender: TObject);
+begin
+// todo
 end;
 
 end.

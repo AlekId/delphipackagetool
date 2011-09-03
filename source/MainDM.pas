@@ -21,6 +21,7 @@ type
 
   TOnWriteLogEvent=procedure(Sender:TObject;const _msg:string) of object;
   TOnDelphiVersionChangeEvent=procedure(Sender:TObject;const _DelphiVersion:integer) of object;
+  TOnPlatformChangeEvent=procedure(Sender:TObject;const _Platform:TDelphiPlatform) of object;
   TOnApplicationStateChangeEvent=procedure(Sender:TObject;const _OldState,_NewState:TApplicationState) of object;
   TOnProcessStateChangeEvent=procedure(Sender:TObject;const _ProcessStates:TProcessStates) of object;
   TOnPackageInstallEvent=procedure(Sender:TObject;const _PackageName:string;const _Message:string;const _ProjectNumber:integer) of object;
@@ -103,6 +104,7 @@ type
     FCurrentDelphiVersion: Integer;
     FApplicationIniFilename:string;
     FOnDelphiVersionChangeEvent: TOnDelphiVersionChangeEvent;
+    FOnPlatformChangeEvent:TOnPlatformChangeEvent;
     FOnApplicationStateEvent: TOnApplicationStateChangeEvent;
     FOnProcessStateChangeEvent:TOnProcessStateChangeEvent;
     FOnPackageInstalledEvent: TOnPackageInstallEvent;
@@ -111,12 +113,14 @@ type
     FOnCurrentProjectCompileStateChanged: TOnCurrentProjectCompileStateChanged;
     FDelphiLibraryPath:TDelphiLibraryPath;
     FCurrentPackageSuffix: string;
-    FOnDeleteLog: TNotifyEvent; // information read from the registery.
+    FOnDeleteLog: TNotifyEvent;
+    FCurrentPlatform: TDelphiPlatform; // information read from the registery.
     procedure ReadCurrentProjectType(const _DelphiVersion:integer);
     function  GetLibSuffix(_ProjectType:TProjectType;_LibSuffix:string): string;
     procedure WriteLog(_msg: string;const _params:array of const);
     procedure DeleteLog;
     procedure FireDelphiVersionChange(const _version:integer);
+    procedure FirePlatformChange(const _platform:TDelphiPlatform);
     procedure FireCurrentProjectChanged;
     procedure SetApplicationState(const _newState:TApplicationState);
     procedure SetDelphiVersion(const Value: Integer);
@@ -131,6 +135,7 @@ type
     function  SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer):boolean;
     function  GetProjectVersionOfFile(_filename:string;var Major,Minor,Release,Build:integer):boolean;
     function  OldFilesExist(_ChangedFiles:string):boolean;
+    procedure SetPlatform(const Value: TDelphiPlatform);
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -160,6 +165,7 @@ type
     procedure SaveBackup(_backupfilename:string;_Lines:TStrings);
     function  SetProjectVersion(_filenames:TStringList;var ShowVersionDialog:boolean):boolean;
     function  IncreaseProjectBuildNo(const _filename: string): boolean;
+    function  GetAvailablePlatforms: TStrings;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
@@ -174,6 +180,7 @@ type
     property  CurrentPackageSuffix:string read FCurrentPackageSuffix;
     property  CurrentConditions:string read     FCurrentConditions;
     property  CurrentDelphiVersion:Integer read FCurrentDelphiVersion write SetDelphiVersion; // currently selected delphi version.
+    property  CurrentPlatform:TDelphiPlatform read FCurrentPlatform  write SetPlatform; // currently selected platform (new feature in Delphi XE2)
     property  BPGPath:string read FBPGPath;
     property  BPGFilename:string read FBPGFilename write SetBPGFilename;
     property  DPTSearchPath:string read FDPTSearchPath write FDPTSearchPath;
@@ -192,6 +199,7 @@ type
     property  OnPackageUnInstalledEvent:TOnPackageInstallEvent read FOnPackageUnInstalledEvent write FOnPackageUnInstalledEvent;
     property  OnCurrentProjectChanged:TOnCurrentProjectChanged read FOnCurrentProjectChanged write FOnCurrentProjectChanged;
     property  OnCurrentProjectCompileStateChanged:TOnCurrentProjectCompileStateChanged read FOnCurrentProjectCompileStateChanged write FOnCurrentProjectCompileStateChanged;
+    property  OnPlatformChangeEvent:TOnPlatformChangeEvent read FOnPlatformChangeEvent write FOnPlatformChangeEvent;
   end;
 
 var
@@ -2065,6 +2073,49 @@ end;
 procedure TDMMain.actWriteDPTPathsToProjectExecute(Sender: TObject);
 begin
   UpdateProjectFiles(true);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: SetPlatform
+  Author:    sam
+  Date:      02-Sep-2011
+  Arguments: const Value: TDelphiPlatform
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TDMMain.SetPlatform(const Value: TDelphiPlatform);
+begin
+  FCurrentPlatform := Value;
+  FirePlatformChange(FCurrentPlatform);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: FirePlatformChange
+  Author:    sam
+  Date:      03-Sep-2011
+  Arguments: const _platform: TDelphiPlatform
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
+procedure TDMMain.FirePlatformChange(const _platform: TDelphiPlatform);
+begin
+  if assigned(FOnPlatformChangeEvent) then FOnPlatformChangeEvent(self,_platform);
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: GetAvailablePlatforms
+  Author:    sam
+  Date:      03-Sep-2011
+  Arguments: None
+  Result:    TStrings
+  Description:
+-----------------------------------------------------------------------------}
+function TDMMain.GetAvailablePlatforms: TStrings;
+begin
+  result:=TStringlist.create;
+  if tdp_win32 in DelphiVersions[FCurrentDelphiVersion].Platforms then result.Add(PlatformTypeAsString(tdp_win32));
+  if tdp_win64 in DelphiVersions[FCurrentDelphiVersion].Platforms then result.Add(PlatformTypeAsString(tdp_win64));
+  if tdp_osx   in DelphiVersions[FCurrentDelphiVersion].Platforms then result.Add(PlatformTypeAsString(tdp_osx));
 end;
 
 end.

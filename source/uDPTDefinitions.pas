@@ -25,6 +25,10 @@ type
                       tpr_3rdparty,      // all packages except the borland packages in the directory ($DELPHI)\bin
                       tpr_projectsbpl);  // all packages which are in the directory ($DELPHI)\Projects\bpl
 
+  TDelphiPlatform=(tdp_win32,tdp_win64,tdp_OSX);
+
+  TDelphiPlatforms= set of TDelphiPlatform;
+
   TDelphiVersionInfo = record
     Name: string;
     VersionStr: string;
@@ -35,6 +39,7 @@ type
     CompilerVersion:double;
     CompilerVersionStr:string;
     Supported: Boolean;
+    Platforms:TDelphiPlatforms;
   end;
 
 
@@ -71,7 +76,8 @@ const
       ShortName: 'D1';
       CompilerVersion:8;
       CompilerVersionStr: 'VER80';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),  //???
     (
       Name: cDelphiName;          //2
       VersionStr: '2.0';
@@ -81,7 +87,8 @@ const
       ShortName: 'D2';
       CompilerVersion:9;
       CompilerVersionStr: 'VER90';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]), //???
     (
       Name: cDelphiName;          //3
       VersionStr: '3.0';
@@ -91,7 +98,8 @@ const
       ShortName: 'D3';
       CompilerVersion:10;
       CompilerVersionStr: 'VER100';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cDelphiName;          //4
       VersionStr: '4.0';
@@ -101,7 +109,8 @@ const
       ShortName: 'D4';
       CompilerVersion:12;
       CompilerVersionStr: 'VER120';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cDelphiName;          //5
       VersionStr: '5.0';
@@ -111,7 +120,8 @@ const
       ShortName: 'D5';
       CompilerVersion:13;
       CompilerVersionStr: 'VER130';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cDelphiName;          //6
       VersionStr: '6.0';
@@ -121,7 +131,8 @@ const
       ShortName: 'D6';
       CompilerVersion:14;
       CompilerVersionStr: 'VER140';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cDelphiName;          //7
       VersionStr: '7.0';
@@ -131,7 +142,8 @@ const
       ShortName: 'D7';
       CompilerVersion:15;
       CompilerVersionStr:'VER150';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cDelphiName;          //8
       VersionStr: '8';
@@ -141,7 +153,8 @@ const
       ShortName: 'D8';
       CompilerVersion:16;
       CompilerVersionStr: 'VER160';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cDelphiName;          //9
       VersionStr: '2005';
@@ -151,7 +164,8 @@ const
       ShortName: 'D2005';
       CompilerVersion:17;
       CompilerVersionStr:'VER170';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cBDSName;             //10
       VersionStr: '2006';
@@ -161,7 +175,8 @@ const
       ShortName: 'D2006';
       CompilerVersion:18;
       CompilerVersionStr:'VER180';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cRSName;              //11
       VersionStr: '2007';
@@ -171,7 +186,8 @@ const
       ShortName: 'D2007';
       CompilerVersion:18.5;
       CompilerVersionStr:'VER185';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cRSName;              //12
       VersionStr: '2008';
@@ -179,7 +195,8 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '0';
       ShortName: 'n/a';
-      Supported: False),
+      Supported: False;
+      Platforms:[tdp_win32]),
     (
       Name: cRSName;              //13
       VersionStr: '2009';
@@ -189,7 +206,8 @@ const
       ShortName: 'D2009';
       CompilerVersion:20;
       CompilerVersionStr:'VER200';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cRSName;              //14
       VersionStr: '2010';
@@ -199,7 +217,8 @@ const
       ShortName: 'D2010';
       CompilerVersion:21;
       CompilerVersionStr:'Ver210';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cRSName;              //15
       VersionStr: 'XE';
@@ -209,7 +228,8 @@ const
       ShortName: 'D2011';
       CompilerVersion:22;
       CompilerVersionStr:'VER220';
-      Supported: True),
+      Supported: True;
+      Platforms:[tdp_win32]),
     (
       Name: cRSName;              //16
       VersionStr: 'XE2';
@@ -219,7 +239,8 @@ const
       ShortName: 'D2012';
       CompilerVersion:23;
       CompilerVersionStr:'VER230';
-      Supported: True)
+      Supported: True;
+      Platforms:[tdp_win32,tdp_win64,tdp_OSX])
   );
 
 

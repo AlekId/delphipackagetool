@@ -1,3 +1,9 @@
+1.9.0.158  ( 03.09.2011 )
+- SH: started work to support platforms.
+      This is needed because in delphi xe2 the path's defined in the registry
+      are on different locations for the different platforms. Note! this feature
+      is not finished yet and un-tested.
+
 1.9.0.157  ( 02.09.2011 )
 - SH: add definitions for Delphi XE2.
 
