@@ -801,6 +801,7 @@ procedure TDMMain.SaveBackup(_backupfilename: string;_Lines:TStrings);
 resourcestring
 cCreateBackup='Trying to create a backup file. You can modify the file <%s> if you like to change the backup behavoir.';
 cOpenBackupFolder='Open the backup folder ?';
+cNo7zipFound='Could not find 7-zip. You must install 7-zip v9.25 or higher to use the backup feature.';
 var
 i:integer;
 _line:string;
@@ -815,6 +816,11 @@ _BackupZip :TZip;
 begin
 {$ifndef NoZipSupport}
   _BackupZip := TZip.Create(nil);
+{$else}
+  if Get7zAppName='' then begin
+    Application.MessageBox(pchar(cNo7zipFound),pchar(cWarning),MB_OK);
+    exit;
+  end;
 {$endif}
   try
 {$ifndef NoZipSupport}
@@ -843,16 +849,14 @@ begin
       _FileList.SaveToFile(_backupPath+_BackupFileList);
       writelog('Saved filelist to <%s>.',[_backupPath+_BackupFileList]);
       _batchFilename:=_backupPath+'backup_template.bat';
-     // if not fileexists(_batchFilename) then begin
-        _BatchZipFile:=TStringList.create;
-        try
-          _BatchZipFile.add(Get7zAppName+' a -t7z "ARCHIVENAME" @"FILELIST" -spf');  // needs 7zip 9.25 or higher.
-          _BatchZipFile.add('pause');
-          _BatchZipFile.SaveToFile(_batchFilename);
-        finally
-          _BatchZipFile.free;
-        end;
-     // end;
+      _BatchZipFile:=TStringList.create;
+      try
+        _BatchZipFile.add(Get7zAppName+' a -t7z "ARCHIVENAME" @"FILELIST" -spf');  // needs 7zip 9.25 or higher.
+        _BatchZipFile.add('pause');
+        _BatchZipFile.SaveToFile(_batchFilename);
+      finally
+        _BatchZipFile.free;
+      end;
       if not ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
       _BatchZipFile:=TStringList.create;
       try
