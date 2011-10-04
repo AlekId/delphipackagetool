@@ -1,3 +1,6 @@
+1.9.0.159  ( 04.10.2011 )
+- SH: changes to make backup-zip feature work. Needs a installed 7zip V9.25 or higher.
+
 1.9.0.158  ( 03.09.2011 )
 - SH: started work to support platforms.
       This is needed because in delphi xe2 the path's defined in the registry

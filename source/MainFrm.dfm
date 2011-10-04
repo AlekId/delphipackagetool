@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
-  Left = 35
-  Top = 119
+  Left = 49
+  Top = 152
   Width = 1216
-  Height = 676
+  Height = 644
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,7 +25,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 425
+    Top = 393
     Width = 1208
     Height = 12
     Cursor = crVSplit
@@ -35,7 +35,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 145
     Width = 1208
-    Height = 280
+    Height = 248
     Align = alClient
     ColCount = 8
     Ctl3D = False
@@ -219,7 +219,7 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 437
+    Top = 405
     Width = 1208
     Height = 193
     ActivePage = TabSheet1
@@ -251,6 +251,8 @@ object FrmMain: TFrmMain
         Width = 1200
         Height = 165
         Align = alClient
+        Ctl3D = False
+        ParentCtl3D = False
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0

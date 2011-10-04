@@ -62,6 +62,7 @@ function CreateDirectory(const _path:string):boolean;
 function RemoveReadOnlyFlag(const _filename:string;const _silent:boolean):boolean;
 function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;Show: Word; bWait: Boolean; var ExitCode: LongWord): LongWord;
 procedure ShowFolder(strFolder: string);
+function Get7zAppName:string; // returns full filename&path to the 7z.exe file.
 
 var
   FWriteMsg:TNVBTraceProcedure;
@@ -74,6 +75,36 @@ uses Graphics,
      Dialogs,
      ShellAPI,
      shlObj;
+
+{*-----------------------------------------------------------------------------
+  Procedure: Get7zAppName
+  Author:    sam
+  Date:      04-Okt-2011
+  Arguments: None
+  Result:    string
+  Description: returns full filename&path to the 7z.exe file.
+-----------------------------------------------------------------------------}
+function Get7zAppName:string;
+var
+_Reg: TRegistry;
+begin
+  result:='';
+  _Reg := TRegistry.Create;
+  try
+    _Reg.RootKey := HKEY_CLASSES_ROOT;
+    if not _Reg.OpenKeyReadOnly('\Applications\7z.exe\shell\open\command') then exit;
+    try
+      Result := _Reg.ReadString('');
+      if pos('"',result)=1 then delete(result,1,1);
+      result:=GetField('"',result);
+    finally
+      _Reg.CloseKey;
+    end;
+  finally
+    _Reg.free;
+  end;
+end;
+
 
 {-----------------------------------------------------------------------------
   Procedure: RemoveReadOnlyFlag

@@ -583,11 +583,12 @@ begin
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath',11,'','Defines last used Backup Path.',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup', 12, true,'If set to <True>, then DelphiPackageTool creates a backup zip-file after succeessfull run of "Install All".', true,false,false);
   ProjectSettings.GetBoolValue('Application/Trace',13,false,'If set to <True>, then Program internals are written into the trace-memo.',true,false,false);
-  if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName])
-                          else ProjectSettings.SetInteger('Application/DelphiVersion',5,CurrentDelphiVersion);
+  ProjectSettings.GetStringValue('Application/Platform',14,'win32','The platform used. e.g win32,win64,osx.',true,false,false);
+  if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName]);
   CurrentDelphiVersion:=ProjectSettings.IntegerValue('Application/DelphiVersion',5);
+  CurrentPlatform     :=PlatformStringToType(ProjectSettings.StringValue('Application/Platform',14));
   ReadPackageListfromFile(FBPGFilename,FProjectList);
-  FDPTSearchPath := GetGlobalSearchPath(false);
+  FDPTSearchPath      := GetGlobalSearchPath(false);
   if FProjectList.count>0 then SetCurrentProject(FProjectList[0]);
   ApplicationState:=tas_open;
   if assigned(FOnBPGOpen) then FOnBPGOpen(self);
@@ -842,16 +843,16 @@ begin
       _FileList.SaveToFile(_backupPath+_BackupFileList);
       writelog('Saved filelist to <%s>.',[_backupPath+_BackupFileList]);
       _batchFilename:=_backupPath+'backup_template.bat';
-      if not fileexists(_batchFilename) then begin
-        _BatchZipFile:=TStringList.create; 
+     // if not fileexists(_batchFilename) then begin
+        _BatchZipFile:=TStringList.create;
         try
-          _BatchZipFile.add('7za u -r -t7z "ARCHIVENAME" @"FILELIST"');
+          _BatchZipFile.add(Get7zAppName+' a -t7z "ARCHIVENAME" @"FILELIST" -spf');  // needs 7zip 9.25 or higher.
           _BatchZipFile.add('pause');
           _BatchZipFile.SaveToFile(_batchFilename);
         finally
           _BatchZipFile.free;
         end;
-      end;
+     // end;
       if not ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
       _BatchZipFile:=TStringList.create;
       try

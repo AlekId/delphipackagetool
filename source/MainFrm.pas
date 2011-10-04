@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.159  ( 04.10.2011 )
+- SH: changes to make backup-zip feature work. Needs a installed 7zip V9.25 or higher.
+
 1.9.0.158  ( 03.09.2011 )
 - SH: started work to support platforms.
       This is needed because in delphi xe2 the path's defined in the registry
@@ -970,6 +973,7 @@ procedure TFrmMain.GUItoProjectSettings;
 begin
   if not DMMain.ProjectSettings.isLoaded then exit;
   DMMain.ProjectSettings.SetInteger('Application/DelphiVersion',5, DMMain.CurrentDelphiVersion);
+  DMMain.ProjectSettings.SetString('Application/Platform',14, PlatformTypeAsString(DMMain.CurrentPlatform));
   DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',6,edtPackageBPLDirectory.Text);
   DMMain.ProjectSettings.SetPath('Application/DCUOutputPath',7,edtDcuPath.Text);
 end;
@@ -987,6 +991,7 @@ begin
   if DMMain.ProjectSettings.PathValue('Application/PackageOutputPath', 6)<>'' then edtPackageBPLDirectory.Text:= DMMain.ProjectSettings.PathValue('Application/PackageOutputPath', 6);
   if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath', 7)<>''     then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath', 7);
   SetDelphiVersionCombobox(DMMain.ProjectSettings.IntegerValue('Application/DelphiVersion',5));
+  SetPlatformCombobox(PlatformStringToType(DMMain.ProjectSettings.StringValue('Application/Platform',14)));
 end;
 
 {-----------------------------------------------------------------------------
@@ -1877,6 +1882,7 @@ procedure TFrmMain.cbxPlatformChange(Sender: TObject);
 begin
 // todo
 end;
+
 
 end.
 
