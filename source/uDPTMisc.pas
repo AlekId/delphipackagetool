@@ -31,8 +31,8 @@ type
     spMediaPath, spWallPaper, spCommonDocs);
 
 
-  TNVBTraceProcedure=function(_level:byte;_msg:String;_params:Array of Const):boolean of object;
-  TNVBSendTrace     =function (_to:string='';_subject:string='';_attachementFilename:string=''):boolean of object;
+  TNVBTraceProcedure=procedure(_level:byte;_msg:String;_params:Array of Const) of object;
+  TNVBSendTrace     =procedure (_to:string='';_subject:string='';_attachementFilename:string='') of object;
 
 procedure RegisterFileType(_ExtName:String;_AppName:String) ;
 function GetWindowsPath:String;  // returns the windows directory name

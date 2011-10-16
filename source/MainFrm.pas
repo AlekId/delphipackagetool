@@ -390,7 +390,7 @@ type
     procedure DoPackageUnInstallEvent(Sender:TObject;const _PackageName:string;const _Message:string;const _ProjectNumber:integer);
     procedure DoCurrentProjectCompileStateChanged(Sender:TObject;const _ProjectName:string;const _CompileState:string;const _CompileDateTime:string;const _ProjectVersion:string;const _ProjectSize:string;const _ProjectNumber:integer;const _Description:string);
     procedure DoCurrentProjectChanged(Sender:TObject;const _ProjectName:string;const _ProjectNumber:integer);
-    function  DoWriteTrace(_level:byte;_msg:String;_params:Array of Const):boolean;
+    procedure  DoWriteTrace(_level:byte;_msg:String;_params:Array of Const);
     procedure DoPlatformChangeEvent(Sender:TObject;const _Platform:TDelphiPlatform);
   public
     NVBAppExecExternalCommand: TNVBAppExec;
@@ -1819,10 +1819,9 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const): boolean;
+procedure TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const);
 begin
   mmoTrace.Lines.add(datetimetostr(now)+': '+format(_msg,_params));
-  result:=true;
 end;
 
 {*-----------------------------------------------------------------------------

@@ -247,7 +247,7 @@ begin
   _filter:=trim(lowercase(_filter));
   lstAllFiles.Clear;
   for i:=0 to FItems.count-1 do begin
-    if (_filter='') or (pos(_filter,lowercase(FItems[i]))>0) then  lstAllFiles.Items.add(FItems[i]);
+    if (_filter='') or (pos(_filter,lowercase(ExtractFilename(FItems[i])))>0) then  lstAllFiles.Items.add(FItems[i]);
   end;
 end;
 
