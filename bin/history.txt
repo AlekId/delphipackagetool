@@ -1,3 +1,9 @@
+1.9.0.162  ( 18.10.2011 )
+-SH: fixes for registry access.
+
+1.9.0.161  ( 17.10.2011 )
+-SH: changes in set/get package dir.
+
 1.9.0.159  ( 04.10.2011 )
 - SH: changes to make backup-zip feature work. Needs a installed 7zip V9.25 or higher.
 

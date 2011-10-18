@@ -1097,7 +1097,7 @@ begin
   try
     _Reg.RootKey := _ROOTKEY;
     if not _Reg.OpenKey(_DelphiRootDirKey,false) then begin
-      trace(5,'CleanupByRegistry: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
+      trace(1,'CleanupByRegistry: The Key <%s> was not found in the registry or no access rights.',[_DelphiRootDirKey]);
       exit;
     end;
     _Reg.GetValueNames(_ValueNames);
@@ -1144,7 +1144,10 @@ begin
   _Reg := TRegistry.Create;
   try
     _Reg.RootKey := _RootKey;
-    _Reg.OpenKey(_Key,false);
+    if not _Reg.OpenKey(_Key,false) then begin
+      trace(1,'RemoveValueFromRegistry: The Key <%s> was not found in the registry or no access rights.',[_Key]);
+      exit;
+    end;
     if not _Reg.ValueExists(_PackageName) then begin
       trace(5,'RemoveValueFromRegistry: Could not find Key Value <%s> in <%s>.',[_PackageName,_key]);
       exit;
@@ -2267,7 +2270,7 @@ _DelphiPackageDirKey:string;
 _DelphiPackagePath:string;
 _Reg: TRegistry;
 begin
-  result:='unknown';
+  result:='';
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in GetDelphiPackageDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
@@ -2314,7 +2317,6 @@ _DelphiPackageDirKey:string;
 _Reg: TRegistry;
 begin
   result:=false;
-  if _PackageDir='' then exit;
   if GetDelphiPackageDir(_DelphiVersion)=_PackageDir then begin
     result:=true;
     exit; // is already set to this value
@@ -3147,11 +3149,14 @@ begin
   _Reg := TRegistry.Create;
   try
     _Reg.RootKey := _RootKey;
+    if not _Reg.OpenKey(_Key,false) then begin
+      trace(1,'AddPackageToRegistry: The Key <%s> was not found in the registry or no access rights.',[_RootKey]);
+      exit;
+    end;
     if _Reg.ValueExists(_PackageName) then begin
       trace(5,'AddPackageToRegistry: The Packages <%s> is already registered.',[_PackageName]);
       exit;
     end;
-    _Reg.OpenKey(_Key,false);
     try
       _Reg.WriteString(_PackageName,_PackageDescription);
       trace(5,'AddPackageToRegistry: Successfully installed the  Packages <%s> for <%s>.',[_PackageName,_Key]);
