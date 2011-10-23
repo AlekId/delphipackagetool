@@ -209,7 +209,6 @@ implementation
 
 uses
   Forms,
-  dialogs,
   Windows,
   Controls,
   RemovePackagesQuestionFrm,

@@ -422,7 +422,8 @@ uses
   StartUpInfoFrm,
   BPLSearchFrm,
   MainDM,
-  VersionFrm, TypInfo;
+  VersionFrm,
+  TypInfo;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.actSelectBPGFileExecute
