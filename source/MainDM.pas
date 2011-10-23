@@ -234,11 +234,6 @@ cModifiedFileExtentions='.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;';
 -----------------------------------------------------------------------------}
 procedure TDMMain.ReadCurrentProjectType(const _DelphiVersion:integer);
 begin
-  FCurrentProjectType:=tp_unkown;
-  if not fileexists(FCurrentProjectFilename) then begin
-    trace(1,'Problem in TDMMain.ReadCurrentProjectType: Could not find file <%s>.',[FCurrentProjectFilename]);
-    exit;
-  end;
   FCurrentProjectType:=DetermProjectType(FCurrentProjectFilename,FBPGFilename,_DelphiVersion);
   if FCurrentProjectType=tp_unkown then trace(1,'Problem in TDMMain.ReadCurrentProjectType: Could not find out the project type of <%s>.',[FCurrentProjectFilename]);
 end;

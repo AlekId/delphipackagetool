@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
   Left = 49
-  Top = 152
+  Top = 0
   Width = 1216
   Height = 644
   Caption = 'Package Group Rebuilder/Installer'

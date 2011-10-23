@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.163  ( 23.10.2011 )
+-SH: fix in DetermProjectTypeDelphi incase when the file does not exist.
+     RemoveProjectFromBPG did not work in this special case.
+
 1.9.0.162  ( 18.10.2011 )
 -SH: fixes for registry access.
 

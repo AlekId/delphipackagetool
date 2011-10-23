@@ -498,7 +498,7 @@ end;
 function RemoveProjectFromGroupProj(const _bpgfilename,_projectfilename:string;const _filetype:TProjectType):boolean;
 begin
   result:=false;
-  showmessage('TODO: Deletion of a project from a .groupproj file is not implemented yet.');
+  showmessage('TODO: Deletion of a project from a .groupproj file is not implemented yet. You can get the sourcecode from sourceforge.net and implement this feaure.');
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1710,7 +1710,11 @@ _sourcetext:string;
 _ProjectName:string;
 begin
   result:=tp_unkown;
-  if not fileexists(_projectfilename) then exit;
+  if not fileexists(_projectfilename) then begin
+    if lowercase(ExtractFileExt(_projectfilename))='.dpk' then result:=tp_bpl
+                                                          else result:=tp_exe;
+    exit;
+  end;
   _projectfilename:=ReadProjectFilenameFromDProj(_projectfilename);
   if not fileexists(_projectfilename) then exit;
   _ProjectFile:=TStringList.Create;
