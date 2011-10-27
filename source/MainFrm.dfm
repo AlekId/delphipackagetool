@@ -256,6 +256,7 @@ object FrmMain: TFrmMain
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
+        OnDblClick = mmoTraceDblClick
       end
     end
   end

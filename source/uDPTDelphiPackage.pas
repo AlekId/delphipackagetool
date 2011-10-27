@@ -51,7 +51,7 @@ procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectG
 function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer):string; // add package into the regitstry.
 function  UninstallPackage(_PackageName,_PackageDirectory,_PackageLibSuffix:String;_DelphiVersion:Integer):boolean;  // remove package from regeistry.
 function  CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;_ProjectType:TProjectType;Var Output:String;const _DelphiVersion:integer):boolean; // compile the package
-function  VerifyRegistry(const _DelphiVersion:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
+function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStrings);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
 function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
@@ -79,7 +79,7 @@ function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) 
 function  VersionNoToIDEName(const _version:integer):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
-function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer):boolean; // find registry-entries without the packages
+function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
 function  CheckDirectory(const _name:string):boolean; // check if the directory exists. if not then ask the user and create it.
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings):THashedStringList; // extract filenames from the dcc32.exe output.
@@ -528,13 +528,15 @@ end;
   Result:    boolean
   Description: this method returns true if an invalid key from the registry gets deleted.
 -----------------------------------------------------------------------------}
-function  VerifyRegistry(const _DelphiVersion:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
+function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 begin
   result:=false;
-  if CleanupByRegistry(HKEY_CURRENT_USER, 'Known Packages'   ,_DelphiVersion) then result:=true;
-  if CleanupByRegistry(HKEY_LOCAL_MACHINE,'Known Packages'   ,_DelphiVersion) then result:=true;
-  if CleanupByRegistry(HKEY_CURRENT_USER, 'Disabled Packages',_DelphiVersion) then result:=true;
-  if CleanupByRegistry(HKEY_LOCAL_MACHINE,'Disabled Packages',_DelphiVersion) then result:=true;
+  NoOfRemovedKeys:=0;
+  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then exit;
+  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then exit;
+  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then exit;
+  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then exit;
+  result:=true;
 end;
 
 {-----------------------------------------------------------------------------
@@ -550,15 +552,14 @@ var
 i:integer;
 _Text:String;
 begin
-  removedText:='';
   result:=-1;
+  removedText:='';
   for i:=0 to content.Count-1 do begin
     _text:=trim(content[i]);
-    if pos(_Tag,_text)=1 then begin
-      removedText:=_text;
-      result:=i;
-      break;
-    end;
+    if pos(_Tag,_text)<>1 then continue;
+    removedText:=_text;
+    result:=i;
+    break;
   end;
 end;
 
@@ -987,8 +988,36 @@ end;
 -----------------------------------------------------------------------------}
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean;
 var
-_Reg:TRegistry;
 _Key:string;
+
+  function _ReadLibraryPath(_RootKey:HKEY):boolean;
+  var
+  _Reg:TRegistry;
+  begin
+    result:=false;
+    _Reg := TRegistry.Create;
+    try
+      _Reg.RootKey := _RootKey;
+      if not _Reg.OpenKeyReadOnly(_Key) then begin
+        trace(5,'Warning in _ReadLibraryPath: The Key <%s,%s> could not be opened in the registry.',[HKEYToStr(_RootKey),_Key]);
+        exit;
+      end;
+      try
+        DelphiLibraryPath.BrowsingPath:=_Reg.ReadString('Browsing Path');
+        DelphiLibraryPath.DebugDCUpath:=_Reg.ReadString('Debug DCU Path');
+        DelphiLibraryPath.DCPpath     :=_Reg.ReadString('Package DCP Output');
+        DelphiLibraryPath.BPLpath     :=_Reg.ReadString('Package DPL Output');
+        DelphiLibraryPath.PackagePath :=_Reg.ReadString('Package Search Path');
+        DelphiLibraryPath.Searchpath  :=_Reg.ReadString('Search Path');
+        result:=true;
+      except
+        on e:exception do trace(1,'Warning in _ReadLibraryPath: Could not read Library-Settings for delphi version <%s>.You need to have Admin rights for this computer. <%s>',[_DelphiVersion,e.message]);
+      end;
+      _Reg.CloseKey;
+    finally
+      _Reg.free;
+    end;
+  end;
 begin
   result:=false;
   if not GetIDERootKey(_DelphiVersion,_Key) then begin
@@ -996,27 +1025,8 @@ begin
     exit;
   end;
   _Key:=_Key+'library\';
-  _Reg := TRegistry.Create;
-  try
-    _Reg.RootKey := HKEY_LOCAL_MACHINE;
-    if not _Reg.OpenKeyReadOnly(_Key) then begin
-      trace(1,'Problem in ReadLibraryPath: The Key <%s> could not be opened in the registry.',[_Key]);
-      exit;
-    end;
-    try
-      DelphiLibraryPath.BrowsingPath:=_Reg.ReadString('Browsing Path');
-      DelphiLibraryPath.DebugDCUpath:=_Reg.ReadString('Debug DCU Path');
-      DelphiLibraryPath.DCPpath     :=_Reg.ReadString('Package DCP Output');
-      DelphiLibraryPath.BPLpath     :=_Reg.ReadString('Package DPL Output');
-      DelphiLibraryPath.PackagePath :=_Reg.ReadString('Package Search Path');
-      DelphiLibraryPath.Searchpath  :=_Reg.ReadString('Search Path');
-    except
-      trace(1,'Warning in ReadLibraryPath: Could not read Library-Settings for delphi version <%s>.You need to have Admin rights for this computer.',[_DelphiVersion]);
-    end;
-    _Reg.CloseKey;
-  finally
-    _Reg.free;
-  end;
+  result:=_ReadLibraryPath(HKEY_LOCAL_MACHINE);
+  if not result then result:=_ReadLibraryPath(HKEY_CURRENT_USER);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1078,7 +1088,7 @@ end;
                file really exists. if not then delete the registry entry.
                This method returns true if an invalid key get's deleted from the registry.
 -----------------------------------------------------------------------------}
-function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer):boolean; // find registry-entries without the packages
+function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
 var
 i:integer;
 _DelphiRootDirKey:string;
@@ -1086,7 +1096,7 @@ _Reg: TRegistry;
 _ValueNames:TStrings;
 _packageName:string;
 begin
-  result:=false;
+  result:=true;
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in CleanupByRegistry: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
@@ -1107,12 +1117,11 @@ begin
         if fileexists(_packageName) then continue;
         if not _Reg.DeleteValue(_ValueNames[i]) then begin
           trace(3,'Problem in CleanupByRegistry: Could not remove key <%s> from registry for delphi <%d>.',[_DelphiRootDirKey+_ValueNames[i],_DelphiVersion]);
+          result:=false;
           continue;
-        end
-        else begin
-          result:=true;
-          trace(3,'Removed key <%s> from registry because the referenced file <%s> does not exist.',[_DelphiRootDirKey+_ValueNames[i],_packageName]);
-        end;
+        end ;
+        trace(3,'Removed key <%s> from registry because the referenced file <%s> does not exist.',[_DelphiRootDirKey+_ValueNames[i],_packageName]);
+        inc(NoOfRemovedKeys);
       end;
     except
       on e:exception do begin
@@ -1145,19 +1154,19 @@ begin
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
-      trace(1,'RemoveValueFromRegistry: The Key <%s> was not found in the registry or no access rights.',[_Key]);
+      trace(5,'RemoveValueFromRegistry: The package <%s> was not found in the registry Key <%s,%s> or no access rights.',[_PackageName,HKEYToStr(_RootKey),_Key]);
       exit;
     end;
     if not _Reg.ValueExists(_PackageName) then begin
-      trace(5,'RemoveValueFromRegistry: Could not find Key Value <%s> in <%s>.',[_PackageName,_key]);
+      trace(5,'RemoveValueFromRegistry: Could not find Key Value <%s> in <%s,%s>.',[_PackageName,HKEYToStr(_RootKey),_key]);
       exit;
     end;
     if not _Reg.DeleteValue(_PackageName) then begin
-      trace(5,'RemoveValueFromRegistry: Could not delete Key Value <%s> in <%s>.',[_PackageName,_key]);
+      trace(5,'RemoveValueFromRegistry: Could not delete Key Value <%s> in <%s,%s>.',[_PackageName,HKEYToStr(_RootKey),_key]);
       exit;
     end;
     result:=true;
-    trace(5,'RemoveValueFromRegistry: Successfully deleted Key Value <%s> from <%s>.',[_PackageName,_Key]);
+    trace(5,'RemoveValueFromRegistry: Successfully deleted Key Value <%s> from <%s,%s>.',[_PackageName,HKEYToStr(_RootKey),_Key]);
   finally
     _Reg.CloseKey;
     _Reg.Free;
@@ -1178,6 +1187,7 @@ i:integer;
 _fileList:TStrings;
 _PackageKey:string;
 _filename:string;
+_NoOfDeletedKeys:integer;
 begin
   result:=false;
   _BPLPath:=IncludeTrailingPathDelimiter(_BPLPath);
@@ -1213,7 +1223,7 @@ begin
   finally
     _fileList.free;
   end;
-  VerifyRegistry(_DelphiVersion);
+  VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys);
 end;
 
 
@@ -1931,14 +1941,12 @@ end;
 function PrepapreRegistryPath(_filename:string):string;
 var
 i:integer;
-_outputstring:string;
 begin
-  _outputstring:='';
+  result:='';
   for i:=1 to length(_filename) do begin
-    _outputstring:=_outputstring+_filename[i];
-    if _filename[i]='\' then _outputstring:=_outputstring+'\';
+    result:=result+_filename[i];
+    if _filename[i]='\' then result:=result+'\';
   end;
-  result:=_outputstring;
 end;
 
 
@@ -2025,33 +2033,41 @@ end;
 function  GetDelphiApplication(const _DelphiVersion:integer):string; // returns the name and full path of the delphi32.exe file.
 var
 _DelphiRootDirKey:string;
-_Reg: TRegistry;
+
+  function _GetDelphiApplication(_RootKey:HKEY;_Key:string):string;
+  var
+  _Reg: TRegistry;
+  begin
+    result:='';
+    _Reg := TRegistry.Create;
+    try
+      _Reg.RootKey := _RootKey;
+      if not _Reg.OpenKeyReadOnly(_Key) then begin
+        trace(5,'Warning in _GetDelphiApplication: The Key <%s> was not found in the registry.',[_Key]);
+        exit;
+      end;
+      try
+        result:=_Reg.ReadString('App');
+        if result<>'' then begin
+          trace(5,'_GetDelphiApplication: Found Delphi <%s> for delphi version <%d>.',[result,_DelphiVersion]);
+        end else trace(5,'Problem in _GetDelphiApplication: Could not find root directory for delphi <%d>.',[_DelphiVersion]);
+      except
+        trace(1,'Warning in _GetDelphiApplication: Could not read the delphi root directory for delphi version <%s>.You need to have Admin rights for this computer.',[_DelphiVersion]);
+      end;
+      _Reg.CloseKey;
+    finally
+      _Reg.Free;
+    end;
+  end;
+
 begin
   result:='';
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(5,'Warning in GetDelphiApplication: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
-
-  _Reg := TRegistry.Create;
-  try
-    _Reg.RootKey := HKEY_LOCAL_MACHINE;
-    if not _Reg.OpenKeyReadOnly(_DelphiRootDirKey) then begin
-      trace(1,'Problem in GetDelphiApplication: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
-      exit;
-    end;
-    try
-      result:=_Reg.ReadString('App');
-      if result<>'' then begin
-        trace(5,'GetDelphiApplication: Found Delphi <%s> for delphi version <%d>.',[result,_DelphiVersion]);
-      end else trace(5,'Problem in GetDelphiApplication: Could not find root directory for delphi <%d>.',[_DelphiVersion]);
-    except
-      trace(1,'Warning in GetDelphiApplication: Could not read the delphi root directory for delphi version <%s>.You need to have Admin rights for this computer.',[_DelphiVersion]);
-    end;
-    _Reg.CloseKey;
-  finally
-    _Reg.Free;
-  end;
+  result:=_GetDelphiApplication(HKEY_LOCAL_MACHINE,_DelphiRootDirKey);
+  if result='' then result:=_GetDelphiApplication(HKEY_CURRENT_USER,_DelphiRootDirKey);
 end;
 
 {-----------------------------------------------------------------------------
@@ -2228,35 +2244,45 @@ function GetDelphiRootDir(const _DelphiVersion:integer):string;
 var
 _DelphiRootDirKey:string;
 _DelphiRootPath:string;
+
+
+function _GetDelphiRootDir(_RootKey:HKEY):string;
+var
 _Reg: TRegistry;
+begin
+  result:='';
+  _Reg := TRegistry.Create;
+  try
+    _Reg.RootKey := _RootKey;
+    if not _Reg.OpenKeyReadOnly(_DelphiRootDirKey) then begin
+      trace(5,'Problem in _GetDelphiRootDir: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
+      exit;
+    end;
+    try
+      _DelphiRootPath:=_Reg.ReadString('RootDir');
+      if _DelphiRootPath='' then begin
+        trace(5,'Problem in _GetDelphiRootDir: Could not get root directory for delphi <%d>.',[_DelphiVersion]);
+        exit;
+      end;
+      result:=IncludeTrailingPathDelimiter(_DelphiRootPath);
+      trace(5,'_GetDelphiRootDir: Delphi root directory <%s> for delphi version <%d>.',[_DelphiRootPath,_DelphiVersion]);
+    except
+      on e:exception do trace(1,'Warning in _GetDelphiRootDir: Could not read the delphi root directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
+    end;
+    _Reg.CloseKey;
+  finally
+    _Reg.Free;
+  end;
+end;
+
 begin
   result:='';
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in GetDelphiRootDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
-  _Reg := TRegistry.Create;
-  try
-    _Reg.RootKey := HKEY_LOCAL_MACHINE;
-    if not _Reg.OpenKeyReadOnly(_DelphiRootDirKey) then begin
-      trace(1,'Problem in GetDelphiRootDir: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
-      exit;
-    end;
-    try
-      _DelphiRootPath:=_Reg.ReadString('RootDir');
-      if _DelphiRootPath='' then begin
-        trace(3,'Problem in GetDelphiRootDir: Could not get root directory for delphi <%d>.',[_DelphiVersion]);
-        exit;
-      end;
-      result:=IncludeTrailingPathDelimiter(_DelphiRootPath);
-      trace(5,'GetDelphiRootDir: Delphi root directory <%s> for delphi version <%d>.',[_DelphiRootPath,_DelphiVersion]);
-    except
-      on e:exception do trace(1,'Warning in GetDelphiRootDir: Could not read the delphi root directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
-    end;
-    _Reg.CloseKey;
-  finally
-    _Reg.Free;
-  end;
+  result:=_GetDelphiRootDir(HKEY_LOCAL_MACHINE);
+  if result='' then result:=_GetDelphiRootDir(HKEY_CURRENT_USER);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2272,36 +2298,43 @@ var
 _DelphiRootDirKey:string;
 _DelphiPackageDirKey:string;
 _DelphiPackagePath:string;
-_Reg: TRegistry;
+  function _GetDelphiPackageDir(_RootKey:HKEY):string;
+  var
+  _Reg: TRegistry;
+  begin
+    _Reg := TRegistry.Create;
+    try
+      _Reg.RootKey := _RootKey;
+      _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
+      if not _Reg.OpenKeyReadOnly(_DelphiPackageDirKey) then begin
+         trace(5,'Problem in _GetDelphiPackageDir: The Key <%s> was not found in the registry.',[_DelphiPackageDirKey]);
+        exit;
+      end;
+      try
+        _DelphiPackagePath:=_Reg.ReadString('Package DPL Output');
+        if _DelphiPackagePath='' then begin
+          trace(5,'Problem in _GetDelphiPackageDir: Could not get root directory for delphi <%d>.',[_DelphiVersion]);
+          exit;
+        end;
+        result:=IncludeTrailingPathDelimiter(_DelphiPackagePath);
+        trace(5,'_GetDelphiPackageDir: Delphi root directory <%s> for delphi version <%d>.',[_DelphiPackagePath,_DelphiVersion]);
+      except
+        on e:exception do trace(1,'Error in _GetDelphiPackageDir: Could not read the delphi package directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
+      end;
+      _Reg.CloseKey;
+    finally
+      _Reg.Free;
+    end;
+  end;
+
 begin
   result:='';
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in GetDelphiPackageDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
-  _Reg := TRegistry.Create;
-  try
-    _Reg.RootKey := HKEY_LOCAL_MACHINE;
-    _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
-    if not _Reg.OpenKeyReadOnly(_DelphiPackageDirKey) then begin
-       trace(1,'Problem in GetDelphiPackageDir: The Key <%s> was not found in the registry.',[_DelphiPackageDirKey]);
-      exit;
-    end;
-    try
-      _DelphiPackagePath:=_Reg.ReadString('Package DPL Output');
-      if _DelphiPackagePath='' then begin
-        trace(3,'Problem in GetDelphiPackageDir: Could not get root directory for delphi <%d>.',[_DelphiVersion]);
-        exit;
-      end;
-      result:=IncludeTrailingPathDelimiter(_DelphiPackagePath);
-      trace(5,'GetDelphiPackageDir: Delphi root directory <%s> for delphi version <%d>.',[_DelphiPackagePath,_DelphiVersion]);
-    except
-      on e:exception do trace(1,'Warning in GetDelphiPackageDir: Could not read the delphi package directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
-    end;
-    _Reg.CloseKey;
-  finally
-    _Reg.Free;
-  end;
+  result:=_GetDelphiPackageDir(HKEY_LOCAL_MACHINE);
+  if result='' then result:=_GetDelphiPackageDir(HKEY_CURRENT_USER);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2400,7 +2433,7 @@ begin
   DCUOutputPath:='';
   Conditions:='';
   if not fileExists(_cfgFilename) then begin
-    trace(2,'Problem in ReadCFGSettings: Could not find the file <%s>.',[_cfgFilename]);
+    trace(5,'Warning in ReadCFGSettings: Could not find the file <%s>.',[_cfgFilename]);
     exit;
   end;
   _CFGFile:=TStringList.Create;
@@ -4005,11 +4038,12 @@ end;
 -----------------------------------------------------------------------------}
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
 var
-  _FileName : String;
+_FileName : String;
+_NoOfDeletedKeys:integer;
 begin
   _FileName := GetDelphiApplication(_DelphiVersion);
   if not FileExists(_FileName) then exit;
-  VerifyRegistry(_DelphiVersion);
+  VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys);
   trace(5,'StartUpDelphi:Try to start Delphi from <%s>.',[_FileName]);
 {$IF CompilerVersion < 20.0}
   ShellExecute(0, 'open', PChar(_FileName), PChar(' /ns "'+_ProjectName+'"'), nil, SW_SHOWNORMAL);

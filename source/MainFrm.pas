@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.164  ( 28.10.2011 )
+-SH: changes when reading registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
+     cleanup of trace messages.
+
 1.9.0.163  ( 23.10.2011 )
 -SH: fix in DetermProjectTypeDelphi incase when the file does not exist.
      RemoveProjectFromBPG did not work in this special case.
@@ -369,9 +373,11 @@ type
     procedure actSetVersionSelectedProjectsExecute(Sender: TObject);
     procedure actSelectAllExecute(Sender: TObject);
     procedure cbxPlatformChange(Sender: TObject);
+    procedure mmoTraceDblClick(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
+    FFullTrace:boolean;
     procedure LoadBPG(_filename:string); // load a BPG-File.
     procedure OpenBPGFileInEditor;
     procedure SetCurrentPackage(const _ProjectName:string);
@@ -502,8 +508,8 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
-  if DMMain.ProjectSettings.BoolValue('Application/Trace',13) then FWriteMsg:=DoWriteTrace
-                                                              else FWriteMsg:=nil;
+  FWriteMsg:=DoWriteTrace;
+  FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
   NVBAppExecExternalCommand.Wait := True;
@@ -539,8 +545,7 @@ begin
   try
     _FrmOptions.showmodal;
     FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
-    if DMMain.ProjectSettings.BoolValue('Application/Trace',13) then FWriteMsg:=DoWriteTrace
-                                                                else FWriteMsg:=nil;
+    FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
   finally
     _FrmOptions.free;
   end;
@@ -1410,11 +1415,20 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actVerifyRegistryExecute(Sender: TObject);
 resourcestring
-cDeletedWrongKeys='Removed some wrong Registry-Keys. See the Trace-File CTRL+T if you need more information.';
+cDeletedWrongKeys='Removed some wrong Registry-Keys.';
 cRegistryIsOk='Registry-Entries are ok. Nothing has been changed.';
+cCouldNotCleanupRegistry='Could not delete some keys from the registery. You might need to run this action with admin-rights.';
+var
+_NoOfDeletedKeys:integer;
 begin
-  if VerifyRegistry(DMMain.CurrentDelphiVersion) then Application.MessageBox(pchar(cDeletedWrongKeys),pchar(cInformation),MB_ICONINFORMATION or MB_OK)
-                                                 else Application.MessageBox(pchar(cRegistryIsOk),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+  if not VerifyRegistry(DMMain.CurrentDelphiVersion,_NoOfDeletedKeys) then begin
+    Application.MessageBox(pchar(cCouldNotCleanupRegistry),pchar(cError),MB_ICONINFORMATION);
+    exit;
+  end;
+
+  if _NoOfDeletedKeys>0 then Application.MessageBox(pchar(cDeletedWrongKeys),pchar(cInformation),MB_ICONINFORMATION or MB_OK)
+                        else Application.MessageBox(pchar(cRegistryIsOk),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+
 end;
 
 {-----------------------------------------------------------------------------
@@ -1832,7 +1846,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const);
 begin
-  mmoTrace.Lines.add(datetimetostr(now)+': '+format(_msg,_params));
+  if FFullTrace or (_level<=3) then mmoTrace.Lines.insert(0,datetimetostr(now)+': '+format(_msg,_params))
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1893,6 +1907,11 @@ begin
 // todo
 end;
 
+
+procedure TFrmMain.mmoTraceDblClick(Sender: TObject);
+begin
+  mmoTrace.clear;
+end;
 
 end.
 

@@ -473,7 +473,7 @@ begin
     FCurrentBPLFilename      :=FCurrentBPLOutputPath+FCurrentProjectOutputFilename;
     FCurrentProjectOutputPath:=FCurrentBPLOutputPath;
   end;
-  trace(5,'CurrentProjectFileName=%s',[FCurrentProjectFilename]);
+  trace(1,'CurrentProjectFileName=%s',[FCurrentProjectFilename]);
   trace(5,'CurrentConditions=%s',[FCurrentConditions]);
   trace(5,'CurrentProjectOutputPath=%s',[FCurrentProjectOutputPath]);
   trace(5,'CurrentBPLFilename=%s',[FCurrentBPLFilename]);

@@ -63,6 +63,7 @@ function RemoveReadOnlyFlag(const _filename:string;const _silent:boolean):boolea
 function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;Show: Word; bWait: Boolean; var ExitCode: LongWord): LongWord;
 procedure ShowFolder(strFolder: string);
 function Get7zAppName:string; // returns full filename&path to the 7z.exe file.
+function HKEYToStr(const _Key: HKEY): string;
 
 var
   FWriteMsg:TNVBTraceProcedure;
@@ -75,6 +76,29 @@ uses Graphics,
      Dialogs,
      ShellAPI,
      shlObj;
+
+
+{*-----------------------------------------------------------------------------
+  Procedure: HKEYToStr
+  Author:    sam
+  Date:      28-Okt-2011
+  Arguments: const Key: HKEY
+  Result:    string
+  Description:
+-----------------------------------------------------------------------------}
+function HKEYToStr(const _Key: HKEY): string;
+begin
+  result:='unkown';
+  case _Key of
+    HKEY_CLASSES_ROOT:result:='HKEY_CLASSES_ROOT';
+    HKEY_CURRENT_USER:result:='HKEY_CURRENT_USER';
+    HKEY_LOCAL_MACHINE:result:='HKEY_LOCAL_MACHINE';
+    HKEY_USERS:result:='HKEY_USERS';
+    HKEY_PERFORMANCE_DATA:result:='HKEY_PERFORMANCE_DATA';
+    HKEY_CURRENT_CONFIG:result:='HKEY_CURRENT_CONFIG';
+    HKEY_DYN_DATA:result:='HKEY_DYN_DATA';
+  end;
+end;
 
 {*-----------------------------------------------------------------------------
   Procedure: Get7zAppName
