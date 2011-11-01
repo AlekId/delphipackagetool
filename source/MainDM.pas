@@ -1233,7 +1233,7 @@ _message:string;
 begin
   if FCurrentProjectType<>tp_bpl then exit;
   UnInstallPackage(FCurrentProjectFilename, FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentDelphiVersion);
-  _message:=InstallPackage(FCurrentProjectFilename, FCurrentProjectOutputPath,FCurrentPackageDescription,FCurrentPackageSuffix,FCurrentDelphiVersion);
+  InstallPackage(FCurrentProjectFilename, FCurrentProjectOutputPath,FCurrentPackageDescription,FCurrentPackageSuffix,FCurrentDelphiVersion,_message);
   WriteLog('Installed Package <%s>.',[FCurrentProjectFilename]);
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FCurrentProjectFilename,_message,FCurrentProjectNo);
   if not ProjectSettings.BoolValue('Application/ModifyEnvironmentPath', 9) then exit;

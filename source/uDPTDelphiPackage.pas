@@ -48,7 +48,7 @@ end;
 function  GetDelphiPackageDir(const _DelphiVersion:integer;const _Platform:TDelphiPlatform=tdp_win32):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
 procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer); // create a bpg-file or bdsproj-file.
-function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer):string; // add package into the regitstry.
+function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer;var msg:string):boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName,_PackageDirectory,_PackageLibSuffix:String;_DelphiVersion:Integer):boolean;  // remove package from regeistry.
 function  CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;_ProjectType:TProjectType;Var Output:String;const _DelphiVersion:integer):boolean; // compile the package
 function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
@@ -1107,7 +1107,7 @@ begin
   try
     _Reg.RootKey := _ROOTKEY;
     if not _Reg.OpenKey(_DelphiRootDirKey,false) then begin
-      trace(1,'CleanupByRegistry: The Key <%s> was not found in the registry or no access rights.',[_DelphiRootDirKey]);
+      trace(1,'CleanupByRegistry: The Key <%s,%s> was not found in the registry or no access rights.',[HKEYToStr(_RootKey),_DelphiRootDirKey]);
       exit;
     end;
     _Reg.GetValueNames(_ValueNames);
@@ -1116,16 +1116,16 @@ begin
         _packageName:=lowercase(ReplaceTag(_ValueNames[i],_DelphiVersion));
         if fileexists(_packageName) then continue;
         if not _Reg.DeleteValue(_ValueNames[i]) then begin
-          trace(3,'Problem in CleanupByRegistry: Could not remove key <%s> from registry for delphi <%d>.',[_DelphiRootDirKey+_ValueNames[i],_DelphiVersion]);
+          trace(3,'Problem in CleanupByRegistry: Could not remove value <%s> from key <%s,%s> from registry for delphi <%d>.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey,_DelphiVersion]);
           result:=false;
           continue;
         end ;
-        trace(3,'Removed key <%s> from registry because the referenced file <%s> does not exist.',[_DelphiRootDirKey+_ValueNames[i],_packageName]);
+        trace(3,'Removed value <%s> from registry key <%s,%s> because the referenced file <%s> does not exist.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey]);
         inc(NoOfRemovedKeys);
       end;
     except
       on e:exception do begin
-        trace(1,'Problem in CleanupByRegistry: Could not remove registry key <%s>.<%s>.',[_packageName,e.Message]);
+        trace(1,'Problem in CleanupByRegistry: Could not remove value <%s> from registry key <%s,%s>.<%s>.',[_packageName,HKEYToStr(_RootKey),_DelphiRootDirKey,e.Message]);
       end;
     end;
   finally
@@ -1259,7 +1259,7 @@ begin
     _Reg.RootKey := _ROOTKEY;
     _DelphiRootDirKey:=_DelphiRootDirKey+_DelphiSubKey;
     if not _Reg.OpenKey(_DelphiRootDirKey,false) then begin
-      trace(3,'Warning in CleanUpPackagesByRegistry: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
+      trace(3,'Warning in CleanUpPackagesByRegistry: The Key <%s,%s> was not found in the registry.',[HKEYToStr(_ROOTKEY),_DelphiRootDirKey]);
       exit;
     end;
     _Reg.GetValueNames(_ValueNames);
@@ -1272,7 +1272,7 @@ begin
           trace(3,'Problem in CleanUpPackagesByRegistry: Could not delete package <%s> for delphi <%d>.',[_packageName,_DelphiVersion]);
           continue;
         end;
-        trace(5,'CleanUpPackagesByRegistry: Deleted Package <%s> for delphi version <%d> from registry.',[_packageName,_DelphiVersion]);
+        trace(5,'Deleted Package <%s> for delphi version <%d> from registry.',[_packageName,_DelphiVersion]);
         if _deletefiles then begin
           if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistry: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
           _packageName:=ChangeFileExt(_packageName,'.dcp');
@@ -2043,7 +2043,7 @@ _DelphiRootDirKey:string;
     try
       _Reg.RootKey := _RootKey;
       if not _Reg.OpenKeyReadOnly(_Key) then begin
-        trace(5,'Warning in _GetDelphiApplication: The Key <%s> was not found in the registry.',[_Key]);
+        trace(5,'Warning in _GetDelphiApplication: The Key <%s,%s> was not found in the registry.',[HKEYToStr(_RootKey),_Key]);
         exit;
       end;
       try
@@ -2351,7 +2351,34 @@ cAskToChangePackageOutputPath='Do you want to change the Delphi''s Package Outpu
 var
 _DelphiRootDirKey:string;
 _DelphiPackageDirKey:string;
+
+function _SetDelphiPackageDir(_RootKey:HKEY):boolean;
+var
 _Reg: TRegistry;
+begin
+  result:=false;
+  _Reg := TRegistry.Create;
+  try
+    _Reg.RootKey := _RootKey;
+    if not _Reg.OpenKey(_DelphiPackageDirKey,false) then begin
+      trace(1,'Problem in _SetDelphiPackageDir: The Key <%s,%s> was not found in the registry.',[HKEYToStr(_RootKey),_DelphiPackageDirKey]);
+      exit;
+    end;
+    try
+      _Reg.WriteString('Package DPL Output',_PackageDir);
+       trace(3,'Successfully set <Pakcage DPL Output> to <%s>',[_PackageDir]);
+      _Reg.WriteString('Package DCP Output',_PackageDir);
+       trace(3,'Successfully set <Package DCP Output> to <%s>',[_PackageDir]);
+      result:=true;
+    except
+      on e:exception do trace(1,'Warning in _SetDelphiPackageDir: Could not write the delphi package directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
+    end;
+    _Reg.CloseKey;
+  finally
+    _Reg.Free;
+  end;
+end;
+
 begin
   result:=false;
   if GetDelphiPackageDir(_DelphiVersion)=_PackageDir then begin
@@ -2363,30 +2390,13 @@ begin
     trace(3,'Problem in SetDelphiPackageDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
-
+  _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
   if not _Silent then begin
     if Application.MessageBox(pchar(format(cAskToChangePackageOutputPath,[_PackageDir])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
   end;
+  result:=_SetDelphiPackageDir(HKEY_LOCAL_MACHINE) or
+          _SetDelphiPackageDir(HKEY_CURRENT_USER);
 
-  _Reg := TRegistry.Create;
-  try
-    _Reg.RootKey := HKEY_LOCAL_MACHINE;
-    _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
-    if not _Reg.OpenKey(_DelphiPackageDirKey,false) then begin
-      trace(1,'Problem in SetDelphiPackageDir: The Key <%s> was not found in the registry.',[_DelphiPackageDirKey]);
-      exit;
-    end;
-    try
-      _Reg.WriteString('Package DPL Output',_PackageDir);
-      _Reg.WriteString('Package DCP Output',_PackageDir);
-      result:=true;
-    except
-      on e:exception do trace(1,'Warning in SetDelphiPackageDir: Could not write the delphi package directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
-    end;
-    _Reg.CloseKey;
-  finally
-    _Reg.Free;
-  end;
 end;
 
 {-----------------------------------------------------------------------------
@@ -3187,19 +3197,20 @@ begin
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
-      trace(1,'AddPackageToRegistry: The Key <%s> was not found in the registry or no access rights.',[_RootKey]);
+      trace(1,'AddPackageToRegistry: The Key <%s,%s> was not found in the registry or no access rights.',[HKEYToStr(_RootKey),_Key]);
       exit;
     end;
     if _Reg.ValueExists(_PackageName) then begin
       trace(5,'AddPackageToRegistry: The Packages <%s> is already registered.',[_PackageName]);
+      result:=true;
       exit;
     end;
     try
       _Reg.WriteString(_PackageName,_PackageDescription);
-      trace(5,'AddPackageToRegistry: Successfully installed the  Packages <%s> for <%s>.',[_PackageName,_Key]);
+      trace(3,'Successfully installed the  Packages <%s> for <%s,%s>.',[_PackageName,HKEYToStr(_RootKey),_Key]);
       Result:=true;
     except
-      on e:exception do trace(1,'Warning in AddPackageToRegistry: Could not add the package <%s> for <%s> to the registry.You need to have Admin rights for this computer. <%s>.',[_PackageName,_key,e.message]);
+      on e:exception do trace(1,'Warning in AddPackageToRegistry: Could not add the package <%s> for <%s,%s> to the registry.You need to have Admin rights for this computer. <%s>.',[_PackageName,HKEYToStr(_RootKey),_key,e.message]);
     end;
   finally
     _Reg.CloseKey;
@@ -3244,18 +3255,19 @@ end;
                directory <_PackageDirectory> for delphi version <_DelphiVersion>.
                The parameter <_PackageDirectory> points to the location of the <.bpl> file.
 -----------------------------------------------------------------------------}
-function InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer):string;
+function InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer;var msg:string):boolean;
 var
 _PackageKey:String;
 _RegFile:TStrings;
 _RegFileName:string;
 _BplFilename:string;
 begin
-  result:='Failed';
+  result:=false;
+  msg:='Failed';
   _PackageName:=ReadProjectFilenameFromDProj(_PackageName);
   if _PackageDescription='' then _PackageDescription:='(untitled)';
   if lowercase(ExtractFileExt(_PackageName))<>'.dpk' then begin
-    Result:='-';
+    msg:='-';
     exit;
   end;
   if not GetIDERootKey(_DelphiVersion,_PackageKey) then begin
@@ -3265,7 +3277,7 @@ begin
 
   if not CanInstallPackage(_PackageName) then begin
     trace(5,'InstallPackage: The package <%s> is a runtime only package. It will not be installed into the IDE.',[_PackageName]);
-    Result:='-';
+    msg:='-';
     exit;
   end;
   if _PackageLibSuffix<>'' then _BplFilename:=lowercase(_PackageDirectory+ExtractFilenameOnly(_PackageName)+_PackageLibSuffix+'.bpl')
@@ -3285,15 +3297,17 @@ begin
       trace(2,'Installed the package <%s> into the Delphi IDE for the current user.',[ExtractFileName(_PackageName)]);
       _RegFile.add('[HKEY_CURRENT_USER\'+_PackageKey+']');
       _RegFile.add('"'+PrepapreRegistryPath(_BplFilename)+'"="'+_PackageDescription+'"');
-      result:='Current User';
+      msg:='Current User';
+      result:=true;
     end;
 
     if AddPackageToRegistry(HKEY_LOCAL_MACHINE,_PackageKey,_BplFilename,_PackageDescription) then begin
       trace(2,'Installed the package <%s> into the Delphi IDE for the all users on this computer.',[ExtractFileName(_PackageName)]);
       _RegFile.add('[HKEY_LOCAL_MACHINE\'+_PackageKey+']');
       _RegFile.add('"'+PrepapreRegistryPath(_BplFilename)+'"="'+_PackageDescription+'"');
-      if result='Current User' then result:=result+'/All Users'
-                               else result:='All Users';
+      if msg='Current User' then msg:=msg+'/All Users'
+                            else msg:='All Users';
+      result:=true;                      
     end;
 
     if _RegFile.Count>0 then begin  // create a .reg file if needed.

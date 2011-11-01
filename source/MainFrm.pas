@@ -4,9 +4,13 @@
  Purpose:
  History:
 
+1.9.0.165  ( 01.11.2011 )
+-SH: more changes when reading/writting registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
+-SH: more cleanup of trace messages.
+
 1.9.0.164  ( 28.10.2011 )
 -SH: changes when reading registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
-     cleanup of trace messages.
+-SH: cleanup of trace messages.
 
 1.9.0.163  ( 23.10.2011 )
 -SH: fix in DetermProjectTypeDelphi incase when the file does not exist.
