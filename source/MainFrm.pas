@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.166  ( 27.01.2012 )
+-SH: improvement in function <Get7zAppName> to find 7z.exe which is used for backup-task.
+
 1.9.0.165  ( 01.11.2011 )
 -SH: more changes when reading/writting registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
 -SH: more cleanup of trace messages.

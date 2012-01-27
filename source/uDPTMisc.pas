@@ -116,14 +116,28 @@ begin
   _Reg := TRegistry.Create;
   try
     _Reg.RootKey := HKEY_CLASSES_ROOT;
-    if not _Reg.OpenKeyReadOnly('\Applications\7z.exe\shell\open\command') then exit;
-    try
-      Result := _Reg.ReadString('');
-      if pos('"',result)=1 then delete(result,1,1);
-      result:=GetField('"',result);
-    finally
-      _Reg.CloseKey;
+    if _Reg.OpenKeyReadOnly('\Applications\7z.exe\shell\open\command') then begin
+      try
+        Result := _Reg.ReadString('');
+        if pos('"',result)=1 then delete(result,1,1);
+        result:=GetField('"',result);
+      finally
+        _Reg.CloseKey;
+      end;
     end;
+    if result='' then begin
+      _Reg.RootKey :=HKEY_LOCAL_MACHINE;
+      if _Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\7zFM.exe') then begin
+        try
+          Result := _Reg.ReadString('Path');
+          if pos('"',result)=1 then delete(result,1,1);
+          result:=IncludeTrailingPathDelimiter(GetField('"',result))+'7z.exe';
+        finally
+          _Reg.CloseKey;
+        end;
+      end;
+    end;
+    if result<>'' then result:='"'+result+'"';
   finally
     _Reg.free;
   end;
