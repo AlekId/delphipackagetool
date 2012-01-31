@@ -578,6 +578,7 @@ begin
   ProjectSettings.GetBoolValue('Application/AutoBackup', 12, true,'If set to <True>, then DelphiPackageTool creates a backup zip-file after succeessfull run of "Install All".', true,false,false);
   ProjectSettings.GetBoolValue('Application/Trace',13,false,'If set to <True>, then Program internals are written into the trace-memo.',true,false,false);
   ProjectSettings.GetStringValue('Application/Platform',14,'win32','The platform used. e.g win32,win64,osx.',true,false,false);
+  ProjectSettings.GetBoolValue('Application/BackupSourceOnly',15,true,'If set to <True>, then only source-files will be added to the backup. (e.g. no *.dcu files)',true,false,false);
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName]);
   CurrentDelphiVersion:=ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   CurrentPlatform     :=PlatformStringToType(ProjectSettings.StringValue('Application/Platform',14));
@@ -823,7 +824,7 @@ begin
     ProjectSettings.SetPath('Application/LastUsedBackupPath',11,extractFilePath(_BackupZip.Filename));
 {$endif}
     writeLog('Searching for files to backup. Please wait...',[]);
-    _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines);
+    _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines,ProjectSettings.BoolValue('Application/BackupSourceOnly',15));
     try
       writeLog('Found <%d> files. Creating zip-file...',[_FileList.Count]);
       if _FileList.Count=0 then exit;

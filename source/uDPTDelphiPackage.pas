@@ -82,7 +82,7 @@ function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
 function  CheckDirectory(const _name:string):boolean; // check if the directory exists. if not then ask the user and create it.
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
-function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings):THashedStringList; // extract filenames from the dcc32.exe output.
+function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
 function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dpk-file.
 function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dproj-file.
@@ -738,7 +738,7 @@ end;
   Result:    TStringList
   Description: extract filenames from the dcc32.exe output.
 -----------------------------------------------------------------------------}
-function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings):THashedStringList;
+function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList;
 var
 i,k,l:integer;
 _ExtensionsOfInterest:TStringList;
@@ -756,8 +756,6 @@ begin
   try
     _ExtensionsOfInterest.add('.pas');
     _ExtensionsOfInterest.add('.dfm');
-    _ExtensionsOfInterest.add('.dcu');
-    _ExtensionsOfInterest.add('.obj');
     _ExtensionsOfInterest.add('.dpk');
     _ExtensionsOfInterest.add('.inc');
     _ExtensionsOfInterest.add('.dcr');
@@ -773,9 +771,15 @@ begin
     _ExtensionsOfInterest.add('.cfg');
     _ExtensionsOfInterest.add('.dof');
     _ExtensionsOfInterest.add('.xml');
-    _ExtensionsOfInterest.add('.bcc_obj');
-    _ExtensionsOfInterest.add('.obj');
-    _ExtensionsOfInterest.add('.zobj');
+    if not _SourceCodeOnly then begin
+      _ExtensionsOfInterest.add('.dcu');
+      _ExtensionsOfInterest.add('.obj');
+      _ExtensionsOfInterest.add('.bpl');
+      _ExtensionsOfInterest.add('.dcp');
+      _ExtensionsOfInterest.add('.bcc_obj');
+      _ExtensionsOfInterest.add('.obj');
+      _ExtensionsOfInterest.add('.zobj');
+    end;
     _ExtensionsOfInterest.add('.rc');
     _ExtensionsOfInterest.add('.ico');
     _ExtensionsOfInterest.add('.dproj');

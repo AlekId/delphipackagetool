@@ -1,3 +1,6 @@
+1.9.0.167  ( 31.01.2012 )
+-SH: added setting to determ if non-source-files (e.g. dcu,bpl,dcp) shall be added to backup-zip or not.
+
 1.9.0.166  ( 27.01.2012 )
 -SH: improvement in function <Get7zAppName> to find 7z.exe which is used for backup-task.
 

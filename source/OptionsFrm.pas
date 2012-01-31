@@ -73,6 +73,7 @@ type
     edtOnBeforeBuildProject: TEdit;
     btnOnBeforeBuildProject: TSpeedButton;
     cbxTrace: TCheckBox;
+    cbxBackupSourceOnly: TCheckBox;
     procedure btnAddPathClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -492,7 +493,8 @@ begin
   DMMain.ProjectSettings.SetBoolean('Application/ChangeFiles', 8,cbxChangeFiles.Checked);
   DMMain.ProjectSettings.SetBoolean('Application/ModifyEnvironmentPath', 9,cbxModifyEnvironment.Checked);
   DMMain.ProjectSettings.SetBoolean('Application/AutoBackup', 12,cbxAutoBackup.checked);
-  DMMain.ProjectSettings.SetBoolean('Application/Trace',13,cbxTrace.checked);  
+  DMMain.ProjectSettings.SetBoolean('Application/Trace',13,cbxTrace.checked);
+  DMMain.ProjectSettings.SetBoolean('Application/BackupSourceOnly',15,cbxBackupSourceOnly.Checked);
 end;
 
 {-----------------------------------------------------------------------------
@@ -528,6 +530,7 @@ begin
   cbxModifyEnvironment.Checked:=DMMain.ProjectSettings.BoolValue('Application/ModifyEnvironmentPath', 9);
   cbxAutoBackup.checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup', 12);
   cbxTrace.checked:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
+  cbxBackupSourceOnly.Checked:=DMMain.ProjectSettings.BoolValue('Application/BackupSourceOnly',15);
 end;
 
 {-----------------------------------------------------------------------------
