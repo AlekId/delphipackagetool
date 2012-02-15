@@ -5,6 +5,7 @@ Samuel Herzog
 
 Thanks to:
 ***********
+- Andreas Heim
 - Markus Müller
 - JCL/JVCL Team (portions for package handling)
 - Jason Penny  (SetVersion.exe) http://www.jasontpenny.com/

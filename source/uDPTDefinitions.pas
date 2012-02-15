@@ -50,6 +50,7 @@ const
   cEmbarcaderoBDSKey='SOFTWARE\EMBARCADERO\BDS\';
   cDelphiTag='$(DELPHI)';
   cBDSTag='$(BDS)';
+  cBDSBINTag='$(BDSBIN)';
   cBDSCommonDirTag='$(BDSCOMMONDIR)';
   cBDSProjectsDirTag='$(BDSPROJECTSDIR)';
   cBDSUserDirTag='$(BDSUSERDIR)';

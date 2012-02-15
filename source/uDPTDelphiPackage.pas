@@ -1871,6 +1871,13 @@ begin
     exit;
   end;
 
+  _pos := Pos(lowercase(cBDSBINTag),_filename);
+  if _pos > 0 then begin
+    Delete(_filename,1,_pos+length(cBDSBINTag));
+    result := IncludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion))+_filename;
+    exit;
+  end;
+
   _pos := Pos(lowercase(cProgramFilesTag),_filename);
   if _pos > 0 then begin
     Delete(_filename,1,_pos+length(cProgramFilesTag));

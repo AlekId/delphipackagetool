@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.168  ( 15.02.2012 )
+-SH: applied patch received from Andreas Heim about BDSBin-Tag for Delphi XE2.
+ 
 1.9.0.167  ( 31.01.2012 )
 -SH: added setting to determ if non-source-files (e.g. dcu,bpl,dcp) shall be added to backup-zip or not.
 
