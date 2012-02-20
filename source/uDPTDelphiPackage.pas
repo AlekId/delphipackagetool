@@ -60,7 +60,7 @@ function  isDelphiStarted(const _DelphiVersion:Integer): Boolean;
 procedure ShutDownDelphi(const _DelphiVersion:Integer;_Blocking : Boolean);
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
 function  ReadProjectFilenameFromDProj(const _Filename:String):string; // the real project filename is now hidden in the dproj-file.
-function  ReadConfigurationSettings(const _filename:string;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean;
+function  ReadConfigurationSettings(const _filename:string;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string;var NameSpaces:string):boolean;
 function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer):string; // get informations from the cfg-file.
 function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns delphi root directory e.g. C:\Program files\Borland\Delphi7
 function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and bds versions.
@@ -2628,7 +2628,14 @@ end;
   Result:    boolean
   Description: read path information from a dproj file used by D2009 or newer.
 -----------------------------------------------------------------------------}
-function ReadDPROJSettingsD2009_and_Newer(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
+function ReadDPROJSettingsD2009_and_Newer(const _dprojFilename:String;
+                                          var Conditions:string;
+                                          var SearchPath:String;
+                                          var ProjectOutputPath:string;
+                                          var BPLOutputPath:string;
+                                          var DCUOutputPath:string;
+                                          var NameSpaces:string):boolean;
+
 var
   _xmlDOMfile: IXMLDOMDocument;
   _msg:string;
@@ -2738,6 +2745,16 @@ begin
     end;
     trace(5,'ReadDPROJSettingsD2009_and_Newer: ProjectOutputPath is <%s>.',[ProjectOutputPath]);
 
+    //Get NameSpaces
+    for i := 0 to _Configs.Count - 1 do begin
+      if _Configs[i] <> '' then begin
+        _Temp := '';
+        if not ReadNodeDocument(_xmlDOMfile,'//PropertyGroup[@Condition="''$(' + _Configs[i] + ')''!=''''"]/DCC_Namespace',_Temp,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_and_Newer: Could not find %s NameSpaces. <%s>.',[_Configs[i], _msg]);
+        if _Temp <> '' then NameSpaces := _Temp;
+      end;
+    end;
+    trace(5,'ReadDPROJSettingsD2009_and_Newer: NameSpaces is <%s>.',[NameSpaces]);
+
     result:=true;
   finally
     _xmlDOMfile := nil;
@@ -2753,7 +2770,7 @@ end;
   Result:    boolean
   Description: read settings from a dproj-file.
 -----------------------------------------------------------------------------}
-function ReadDPROJSettings(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
+function ReadDPROJSettings(const _dprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string;var NameSpaces:string):boolean; // get informations from the dproj-file.
 var
 _msg:string;
 _ProjectVersion:string;
@@ -2763,6 +2780,7 @@ begin
   SearchPath:='';
   BPLOutputPath:='';
   DCUOutputPath:='';
+  NameSpaces:='';
   Conditions:='';
   _ProjectVersion:='';
   if not fileExists(_dprojFilename) then begin
@@ -2771,7 +2789,7 @@ begin
   end;
   if not ReadNodeText(_dprojFilename,'//PropertyGroup/ProjectVersion',_ProjectVersion,_msg) then trace(3,'Warning in ReadDPROJSettings: Could not read condition. <%s>.',[_msg]);
   if _ProjectVersion='' then ReadDPROJSettingsD2005_D2007(_dprojFilename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath)
-                        else ReadDPROJSettingsD2009_and_Newer(_dprojFilename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath);
+                        else ReadDPROJSettingsD2009_and_Newer(_dprojFilename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath,NameSpaces);
   result:=true;
 end;
 
@@ -2783,7 +2801,12 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function ReadConfigurationSettings(const _filename:string;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean;
+function ReadConfigurationSettings(const _filename:string;
+                                   var Conditions:string;
+                                   var SearchPath:String;
+                                   var ProjectOutputPath:string;
+                                   var BPLOutputPath:string;
+                                   var DCUOutputPath:string;var NameSpaces:string):boolean;
 var
 _fileext:string;
 _ProjectName:string;
@@ -2793,7 +2816,7 @@ begin
   trace(5,'ReadConfigurationSettings: filename <%s>.',[_filename]);
   if (_fileext='.dpk') or
      (_fileext='.dpr')   then result:=ReadCFGSettings(ChangefileExt(_filename,'.cfg'),Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath)   else
-  if _fileext='.dproj'   then result:=ReadDProjSettings(_filename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath) else
+  if _fileext='.dproj'   then result:=ReadDProjSettings(_filename,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath,NameSpaces) else
   if _fileext='.bdsproj' then result:=ReadBDSProjSettings(_filename,_ProjectName,Conditions,SearchPath,ProjectOutputPath,BPLOutputPath,DCUOutputPath);
   if Conditions<>'' then Conditions:='-D"'+Conditions+'"';
 end;

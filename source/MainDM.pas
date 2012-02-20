@@ -87,6 +87,7 @@ type
     FCurrentBPLFilename:string; // if the current project is a package then this contains the full .bpl filename and path.
     FCurrentBPLOutputPath:string;  // output path for the package file bpl.
     FCurrentDCUOutputPath:string;  // output path for the dcu-files.
+    FNameSpaces:string;            // namespaces introduced in Delphi XE2 (or before?)
     FCurrentConditions:string;  // the conditions of the current project.
     FCurrentSearchPath:string;  // search path of the current project.
     FDPTSearchPath: string;     // search path defined in DPT Options Dialog.
@@ -430,7 +431,7 @@ begin
            end;
   end;
 // read configuration file.
-  uDPTDelphiPackage.ReadConfigurationSettings(FCurrentProjectFilename,FCurrentConditions,FCurrentSearchPath,FCurrentProjectOutputPath,FCurrentBPLOutputPath,FCurrentDCUOutputPath);
+  uDPTDelphiPackage.ReadConfigurationSettings(FCurrentProjectFilename,FCurrentConditions,FCurrentSearchPath,FCurrentProjectOutputPath,FCurrentBPLOutputPath,FCurrentDCUOutputPath,FNameSpaces);
   uDPTDelphiPackage.ReadPackageInfo(FCurrentProjectFilename,FCurrentPackageDescription,FCurrentPackageSuffix);
 
 // setup the bpl output-path
