@@ -850,8 +850,11 @@ function  BuildTimeStamp(_datetime:TDateTime):String;
 var
 i:integer;
 _s:string;
+_FormatSettings:TFormatSettings;
 begin
-  _s:=datetimetostr(_datetime);
+  _FormatSettings.ShortDateFormat:='yyyy.mm.dd';
+  _FormatSettings.LongTimeFormat:='HH:MM:SS';
+  _s:=datetimetostr(_datetime,_FormatSettings);
   for i:=1 to length(_s) do begin
 {$IF CompilerVersion < 20.0}
     if not (_s[i] in cValidChars) then _s[i]:='_';
