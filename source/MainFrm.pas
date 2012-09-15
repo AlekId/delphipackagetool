@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.170  ( 15.09.2012 )
+- SH: add definitions for Delphi XE3. (not tested because I do not own XE3).
+
 1.9.0.168  ( 15.02.2012 )
 -SH: applied patch received from Andreas Heim about BDSBin-Tag for Delphi XE2.
  
