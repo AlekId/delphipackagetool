@@ -66,14 +66,14 @@ object FrmMain: TFrmMain
     BevelOuter = bvNone
     TabOrder = 1
     object lblDelphiVersion: TLabel
-      Left = 240
-      Top = 48
+      Left = 872
+      Top = 0
       Width = 68
       Height = 13
       Caption = 'Delphi Version'
     end
     object lblPackageDirectory: TLabel
-      Left = 392
+      Left = 240
       Top = 48
       Width = 231
       Height = 13
@@ -87,18 +87,26 @@ object FrmMain: TFrmMain
       Caption = 'ProjectGroup File <*.bpg/*.bdsgroup/*.groupproj>'
     end
     object lblDcuPath: TLabel
-      Left = 392
+      Left = 240
       Top = 96
       Width = 135
       Height = 13
       Caption = 'Output Path for the dcu-files.'
     end
     object lblPlatform: TLabel
-      Left = 240
-      Top = 96
+      Left = 872
+      Top = 48
       Width = 38
       Height = 13
       Caption = 'Platform'
+      Visible = False
+    end
+    object lblConfig: TLabel
+      Left = 872
+      Top = 96
+      Width = 30
+      Height = 13
+      Caption = 'Config'
       Visible = False
     end
     object btnStart: TBitBtn
@@ -151,8 +159,8 @@ object FrmMain: TFrmMain
       OnExit = cbxStopOnFailureExit
     end
     object cbxDelphiVersions: TComboBox
-      Left = 240
-      Top = 64
+      Left = 872
+      Top = 16
       Width = 145
       Height = 21
       Style = csDropDownList
@@ -161,7 +169,7 @@ object FrmMain: TFrmMain
       OnChange = cbxDelphiVersionsChange
     end
     object edtPackageBPLDirectory: TEdit
-      Left = 392
+      Left = 240
       Top = 64
       Width = 601
       Height = 21
@@ -172,7 +180,7 @@ object FrmMain: TFrmMain
       OnExit = edtPackageBPLDirectoryExit
     end
     object btnLoadFile: TButton
-      Left = 992
+      Left = 840
       Top = 16
       Width = 17
       Height = 21
@@ -180,7 +188,7 @@ object FrmMain: TFrmMain
       TabOrder = 6
     end
     object btnSetPackagePath: TButton
-      Left = 992
+      Left = 840
       Top = 64
       Width = 17
       Height = 21
@@ -188,7 +196,7 @@ object FrmMain: TFrmMain
       TabOrder = 7
     end
     object edtDCUPath: TEdit
-      Left = 392
+      Left = 240
       Top = 112
       Width = 601
       Height = 21
@@ -199,18 +207,35 @@ object FrmMain: TFrmMain
       OnExit = edtPackageBPLDirectoryExit
     end
     object btnSelectDcuPath: TButton
-      Left = 992
+      Left = 840
       Top = 112
       Width = 17
       Height = 21
       Action = actSelectDcuPath
       TabOrder = 9
     end
+    object cbxPlatform: TComboBox
+      Left = 872
+      Top = 64
+      Width = 145
+      Height = 21
+      Style = csDropDownList
+      ItemHeight = 13
+      ItemIndex = 0
+      TabOrder = 10
+      Text = 'Win32'
+      Visible = False
+      OnChange = cbxPlatformChange
+      Items.Strings = (
+        'Win32'
+        'Win64'
+        'OSX')
+    end
   end
   object edtPackageBPGFile: TComboBox
     Left = 240
     Top = 16
-    Width = 753
+    Width = 601
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
@@ -260,8 +285,8 @@ object FrmMain: TFrmMain
       end
     end
   end
-  object cbxPlatform: TComboBox
-    Left = 240
+  object cbxConfig: TComboBox
+    Left = 872
     Top = 112
     Width = 145
     Height = 21
@@ -269,13 +294,12 @@ object FrmMain: TFrmMain
     ItemHeight = 13
     ItemIndex = 0
     TabOrder = 4
-    Text = 'Win32'
+    Text = 'Debug'
     Visible = False
     OnChange = cbxPlatformChange
     Items.Strings = (
-      'Win32'
-      'Win64'
-      'OSX')
+      'Debug'
+      'Release')
   end
   object ActionList1: TActionList
     Left = 496

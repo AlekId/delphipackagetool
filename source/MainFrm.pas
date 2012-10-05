@@ -339,8 +339,10 @@ type
     TabSheet2: TTabSheet;
     mmoLogFile: TMemo;
     mmoTrace: TMemo;
-    cbxPlatform: TComboBox;
+    cbxConfig: TComboBox;
     lblPlatform: TLabel;
+    cbxPlatform: TComboBox;
+    lblConfig: TLabel;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -1592,12 +1594,16 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersion: integer);
+var
+_low:word;
 begin
   SetDelphiVersionCombobox(_DelphiVersion);
   if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
   actShowDOFFile.Visible:=(_DelphiVersion<8);
-  lblPlatform.Visible:=(_DelphiVersion>=16);
+  lblPlatform.Visible:=(_DelphiVersion>=16);    // since Delphi X2 are different platforms possible.
   cbxPlatform.Visible:=(_DelphiVersion>=16);
+  lblConfig.Visible:=(_DelphiVersion>=15);
+  cbxConfig.Visible:=(_DelphiVersion>=15);
 end;
 
 {*-----------------------------------------------------------------------------

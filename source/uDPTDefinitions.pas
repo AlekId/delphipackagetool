@@ -25,9 +25,18 @@ type
                       tpr_3rdparty,      // all packages except the borland packages in the directory ($DELPHI)\bin
                       tpr_projectsbpl);  // all packages which are in the directory ($DELPHI)\Projects\bpl
 
-  TDelphiPlatform=(tdp_win32,tdp_win64,tdp_OSX);
+  TDelphiPlatform=(tdp_win32,
+                   tdp_win64,
+                   tdp_OSX);
 
   TDelphiPlatforms= set of TDelphiPlatform;
+
+  TDelphiConfig=(tdc_debug,
+                 tdc_test,
+                 tdc_release);
+
+  TDelphiConfigs= set of TDelphiConfig;
+
 
   TDelphiVersionInfo = record
     Name: string;
@@ -40,6 +49,7 @@ type
     CompilerVersionStr:string;
     Supported: Boolean;
     Platforms:TDelphiPlatforms;
+    Configs:TDelphiConfigs;
   end;
 
 
@@ -78,7 +88,8 @@ const
       CompilerVersion:8;
       CompilerVersionStr: 'VER80';
       Supported: True;
-      Platforms:[tdp_win32]),  //???
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),  //???
     (
       Name: cDelphiName;          //2
       VersionStr: '2.0';
@@ -89,7 +100,8 @@ const
       CompilerVersion:9;
       CompilerVersionStr: 'VER90';
       Supported: True;
-      Platforms:[tdp_win32]), //???
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]), //???
     (
       Name: cDelphiName;          //3
       VersionStr: '3.0';
@@ -100,7 +112,8 @@ const
       CompilerVersion:10;
       CompilerVersionStr: 'VER100';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cDelphiName;          //4
       VersionStr: '4.0';
@@ -111,7 +124,8 @@ const
       CompilerVersion:12;
       CompilerVersionStr: 'VER120';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cDelphiName;          //5
       VersionStr: '5.0';
@@ -122,7 +136,8 @@ const
       CompilerVersion:13;
       CompilerVersionStr: 'VER130';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cDelphiName;          //6
       VersionStr: '6.0';
@@ -133,7 +148,8 @@ const
       CompilerVersion:14;
       CompilerVersionStr: 'VER140';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cDelphiName;          //7
       VersionStr: '7.0';
@@ -144,7 +160,8 @@ const
       CompilerVersion:15;
       CompilerVersionStr:'VER150';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cDelphiName;          //8
       VersionStr: '8';
@@ -155,7 +172,8 @@ const
       CompilerVersion:16;
       CompilerVersionStr: 'VER160';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cDelphiName;          //9
       VersionStr: '2005';
@@ -166,7 +184,8 @@ const
       CompilerVersion:17;
       CompilerVersionStr:'VER170';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cBDSName;             //10
       VersionStr: '2006';
@@ -177,7 +196,8 @@ const
       CompilerVersion:18;
       CompilerVersionStr:'VER180';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cRSName;              //11
       VersionStr: '2007';
@@ -188,7 +208,8 @@ const
       CompilerVersion:18.5;
       CompilerVersionStr:'VER185';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cRSName;              //12
       VersionStr: '2008';
@@ -197,7 +218,8 @@ const
       CoreIdeVersion: '0';
       ShortName: 'n/a';
       Supported: False;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[]),
     (
       Name: cRSName;              //13
       VersionStr: '2009';
@@ -208,7 +230,8 @@ const
       CompilerVersion:20;
       CompilerVersionStr:'VER200';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cRSName;              //14
       VersionStr: '2010';
@@ -219,7 +242,8 @@ const
       CompilerVersion:21;
       CompilerVersionStr:'Ver210';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release]),
     (
       Name: cRSName;              //15
       VersionStr: 'XE';
@@ -230,7 +254,8 @@ const
       CompilerVersion:22;
       CompilerVersionStr:'VER220';
       Supported: True;
-      Platforms:[tdp_win32]),
+      Platforms:[tdp_win32];
+      Configs:[tdc_release,tdc_test,tdc_debug]),
     (
       Name: cRSName;              //16
       VersionStr: 'XE2';
@@ -241,7 +266,8 @@ const
       CompilerVersion:23;
       CompilerVersionStr:'VER230';
       Supported: True;
-      Platforms:[tdp_win32,tdp_win64,tdp_OSX]),
+      Platforms:[tdp_win32,tdp_win64,tdp_OSX];
+      Configs:[tdc_release,tdc_test,tdc_debug]),
     (
       Name: cRSName;              //17
       VersionStr: 'XE3';
@@ -252,7 +278,8 @@ const
       CompilerVersion:24;
       CompilerVersionStr:'VER240';
       Supported: True;
-      Platforms:[tdp_win32,tdp_win64,tdp_OSX])
+      Platforms:[tdp_win32,tdp_win64,tdp_OSX];
+      Configs:[tdc_release,tdc_test,tdc_debug])
 
   );
 
