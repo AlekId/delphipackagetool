@@ -143,7 +143,6 @@ begin
   end;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: RemoveReadOnlyFlag
   Author:    sam
@@ -580,7 +579,11 @@ begin
   _s:=trim(_s);
   _Delim_pos:=Pos('.',_s);
   if _delim_pos=0 then _Delim_pos:=Pos(',',_s);
+{$if CompilerVersion < 20.0}
   if _delim_pos>0 then _s[_Delim_pos]:=DecimalSeparator;
+{$else}
+  if _delim_pos>0 then _s[_Delim_pos]:=FormatSettings.DecimalSeparator;
+{$ifend}
   result:=_s;
 end;
 
@@ -596,12 +599,13 @@ procedure Trace(const _level:byte;const _msg:String;const _params:array of const
 var
 _s:string;
 begin
-  if assigned(FWriteMsg) then FWriteMsg(_level,_msg,_params)
-  else begin
-    if SizeOf(_params)>0 then _s:=format(_msg,_params)
-                         else _s:=_msg;
-    OutputDebugString(PChar(_s));
+  if assigned(FWriteMsg) then begin
+     FWriteMsg(_level,_msg,_params);
+     exit;
   end;
+  if SizeOf(_params)>0 then _s:=format(_msg,_params)
+                       else _s:=_msg;
+  OutputDebugString(PChar(_s));
 end;
 
 {-----------------------------------------------------------------------------

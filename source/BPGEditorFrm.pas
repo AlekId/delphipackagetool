@@ -115,7 +115,7 @@ var
   _Dir: string;
 begin
   _Dir := DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15);
-  if not directoryExists(_Dir) then _Dir:='';
+  if not SysUtils.DirectoryExists(_Dir) then _Dir:='';
   FAbortScan := false;
   if not SelectDirectory('Select Search-Path','',_Dir) then exit;
   DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',15,_Dir);

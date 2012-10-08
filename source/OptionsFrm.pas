@@ -227,7 +227,7 @@ begin
       end;
       _path:=RemoveTrailingSemikolon(_Path);
       _path:=AbsolutePath(DMMain.BPGPath,_path,_DelphiVersion);
-      if not DirectoryExists(_path) then begin
+      if not SysUtils.DirectoryExists(_path) then begin
         if Application.MessageBox(pchar(format(cDirectoryDoesNotExist, [_Path])),pchar(cWarning),MB_ICONWARNING or MB_YESNO)=IDYes then begin
           mmoSearchPath.Lines.delete(i);
         end

@@ -247,7 +247,7 @@ var
 //  _index:integer;
 begin
   _Dir := cbxSearchLocation.text;
-  if (_dir<>'') and (not directoryexists(_dir)) then _dir:='';
+  if (_dir<>'') and (not SysUtils.DirectoryExists(_dir)) then _dir:='';
 //  if not SelectDirectory(_Dir, [sdAllowCreate, sdPerformCreate, sdPrompt], 0) then exit;
   if not SelectDirectory('Select Search-Path','',_Dir) then exit;
   _Dir:=lowercase(IncludeTrailingPathDelimiter(_Dir));

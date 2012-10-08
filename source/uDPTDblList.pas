@@ -109,7 +109,8 @@ implementation
 //{$R cnvbdbllist.dcr}
 
 uses
-  Dialogs;
+  Dialogs,
+  Types;
 
 {procedure Register;
 begin

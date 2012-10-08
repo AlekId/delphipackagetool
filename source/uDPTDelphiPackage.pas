@@ -1315,6 +1315,7 @@ begin
                14:result:='Embarcadero RAD Studio 2010';
                15:result:='Embarcadero RAD Studio XE';
                16:result:='Embarcadero RAD Studio XE2';
+               17:result:='Embarcadero RAD Studio XE3';
   end;
 end;
 
@@ -1960,7 +1961,6 @@ begin
   end;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: GetPackageVersion
   Author:    sam
@@ -2196,6 +2196,13 @@ begin
     end;
     _tmp.Clear;
     GetInstalledBDSVersions(cCodeGearBDSKey,_tmp);
+    for i:=0 to _tmp.Count-1 do begin
+      _sVersion:=_tmp[i];
+      if not StringToFloat(_sversion,_fVersion) then continue;
+      if _fVersion<7 then _list.Add(inttostr(trunc(_fVersion)+6)+'.0')
+                     else _list.Add(inttostr(trunc(_fVersion)+7)+'.0')
+    end;
+    _tmp.Clear;
     GetInstalledBDSVersions(cEmbarcaderoBDSKey,_tmp);
     for i:=0 to _tmp.Count-1 do begin
       _sVersion:=_tmp[i];

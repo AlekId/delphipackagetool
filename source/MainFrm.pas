@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.0.171  ( 08.10.2012 )
+- SH: applied patch received from M.Mueller for detecting Delphi 2010
+      and resolved some warnings in XE2.
+
 1.9.0.170  ( 15.09.2012 )
 - SH: add definitions for Delphi XE3. (not tested because I do not own XE3).
 
@@ -17,182 +21,8 @@
 -SH: improvement in function <Get7zAppName> to find 7z.exe which is used for backup-task.
 
 1.9.0.165  ( 01.11.2011 )
--SH: more changes when reading/writting registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
+-SH: more changes when reading/writing registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
 -SH: more cleanup of trace messages.
-
-1.9.0.164  ( 28.10.2011 )
--SH: changes when reading registry settings. Try first <HKEY_LOCAL_MACHINE> and then <HKEY_CURRENT_USER>.
--SH: cleanup of trace messages.
-
-1.9.0.163  ( 23.10.2011 )
--SH: fix in DetermProjectTypeDelphi incase when the file does not exist.
-     RemoveProjectFromBPG did not work in this special case.
-
-1.9.0.162  ( 18.10.2011 )
--SH: fixes for registry access.
-
-1.9.0.161  ( 17.10.2011 )
--SH: changes in set/get package dir.
-
-1.9.0.159  ( 04.10.2011 )
-- SH: changes to make backup-zip feature work. Needs a installed 7zip V9.25 or higher.
-
-1.9.0.158  ( 03.09.2011 )
-- SH: started work to support platforms.
-      This is needed because in delphi xe2 the path's defined in the registry
-      are on different locations for the different platforms. Note! this feature
-      is not finished yet and un-tested.
-
-1.9.0.157  ( 02.09.2011 )
-- SH: add definitions for Delphi XE2.
-
-1.9.0.156  ( 14.07.2011 )
-- SH: improving the backup-function.
-
-1.9.0.155  ( 17.06.2011 )
-- SH: re-compiled aftter improvement in method <RegisterFileType>. Could give an AV
-      when not possible to write because of non-admin rights on Win7.
-
-1.9.0.154  ( 25.05.2011 )
-- SH: some tweaks to avoid emtpy path entries in search-path and environment variable.
-
-1.9.0.153  ( 10.05.2011 )
-- SH: if tags <release> and <debug> are not found in the dproj-file, then do not insert
-      any path tags.
-
-1.9.0.152  ( 06.05.2011 )
-- SH: made changes for <DCC_HppOutput>. It should not be written into .dproj files older
-      than D2009.
-
-1.9.0.151  ( 23.04.2011 )
-- SH: changes to write search path and bpl,dcp-output path into the dproj-file of Delphi XE.
-      At the moment this settings will only be written into the "Release" configuration. (not debug).
-      I have not decided yet how to handle this new possiblities.
-
-1.9.0.150  ( 18.04.2011 )
-- SH: improved error handling in case the global environment path can not be written
-      because of access rights issues.
-
-1.9.0.149  ( 10.04.2011 )
-- SH: Version mix up because of D2008.
-- SH: fix for updating Lib-Suffix in Version >D7
-
-1.9.0.148  ( 10.04.2011 )
-- SH: added CompilerVersion to Info-Hint. e.g. VER220 for Delphi XE
-
-1.9.0.147  ( 10.01.2011 )
-- SH: automatic correct vcljpg/vclimg in .dpk-file.
-- SH: added AppLocation in About-Dialog.
-
-1.9.0.146 ( 30.12.2010 )
-- SH: fix for detection of Delphi XE.
-
-1.9.0.145 ( 29.12.2010 )
-- SH: if silentMode is <on>, then don't ask the user if he want's to review the changes
-      with the Diff tool.
-
-1.9.0.144 ( 26.11.2010 )
-- SH: recent addition of tracing-stuff slows down the application.
-      So I have added a setting to turn it on/off. default=off.
-
-1.9.0.143 ( 22.11.2010 )
-- SH: delete log before starting to re-comile all projects. 
-
-1.9.0.142 ( 28.10.2010 )
-- SH: started work to make the tool also runing with Delphi XE.
-- SH: added a trace memo to display what DPT is doing. 
-
-1.9.0.142 ( 05.10.2010 )
-- SH: new function to write DPT-Path settings into the project files.
-
-1.9.0.141 ( 18.09.2010 )
-- SH: some minor GUI tweaks.
-
-1.9.0.140 ( 10.08.2010 )
-- SH: better error handling in case SetVersion.exe is not available.
-
-1.9.0.139 ( 08.08.2010 )
-- SH: it's now possible to set the version of one/many/all packages/projects due to integration
-      of the application SetVersion.exe from Jason Penny.
- 
-1.9.0.138 ( 04.08.2010 )
-- SH: started to add functions to set the projects VersionNumber.
-
-1.9.0.137 ( 26.05.2010 )
-- SH: changes to method <CleanUpPackagesByBPLPath> about return value.
-
-1.9.0.136 ( 10.05.2010 )
-- SH: added feature to Undo the last changes.
-
-1.9.0.135 ( 06.05.2010 )
-- SH: re-work of functions which change dpk,dproj,bdsproj,cfg,dof files.
-- SH: added feature to setup/integrate an external diff-tool.
-
-1.9.0.134 ( 27.04.2010 )
-- SH: improvements for LIBSuffix.
-
-1.9.0.133 ( 17.04.2010 )
-- SH: fix in method <RelativePaths> about removing of double entries.
-
-1.9.0.132 ( 15.04.2010 )
-- applied patch from M.Mueller about Binary Output Path (-E).
-
-1.9.0.131 ( 11.04.2010 )
-- applied patch from M.Mueller about WinExecAndWait.
-
-1.9.0.130 ( 07.04.2010 )
-- add's -N /-NO to the batch file. Used to define the .dcu output path.
-
-1.9.0.129 ( 06.04.2010 )
-- applied patch from M.Mueller about reading of dproj-file for D2009,D2010.
-
-1.9.0.128 ( 31.03.2010 )
-- fix for Command Line Parameter -D (Conditional Define).
-- improvements about information on batchfile creation.
-- removed unused variable from CreateGroupProj.
-
-1.9.0.127 ( 30.03.2010 )
-- fix for Search Path.
-- fix in GetSystemPath.
-- fix for Project Search Path and DPT Search Path. 
-
-1.9.0.125 ( 27.03.2010 )
-- fix in CleanUpPackagesByRegistery. Expand placeholders like BDS before compare the path names.
-
-1.9.0.124 ( 27.03.2010 )
-- some changes about the config-filename. from D1-D8 it was .cfg, from D2005-D2006 it was .bdsproj, from D2007- its .dproj
-- work inside SaveBackup to make it work again. DPT now creates a <backup.bat> and tries to execute it.
-  The user of DPT may edit the file <backup_template.bat> to use another archiver.
-- sourcecode clean-up.
-
-1.9.0.122 ( 11.03.2010 )
-- added patch from M.Mueller. DPT can now be built with different delphi versions.
-- SH: fixed AV when using DPT with command-line parameters.
-
-1.9.0.121 ( 10.03.2010 )
-- added patch from M.Mueller. DPT now uses MSXML to read data from dproj,bdsgroup,groupproj files.
-- changed name of BPGTemplatefile.txt to ProjectGroupTemplate.bpg.
-
-1.9.0.120 ( 04.03.2010 )
-- integrate changes from M.Mueller. Donated code to correctly read BDSCommenDir and BDSProjectsDir.
-
-1.9.0.119 ( 24.02.2010 )
-- re-factored to make this project ready to be hosted a sourceforge.net.
-- zip-function has been removed. So no additional components must be installed to compile this project.
-- tracefile has been replaced by OutputDebugString.
-
-1.9.0.116 ( 17.02.2010 )
-- when checking the path environments for double entries, then take into account
-  that for example "c:\temp" and "c:\temp\" are the same.
-
-1.9.0.115 ( 09.01.2010 )
-- replaced all MessageDlg calls with MessageBox calls because language issues.
-
-1.9.0.114 ( 02.01.2010 )
-- moved some message strings to resourcestring section. (for translation)
-- implemented <WriteDProjFile> to write LibSuffix into the dproj file.
-- fix for missing zip-dll in relation with auto-backup.
-- fixed typo reported by S.Besso.
 -----------------------------------------------------------------------------}
 
 unit MainFrm;
@@ -589,7 +419,7 @@ begin
   DMMain.OnWriteLog:=nil;
   DMMain.OnDelphiVersionChange:=nil;
   DMMain.OnPlatformChangeEvent:=nil;
-  if not DirectoryExists(DMMain.BPGPath) then exit;
+  if not SysUtils.DirectoryExists(DMMain.BPGPath) then exit;
   _filename:=ChangeFileExt(DMMain.BPGFilename, '.log');
   try
     if ExtractFilenameOnly(DMMain.BPGFilename)='' then exit;
@@ -1594,8 +1424,6 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersion: integer);
-var
-_low:word;
 begin
   SetDelphiVersionCombobox(_DelphiVersion);
   if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
