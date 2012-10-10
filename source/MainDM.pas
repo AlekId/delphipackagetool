@@ -255,7 +255,6 @@ begin
   NVBAppExec1.Execute;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: CompareFiles
   Author:    
@@ -666,6 +665,7 @@ begin
   FCurrentBPLOutputPath:=GetDelphiPackageDir(FCurrentDelphiVersion);
   FCurrentDCUOutputPath:='';
   FApplicationIniFilename:=changefileext(application.ExeName,'.ini');
+  FCurrentPlatform:=tdp_win32;
   if not fileexists(FApplicationIniFilename) then begin  // on the first start, ask if the filetypes shall be registered.
     if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)           = IdYes then RegisterFileType('bpg'      ,Application.ExeName);
     if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName);
@@ -937,7 +937,11 @@ begin
   trace(3,'Set current delphi version to <%d>.',[FCurrentDelphiVersion]);
   FDelphiRootDirectory:=GetDelphiRootDir(FCurrentDelphiVersion);
   trace(3,'Set the Compiler Root Directory to <%s>.',[FDelphiRootDirectory]);
-  FDelphiCompilerFile :=FDelphiRootDirectory+'bin\dcc32.exe';
+  case FCurrentPlatform of
+    tdp_win32:FDelphiCompilerFile :=FDelphiRootDirectory+'bin\dcc32.exe';
+    tdp_win64:FDelphiCompilerFile :=FDelphiRootDirectory+'bin\dcc64.exe';
+    tdp_OSX: ;//todo
+  end;
   trace(3,'Set the Compiler File to <%s>.',[FDelphiCompilerFile]);
   ReadLibraryPath(FCurrentDelphiVersion,FDelphiLibraryPath);
   AdaptSearchPath;
