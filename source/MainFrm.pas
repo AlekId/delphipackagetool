@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.0.172  ( 10.10.2012 )
+- SH: some code-cleanup and re-factoring.
+
 1.9.0.171  ( 08.10.2012 )
 - SH: applied patch received from M.Mueller for detecting Delphi 2010
       and resolved some warnings in XE2.
@@ -560,13 +563,9 @@ end;
 procedure TFrmMain.cbxDelphiVersionsChange(Sender: TObject);
 var
 _PackagePath:string;
-_iDelphiVersion:integer;
-_fDelphiVersion:extended;
 begin
   _PackagePath:=IncludeTrailingPathDelimiter(edtPackageBPLDirectory.Text);
-  StringToFloat(cbxDelphiVersions.Text,_fDelphiVersion);
-  _iDelphiVersion:=trunc(_fDelphiVersion);
-  DMMain.CurrentDelphiVersion:=_iDelphiVersion;
+  DMMain.CurrentDelphiVersion:=IDENameToVersionNo(cbxDelphiVersions.Text);
 end;
 
 {-----------------------------------------------------------------------------
@@ -764,7 +763,7 @@ _ItemIndex:integer;
 begin
   cbxDelphiVersions.OnChange:=nil;
   cbxDelphiVersions.Items.Assign(DMMain.InstalledDelphiVersions);
-  _sDelphiVersion := inttostr(_DelphiVersion)+'.0';
+  _sDelphiVersion := VersionNoToIDEName(_DelphiVersion,tdn_long);
   _itemIndex:=cbxDelphiVersions.Items.IndexOf(_sDelphiVersion);
   if _ItemIndex>-1 then begin
     cbxDelphiVersions.ItemIndex:=_ItemIndex;

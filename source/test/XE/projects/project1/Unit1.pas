@@ -8,10 +8,9 @@ uses
 
 type
   TForm1 = class(TForm)
+    procedure FormShow(Sender: TObject);
   private
-    { Private-Deklarationen }
   public
-    { Public-Deklarationen }
   end;
 
 var
@@ -20,5 +19,12 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+  {$ifdef release}
+  caption:='Compiled with RELEASE-Mode';
+  {$endif}
+end;
 
 end.

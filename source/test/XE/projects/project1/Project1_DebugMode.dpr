@@ -1,4 +1,4 @@
-program Project1;
+program Project1_DebugMode;
 
 uses
   Forms,

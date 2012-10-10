@@ -161,7 +161,7 @@ object FrmMain: TFrmMain
     object cbxDelphiVersions: TComboBox
       Left = 872
       Top = 16
-      Width = 145
+      Width = 177
       Height = 21
       Style = csDropDownList
       ItemHeight = 13

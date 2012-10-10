@@ -37,6 +37,7 @@ type
 
   TDelphiConfigs= set of TDelphiConfig;
 
+  TDelphiNameType=(tdn_short,tdn_long);
 
   TDelphiVersionInfo = record
     Name: string;
@@ -45,6 +46,7 @@ type
     IDEVersionStr: string;
     CoreIdeVersion: string;
     ShortName:string;
+    LongName:string;
     CompilerVersion:double;
     CompilerVersionStr:string;
     Supported: Boolean;
@@ -85,6 +87,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '10';
       ShortName: 'D1';
+      LongName: 'Borland Delphi 1.0';
       CompilerVersion:8;
       CompilerVersionStr: 'VER80';
       Supported: True;
@@ -97,6 +100,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '20';
       ShortName: 'D2';
+      LongName: 'Borland Delphi 2.0';
       CompilerVersion:9;
       CompilerVersionStr: 'VER90';
       Supported: True;
@@ -109,6 +113,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '30';
       ShortName: 'D3';
+      LongName: 'Borland Delphi 3.0';
       CompilerVersion:10;
       CompilerVersionStr: 'VER100';
       Supported: True;
@@ -121,6 +126,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '40';
       ShortName: 'D4';
+      LongName: 'Borland Delphi 4.0';
       CompilerVersion:12;
       CompilerVersionStr: 'VER120';
       Supported: True;
@@ -133,6 +139,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '50';
       ShortName: 'D5';
+      LongName: 'Borland Delphi 5.0';
       CompilerVersion:13;
       CompilerVersionStr: 'VER130';
       Supported: True;
@@ -145,6 +152,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '60';
       ShortName: 'D6';
+      LongName: 'Borland Delphi 6.0';
       CompilerVersion:14;
       CompilerVersionStr: 'VER140';
       Supported: True;
@@ -157,6 +165,7 @@ const
       IDEVersionStr: '';
       CoreIdeVersion: '70';
       ShortName: 'D7';
+      LongName: 'Borland Delphi 7.0';
       CompilerVersion:15;
       CompilerVersionStr:'VER150';
       Supported: True;
@@ -169,6 +178,7 @@ const
       IDEVersionStr: '2.0';
       CoreIdeVersion: '71';
       ShortName: 'D8';
+      LongName: 'Borland Delphi 8 .NET';
       CompilerVersion:16;
       CompilerVersionStr: 'VER160';
       Supported: True;
@@ -181,6 +191,7 @@ const
       IDEVersionStr: '3.0';
       CoreIdeVersion: '90';
       ShortName: 'D2005';
+      LongName: 'Borland Delphi 2005';
       CompilerVersion:17;
       CompilerVersionStr:'VER170';
       Supported: True;
@@ -193,6 +204,7 @@ const
       IDEVersionStr: '4.0';
       CoreIdeVersion: '100';
       ShortName: 'D2006';
+      LongName: 'Borland Developer Studio 2006/Turbo Delphi';
       CompilerVersion:18;
       CompilerVersionStr:'VER180';
       Supported: True;
@@ -205,6 +217,7 @@ const
       IDEVersionStr: '5.0';
       CoreIdeVersion: '100';
       ShortName: 'D2007';
+      LongName: 'CodeGear Developer Studio 2007/CodeGear Delphi 2007 for Win32';
       CompilerVersion:18.5;
       CompilerVersionStr:'VER185';
       Supported: True;
@@ -227,6 +240,7 @@ const
       IDEVersionStr: '6.0';
       CoreIdeVersion: '120';
       ShortName: 'D2009';
+      LongName: 'CodeGear Delphi 2009';
       CompilerVersion:20;
       CompilerVersionStr:'VER200';
       Supported: True;
@@ -239,6 +253,7 @@ const
       IDEVersionStr: '7.0';
       CoreIdeVersion: '140';
       ShortName: 'D2010';
+      LongName: 'Embarcadero RAD Studio 2010';
       CompilerVersion:21;
       CompilerVersionStr:'Ver210';
       Supported: True;
@@ -250,7 +265,8 @@ const
       IDEVersion: 8;
       IDEVersionStr: '8.0';
       CoreIdeVersion: '150';
-      ShortName: 'D2011';
+      ShortName: 'XE';
+      LongName: 'Embarcadero RAD Studio XE';
       CompilerVersion:22;
       CompilerVersionStr:'VER220';
       Supported: True;
@@ -262,7 +278,8 @@ const
       IDEVersion: 9;
       IDEVersionStr: '9.0';
       CoreIdeVersion: '160';
-      ShortName: 'D2012';
+      ShortName: 'XE2';
+      LongName: 'Embarcadero RAD Studio XE2';
       CompilerVersion:23;
       CompilerVersionStr:'VER230';
       Supported: True;
@@ -274,13 +291,13 @@ const
       IDEVersion: 10;
       IDEVersionStr: '10.0';
       CoreIdeVersion: '170';
-      ShortName: 'D2013';
+      ShortName: 'XE3';
+      LongName: 'Embarcadero RAD Studio XE3';
       CompilerVersion:24;
       CompilerVersionStr:'VER240';
       Supported: True;
       Platforms:[tdp_win32,tdp_win64,tdp_OSX];
       Configs:[tdc_release,tdc_test,tdc_debug])
-
   );
 
 

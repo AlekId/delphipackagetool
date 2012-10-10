@@ -76,7 +76,8 @@ function  RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const
 function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;const _libsuffix:string=''):string; // input is a source code filename, output is the name of the compiled target.
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
-function  VersionNoToIDEName(const _version:integer):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
+function  VersionNoToIDEName(const _version:integer;const _NameType:TDelphiNameType=tdn_long):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
+function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0 into 6 or bds 4.0 into 10.
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
@@ -201,7 +202,6 @@ function  OldestIDEVersion:integer;
 var
 i:integer;
 _installedVersion:integer;
-_finstalledVersion:extended;
 _InstalledIDEVersions:TStrings;
 begin
   result:=High(integer);
@@ -209,8 +209,7 @@ begin
   try
     GetInstalledIDEVersions(_InstalledIDEVersions);
     for i:=0 to _InstalledIDEVersions.count-1 do begin
-      if not StringToFloat(_InstalledIDEVersions[i],_finstalledVersion) then continue;
-      _installedVersion:=trunc(_finstalledVersion);
+      _installedVersion:=IDENameToVersionNo(_InstalledIDEVersions[i]);
       if _installedVersion<result then result:=_installedVersion;
     end;
   finally
@@ -230,7 +229,6 @@ function  LatestIDEVersion:integer;
 var
 i:integer;
 _installedVersion:integer;
-_finstalledVersion:extended;
 _InstalledIDEVersions:TStrings;
 begin
   result:=0;
@@ -238,8 +236,7 @@ begin
   try
     GetInstalledIDEVersions(_InstalledIDEVersions);
     for i:=0 to _InstalledIDEVersions.count-1 do begin
-      if not StringToFloat(_InstalledIDEVersions[i],_finstalledVersion) then continue;
-      _installedVersion:=trunc(_finstalledVersion);
+      _installedVersion:=IDENameToVersionNo(_InstalledIDEVersions[i]);
       if _installedVersion>result then result:=_installedVersion;
     end;
   finally
@@ -260,7 +257,6 @@ function isIDEInstalled(const _Version:Integer):boolean;
 var
 i:integer;
 _installedVersion:integer;
-_finstalledVersion:extended;
 _InstalledIDEVersions:TStrings;
 begin
   result:=false;
@@ -268,8 +264,7 @@ begin
   try
     GetInstalledIDEVersions(_InstalledIDEVersions);
     for i:=0 to _InstalledIDEVersions.count-1 do begin
-      if not StringToFloat(_InstalledIDEVersions[i],_finstalledVersion) then continue;
-      _installedVersion:=trunc(_finstalledVersion);
+      _installedVersion:=IDENameToVersionNo(_InstalledIDEVersions[i]);
       if _installedVersion=_Version then begin
         result:=true;
         exit;
@@ -1302,20 +1297,13 @@ end;
   Result:    string
   Description:   information taken from http://delphi.wikia.com/wiki/Delphi_Release_Dates
 -----------------------------------------------------------------------------}
-function VersionNoToIDEName(const _version:integer):string;
+function VersionNoToIDEName(const _version:integer;const _NameType:TDelphiNameType=tdn_long):string;
 begin
   result:='unknown version';
-  case _version of
-    1,2,3,4,5,6,7:result:=format('Borland Delphi %d',[_version]);
-                8:result:='Borland Delphi 8 .NET';
-                9:result:='Borland Delphi 2005';
-               10:result:='Borland Developer Studio 2006/Turbo Delphi';
-               11:result:='CodeGear Developer Studio 2007/CodeGear Delphi 2007 for Win32';
-               12:result:='Delphi 2009';
-               14:result:='Embarcadero RAD Studio 2010';
-               15:result:='Embarcadero RAD Studio XE';
-               16:result:='Embarcadero RAD Studio XE2';
-               17:result:='Embarcadero RAD Studio XE3';
+  if (_version<1) or (_version>length(DelphiVersions)) then exit;
+  case _NameType of
+    tdn_long :result:=DelphiVersions[_version].LongName;
+    tdn_short:result:=DelphiVersions[_version].ShortName;
   end;
 end;
 
@@ -1329,22 +1317,17 @@ end;
 -----------------------------------------------------------------------------}
 function IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0 into 6 or bds 4.0 into 10.
 var
-_fVersion:extended;
+i:integer;
 begin
   result:=0;
   _version:=uppercase(trim(_version));
-  if Pos('BDS',_version)=1 then begin
-    delete(_version,1,3);
-    _version:=trim(_version);
-    if not StringToFloat(_version,_fVersion) then exit;
-    result:=trunc(_fVersion);
-    if result<7 then result:=result+6   //BDS1.0-BDS6.0
-                else result:=result+7;  //BDS7.0....
-  end
-  else begin
-    if Pos('D',_version)=1 then delete(_version,1,1);
-    if not StringToFloat(_version,_fVersion) then exit;
-    result:=trunc(_fVersion); //D1-D7
+  for i:=1 to length(DelphiVersions) do begin
+    if (_version<>uppercase(DelphiVersions[i].LongName)) and
+       (_version<>uppercase(DelphiVersions[i].ShortName)) and
+       (_version<>uppercase(DelphiVersions[i].VersionStr)) and
+       (_version<>uppercase(DelphiVersions[i].IDEVersionStr)) then continue;
+    result:=i;
+    exit;
   end;
 end;
 
@@ -2083,87 +2066,41 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: GetInstalledDelphiVersions
-  Author:    Sami
-  Date:      24-Dez-2003
-  Arguments: var array of integer
-  Result:    None
-  Description: read the registry to try to find the install delphi version 1-7
-  15.11.2004 SH -first try to read from HKEY_LOCAL_MACHINE
------------------------------------------------------------------------------}
-function GetInstalledDelphiVersions(_list:TStrings):boolean;
-var
-i:integer;
-_reg: TRegistry;
-begin
-  result:=false;
-  if not assigned(_list) then exit;
-  try
-    _reg := TRegistry.Create;
-    try
-      _reg.CloseKey;
-      _reg.RootKey := HKEY_LOCAL_MACHINE;
-      if _reg.OpenKeyReadOnly(cDelphiKey) then
-        if _reg.HasSubKeys then _reg.GetKeyNames(_list);
-      _reg.CloseKey;
-      if _list.Count=0 then begin
-        _reg.CloseKey;
-        _reg.RootKey := HKEY_CURRENT_USER;
-        if _reg.OpenKeyReadOnly(cDelphiKey) then
-          if _reg.HasSubKeys then _reg.GetKeyNames(_list);
-        _reg.CloseKey;
-      end;
-    finally
-      _reg.free;
-    end;
-  except
-    on e:exception do trace(1,'Error in GetInstalledDelphiVersions: <%s>.',[e.Message]);
-  end;
-  for i:=0 to _list.count-1 do trace(5,'GetInstalledDelphiVersions: Found <%s>.',[_list[i]]);
-  result:=(_list.count>0);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: GetInstalledBDSVersions
   Author:    sam
   Date:      25-Feb-2006
   Arguments: _list:TStrings
   Result:    boolean
-  Description: read the registry to try to find the installed bds versions 1-6
+  Description: read the registry to try to find the installed delphi/bds versions.
 -----------------------------------------------------------------------------}
-function GetInstalledBDSVersions(_basekey:string;_list:TStrings):boolean;
+function GetInstalledDelphiVersions(_basekey:string;_list:TStrings):boolean;
 var
 i:integer;
-_reg: TRegistry;
+
+  procedure GetSubKeys(_RootKey:HKey);
+  var
+  _reg: TRegistry;
+  begin
+    _reg := TRegistry.Create;
+    try
+      try
+        _reg.RootKey := _RootKey;
+        if not _reg.OpenKeyReadOnly(_basekey) then exit;
+        if _reg.HasSubKeys then _reg.GetKeyNames(_list);
+        _reg.CloseKey;
+      except
+        on e:exception do trace(1,'Error in GetInstalledDelphiVersions: <%s>.',[e.Message]);
+      end;
+    finally
+      _reg.free;
+    end;
+  end;
+
 begin
   result:=false;
   if not assigned(_list) then exit;
-  try
-    _reg := TRegistry.Create;
-    try
-      with _reg do begin     // first search in local machine
-        CloseKey;
-        RootKey := HKEY_LOCAL_MACHINE;
-        if OpenKeyReadOnly(_basekey) then
-          if HasSubKeys then GetKeyNames(_list);
-        CloseKey;
-      end;
-
-      if _list.Count=0 then begin // if nothing is found then lookup the current user.
-        with _reg do begin
-          CloseKey;
-          RootKey := HKEY_CURRENT_USER;
-          if OpenKeyReadOnly(_basekey) then
-            if HasSubKeys then GetKeyNames(_list);
-          CloseKey;
-        end;
-      end;
-    finally
-      if Assigned(_reg) then FreeAndNil(_reg);
-    end;
-  except
-    on e:exception do trace(1,'Error in GetInstalledBDSVersions: <%s>.',[e.Message]);
-  end;
-  for i:=0 to _list.count-1 do trace(5,'GetInstalledBDSVersions: Found <%s>.',[_list[i]]);
+  GetSubKeys(HKEY_LOCAL_MACHINE);    // first look at local machine.
+  if _list.Count=0 then GetSubKeys(HKEY_CURRENT_USER); // if nothing is found then lookup the current user.
+  for i:=0 to _list.count-1 do trace(5,'GetInstalledDelphiVersions: Found <%s> for <%s>.',[_list[i],_basekey]);
   result:=(_list.count>0);
 end;
 
@@ -2185,46 +2122,55 @@ _fVersion:extended;
 _sVersion:string;
 begin
   _list.Clear;
-  GetInstalledDelphiVersions(_list);
+  GetInstalledDelphiVersions(cDelphiKey,_list);
   _tmp:=TStringList.create;
   try
-    GetInstalledBDSVersions(cBorlandBDSKey,_tmp);
+    GetInstalledDelphiVersions(cBorlandBDSKey,_tmp);
     for i:=0 to _tmp.Count-1 do begin
       _sVersion:=_tmp[i];
       if not StringToFloat(_sversion,_fVersion) then continue;
-      _list.Add(inttostr(trunc(_fVersion)+6)+'.0');
+      _list.Add(inttostr(trunc(_fVersion)+6));
     end;
     _tmp.Clear;
-    GetInstalledBDSVersions(cCodeGearBDSKey,_tmp);
+    GetInstalledDelphiVersions(cCodeGearBDSKey,_tmp);
     for i:=0 to _tmp.Count-1 do begin
       _sVersion:=_tmp[i];
       if not StringToFloat(_sversion,_fVersion) then continue;
-      if _fVersion<7 then _list.Add(inttostr(trunc(_fVersion)+6)+'.0')
-                     else _list.Add(inttostr(trunc(_fVersion)+7)+'.0')
+      if _fVersion<7 then _list.Add(inttostr(trunc(_fVersion)+6))
+                     else _list.Add(inttostr(trunc(_fVersion)+7))
     end;
     _tmp.Clear;
-    GetInstalledBDSVersions(cEmbarcaderoBDSKey,_tmp);
+    GetInstalledDelphiVersions(cEmbarcaderoBDSKey,_tmp);
     for i:=0 to _tmp.Count-1 do begin
       _sVersion:=_tmp[i];
       if not StringToFloat(_sversion,_fVersion) then continue;
-      if _fVersion<7 then _list.Add(inttostr(trunc(_fVersion)+6)+'.0')
-                     else _list.Add(inttostr(trunc(_fVersion)+7)+'.0')
+      if _fVersion<7 then _list.Add(inttostr(trunc(_fVersion)+6))
+                     else _list.Add(inttostr(trunc(_fVersion)+7))
     end;
   finally
     _tmp.free;
   end;
   i:=0;
-  while i<_list.count do begin
-    _version:=IDENameToVersionNo(_list.Strings[i]);
+  while i<_list.count do begin     // found n entries in the registry. Now check if referenced compiler file is really available.
+    _version:=trunc(strtofloat(_list.Strings[i]));
     _delphiExeFilename:=GetDelphiApplication(_version);
     if _delphiExeFilename='' then _list.Delete(i)
     else begin
-      if fileexists(_delphiExeFilename) then inc(i)
+      if fileexists(_delphiExeFilename) then begin
+        trace(3,'Found Compiler <%s> for Version <%s>. <%s>. ',[_delphiExeFilename,_list.Strings[i],VersionNoToIDEName(_version)]);
+        inc(i);
+      end
       else begin
         trace(3,'Found the Registry entry for IDE <%s> but the file <%s> is not present.',[_list.Strings[i],_delphiExeFilename]);
-        _list.Delete(i);
+        _list.Delete(i);  // remove item.
       end;
     end;
+  end;
+  i:=0;
+  while i<_list.count do begin
+    _version:=trunc(strtofloat(_list.Strings[i]));
+    _list[i]:=VersionNoToIDEName(_version,tdn_long);
+    inc(i);
   end;
   result:=(_list.count>0);
 end;
