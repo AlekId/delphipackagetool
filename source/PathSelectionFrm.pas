@@ -66,11 +66,13 @@ function ShowSelectPathDialog(_searchLocation, _searchcriteria: string;const _sh
 implementation
 
 uses
+  uDPTDefinitions,
   uDPTMisc,
+  uDPTPathFilenameConvert,
   MainDM,
   FileCtrl,
   Windows,
-  uDPTDelphiPackage,
+//  uDPTDelphiPackage,
   OptionsFrm;
 
 {$R *.dfm}

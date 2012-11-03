@@ -54,6 +54,17 @@ type
     Configs:TDelphiConfigs;
   end;
 
+  TProjectType=(tp_unkown,  // defines compiler output
+              tp_dll,     // project is a dll
+              tp_exe,     // project is a executable
+              tp_bpl);    // project is a package
+
+
+resourcestring
+cConfirm='Confirm';
+cWarning='Warning';
+cError='Error';
+cInformation='Information';
 
 const
   cDelphiKey='SOFTWARE\BORLAND\DELPHI';

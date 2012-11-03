@@ -217,6 +217,7 @@ uses
   PathSelectionFrm,
   uDPTEnvironmentPath,
   uDPTMisc,
+  uDPTPathFilenameConvert,
   VersionFrm;
 
 {$R *.dfm}

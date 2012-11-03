@@ -154,7 +154,6 @@ const
 
 
 implementation
-uses dialogs;
 
 constructor TNVBAppExec.Create(AOwner: TComponent);
 begin
@@ -165,7 +164,6 @@ begin
   FErrNo     := -1;
   FPriority  :=ppNormal;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBAppExec.Execute

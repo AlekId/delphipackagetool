@@ -17,22 +17,11 @@ uses Classes,
      Registry,
      uDPTDefinitions;
 
-resourcestring
-cConfirm='Confirm';
-cWarning='Warning';
-cError='Error';
-cInformation='Information';
-
 const
   cLIBAutomaticTag='<Auto>';     
   cLIBNoneTag='<None>';
 
 type
-  TProjectType=(tp_unkown,  // defines compiler output
-                tp_dll,     // project is a dll
-                tp_exe,     // project is a executable
-                tp_bpl);    // project is a package
-
 
 // these settings are stored in the registry in SOFTWARE\Borland\Delphi\x.x\Library
 // or SOFTWARE\Borland\BDS\x.x\library.
@@ -47,7 +36,6 @@ end;
 
 function  GetDelphiPackageDir(const _DelphiVersion:integer;const _Platform:TDelphiPlatform=tdp_win32):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
-procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer); // create a bpg-file or bdsproj-file.
 function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer;var msg:string):boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName,_PackageDirectory,_PackageLibSuffix:String;_DelphiVersion:Integer):boolean;  // remove package from regeistry.
 function  CompileProject(_Compiler,_CompilerSwitches,_ProjectName,_TargetPath,_DCUPath,_WorkPath:string;_ProjectType:TProjectType;Var Output:String;const _DelphiVersion:integer):boolean; // compile the package
@@ -68,11 +56,8 @@ procedure InitBatchFile(const _filename:string); // reset batch file
 function  SaveBatchFile:string; // save the batch file.
 function  GetPackageVersion(const _PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):string;
 function  ReplaceTag(_filename:string;_DelphiVersion:integer):string;
+function  AddTag(_filename: string;_DelphiVersion:integer): string;
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType; // find out if the source file contains a application or library or package.
-function  AbsoluteFilename(_realpath,_filename: string):string; // converts a relative package filename into absolute filename
-function  AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string; // converts the path <_path> into an absolute pathname.
-function  RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:integer):string; // converts the filename <_filename> into a relative filename.
-function  RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string; // converts the path <_path> into a realtive pathname.
 function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;const _libsuffix:string=''):string; // input is a source code filename, output is the name of the compiled target.
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
@@ -97,7 +82,6 @@ function  OldestIDEVersion:integer; // returns the VersionNo of the oldest IDE i
 function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE installed.
 function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
-function  MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
 function  RemoveTrailingSemikolon(const _path:string):string;
 function  PlatformTypeAsString(const _platform:TDelphiPlatform):string;
 function  PlatformStringToType(_platform:string):TDelphiPlatform;
@@ -108,8 +92,8 @@ FCreateBatchFile:boolean;
 implementation
 
 uses uDPTMisc,
+     uDPTPathFilenameConvert,
      SysUtils,
-     Messages,
      StrUtils,
      TlHelp32,
      TypInfo,
@@ -127,7 +111,6 @@ uses uDPTMisc,
 var
 FBatchFile:TStrings;
 FBatchFilename:string;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: PlatformTypeAsString
@@ -243,7 +226,6 @@ begin
     _InstalledIDEVersions.free;
   end;
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: isIDEInstalled
@@ -534,30 +516,6 @@ begin
   result:=true;
 end;
 
-{-----------------------------------------------------------------------------
-  Procedure: FindLine
-  Author:    herzogs2
-  Date:      25-Mrz-2010
-  Arguments: var content:TStrings;_Tag:string;var removedText:string
-  Result:    integer
-  Description:
------------------------------------------------------------------------------}
-function FindLine(var content:TStrings;_Tag:string;var removedText:string):integer;
-var
-i:integer;
-_Text:String;
-begin
-  result:=-1;
-  removedText:='';
-  for i:=0 to content.Count-1 do begin
-    _text:=trim(content[i]);
-    if pos(_Tag,_text)<>1 then continue;
-    removedText:=_text;
-    result:=i;
-    break;
-  end;
-end;
-
 {*-----------------------------------------------------------------------------
   Procedure: WritePackageFile
   Author:    sam
@@ -724,7 +682,6 @@ begin
   end;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: ExtractFilenamesFromDCC32Output
   Author:    herzogs2
@@ -846,7 +803,6 @@ begin
   end;
   result:=RemoveDoublePathEntries(result);
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: WriteDOFFile
@@ -1134,7 +1090,6 @@ begin
   end;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: RemoveValueFromRegistry
   Author:    herzogs2
@@ -1224,7 +1179,6 @@ begin
   end;
   VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys);
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: CleanUpPackagesByRegistry
@@ -1329,345 +1283,6 @@ begin
     result:=i;
     exit;
   end;
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: CreateBPGFile
-  Author:    herzogs2
-  Date:      04-Jun-2008
-  Arguments: const _lstProjectFiles:TListBox;const _bpgFilename:string
-  Result:    None
-  Description: create a bpg-file with all the projects in the list <_lstProjectFiles>.
------------------------------------------------------------------------------}
-procedure CreateBPGFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
-resourcestring
-cDoFreshInstall='Could not find the file <%s>. Download the latest <setup.exe> of Delphi Package Tool and do fresh install.';
-const
-  cBPGTemplateFilename='ProjectGroupTemplate.bpg'; // this file must be in the application directory. the file contains the header part of a bpg-file.
-var
-i:integer;
-_Files:TStrings;
-_line:string;
-_Projects:string;
-_filename:string;                                                                                
-_ProjectFilename:string;
-_ProjectType:TProjectType;
-begin
-  if not FileExists(ExtractFilePath(Application.exename)+cBPGTemplateFilename) then begin
-    trace(5,'Could not find the file <%s>. Make sure it is in the application directory.',[ExtractFilePath(Application.exename)+cBPGTemplateFilename]);
-    Application.MessageBox(Pchar(format(cDoFreshInstall,[ExtractFilePath(Application.exename)+cBPGTemplateFilename])),pchar(cError),MB_ICONERROR or MB_OK);
-    exit;
-  end;
-
-  _Files:=TStringList.create;
-  try
-    _Files.loadfromfile(extractFilePath(Application.exename)+cBPGTemplateFilename);
-    _Projects:='PROJECTS =';
-    for i:=0 to _lstProjectFiles.Items.count-1 do begin
-      _ProjectFilename:=AbsoluteFilename(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
-      _ProjectType:=DetermProjectType(_ProjectFilename,_projectGroupFilename,_DelphiVersion);
-      _Projects:=_Projects+OutputFilename(_ProjectFilename,_ProjectType,DelphiVersions[_DelphiVersion].ShortName);
-      if (length(_Projects)-LastPos(_Projects,'\'))>80 then _Projects:=_Projects+' \'+#$D+#$A+'  '
-      else _Projects:=_Projects+' ';
-    end;
-    _Files.Add(_Projects);
-    _Files.Add('#------------------------------------------------------------------------------');
-    _Files.Add('default: $(PROJECTS)                                                           ');
-    _Files.Add('#------------------------------------------------------------------------------');
-    _Files.Add('');
-    for i:=0 to _lstProjectFiles.Items.count-1 do begin
-      _ProjectFilename:=AbsoluteFilename(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
-      _ProjectType:=DetermProjectType(_ProjectFilename,_projectGroupFilename,_DelphiVersion);
-
-      _filename:=OutputFilename(_ProjectFilename,_ProjectType,DelphiVersions[_DelphiVersion].ShortName);
-      _line:=ExtractFilename(_filename)+': '+ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
-      if _files.IndexOf(_line)=-1 then begin // avoid doubles.
-        _Files.Add(_line);
-        _Files.Add('  $(DCC)');
-        _Files.Add('');
-      end;
-    end;
-    if RenameFile(_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')) then begin
-      trace(1,'Renamed the file <%s> to <%s>.',[_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')]);
-    end;
-    _Files.SaveToFile(_projectGroupFilename);
-    trace(1,'Saved ProjectGroup-File <%s>.',[_projectGroupFilename]);
-  finally
-    _Files.Free;
-  end;
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: CreateBDSGroup
-  Author:    herzogs2
-  Date:      04-Jun-2008
-  Arguments: const _lstProjectFiles:TListBox;const _bpgFilename:string
-  Result:    None
-  Description: create a bdsgroup-file with all the projects in the list <_lstProjectFiles>.
------------------------------------------------------------------------------}
-procedure CreateBDSGroup(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
-resourcestring
-cDoFreshInstall='Could not find the file <%s>. Download the latest <setup.exe> of Delphi Package Tool and do fresh install.';
-cCouldNotCopy='Could not copy file <%s> to <%s>. Check User-Rights.';
-const
-  cBDSGroupTemplateFilename='ProjectGroupTemplate.bdsgroup';
-var
-i,j:integer;
-_file:TStrings;
-_line:string;
-_BeginProjectSection:integer;
-_filename:string;
-_lineToInsert:string;
-_TargetsLine:string;
-_description:string;
-_packagefilename:string;
-_templateFilename:string;
-_projectType:TProjectType;
-_libsuffix:string;
-begin
-  if not fileexists(_projectGroupFilename) then begin // if the project file does not exists, then create it from the template.
-    _templateFilename:=ExtractFilePath(Application.exename)+cBDSGroupTemplateFilename;
-    if not FileExists(_templateFilename) then begin
-      trace(5,'Could not find the file <%s>. Make sure it is in the application directory.',[_templateFilename]);
-      Application.MessageBox(pchar(format(cDoFreshInstall,[_templateFilename])),pchar(cError),MB_ICONERROR or MB_OK);
-      exit;
-    end;
-    if not CopyFile(pchar(_templateFilename),pchar(_projectGroupFilename),false) then begin
-      trace(2,'Problem in CreateBDSGroup: Could not copy file <%s> to <%s>. Check User-Rights.',[_templateFilename,_projectGroupFilename]);
-      Application.MessageBox(pchar(format(cCouldNotCopy,[_templateFilename,_projectGroupFilename])),pchar(cError),MB_ICONERROR or MB_OK);
-      exit;
-    end;
-  end;
-  _file:=TStringList.Create;
-  try
-    _file.LoadFromFile(_projectGroupFilename);
-// find the begin of the project section
-    _BeginProjectSection:=0;
-    for i:=0 to _file.Count-1 do begin
-      _line:=_file[i];
-      inc(_BeginProjectSection);
-      if Pos('<Projects>',_line)=0 then continue;
-      break;
-    end;
-// replace projects in the file with the projects from the list <_listProjectFiles>.
-    j:=_BeginProjectSection;
-    _TargetsLine:='      <Projects Name="Targets">';
-    for i:=0 to _lstProjectFiles.Count-1 do begin
-      _filename:=_lstProjectFiles.Items[i];
-      _packagefilename:=AbsoluteFilename(extractFilepath(_projectGroupFilename),_filename);
-      _projectType:=DetermProjectType(_packagefilename,'',_DelphiVersion);
-      case _projectType of
-        tp_unkown,  // defines compiler output
-        tp_dll:begin // project is a dll
-                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+'.dll',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-                 if _file.IndexOf(_lineToInsert)=-1 then begin
-                   _file.Insert(j,_lineToInsert);
-                   _TargetsLine:=_TargetsLine+extractfilenameonly(_filename)+'.dll'+' ';
-                 end;
-               end;
-        tp_exe:begin // project is a executable
-                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+'.exe',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-                 if _file.IndexOf(_lineToInsert)=-1 then begin
-                   _file.Insert(j,_lineToInsert);
-                   _TargetsLine:=_TargetsLine+extractfilenameonly(_filename)+'.exe'+' ';
-                 end;
-               end;
-        tp_bpl:begin  // project is a package
-                 ReadpackageInfo(_packagefilename,_description,_libsuffix);
-                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+DelphiVersions[_DelphiVersion].ShortName+'.bpl',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-                 if _file.IndexOf(_lineToInsert)=-1 then begin
-                   _file.Insert(j,_lineToInsert);
-                   _TargetsLine:=_TargetsLine+extractfilenameonly(_filename)+DelphiVersions[_DelphiVersion].ShortName+'.bpl'+' ';
-                 end;
-               end;
-      end;
-      inc(j);
-    end;
-    _TargetsLine:=_TargetsLine+'</Projects>';
-    _file.Insert(j,_TargetsLine);
-    if RenameFile(_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')) then begin
-      trace(1,'Renamed the file <%s> to <%s>.',[_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')]);
-    end;
-    _File.SaveToFile(_projectGroupFilename);
-    trace(1,'Saved ProjectGroup-File <%s>.',[_projectGroupFilename]);
-  finally
-    _File.Free;
-  end;
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: CreateGroupProj
-  Author:    herzogs2
-  Date:      21-Jan-2009
-  Arguments: const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer
-  Result:    None
-  Description: create a group file as introduced in D2007.
------------------------------------------------------------------------------}
-procedure CreateGroupProj(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
-resourcestring
-cDoFreshInstall='Could not find the file <%s>. Download the latest <setup.exe> of Delphi Package Tool and do fresh install.';
-cCouldNotCopy='Could not copy file <%s> to <%s>. Check User-Rights.';
-const
-  cBDSGroupTemplateFilename='ProjectGroupTemplate.groupproj';
-var
-i,j:integer;
-_file:TStrings;
-_BeginProjectSection:integer;
-_EndProjectSection:integer;
-_BeginTargetSection:integer;
-_EndTargetSection:integer;
-_filename:string;
-_lineToInsert:string;
-_templateFilename:string;
-_buildsection:string;
-_makesection:string;
-_cleansection:string;
-_text:string;
-begin
-  if not fileexists(_projectGroupFilename) then begin // if the project file does not exists, then create it from the template.
-    _templateFilename:=ExtractFilePath(Application.exename)+cBDSGroupTemplateFilename;
-    if not FileExists(_templateFilename) then begin
-      trace(5,'Could not find the file <%s>. Make sure it is in the application directory.',[_templateFilename]);
-      Application.MessageBox(pchar(format(cDoFreshInstall,[_templateFilename])),pchar(cError),MB_ICONERROR or MB_OK);
-      exit;
-    end;
-    if not CopyFile(pchar(_templateFilename),pchar(_projectGroupFilename),false) then begin
-      trace(2,'Problem in CreateGroupProj: Could not copy file <%s> to <%s>. Check User-Rights.',[_templateFilename,_projectGroupFilename]);
-      Application.MessageBox(pchar(format(cCouldNotCopy,[_templateFilename,_projectGroupFilename])),pchar(cError),MB_ICONERROR or MB_OK);
-      exit;
-    end;
-    if not RemoveReadOnlyFlag(_projectGroupFilename,false) then exit;
-  end;
-  _file:=TStringList.Create;
-  try
-    _file.LoadFromFile(_projectGroupFilename);
-// find the begin of the project section
-    _BeginProjectSection:=FindLine(_file,'<ItemGroup>',_text);
-    if _BeginProjectSection=-1 then begin
-      trace(2,'Problem in CreateGroupProj: Could not find the begin of project section in file <%s>. Something wrong here.',[_projectGroupFilename]);
-      exit;
-    end;
-    _EndProjectSection  :=FindLine(_file,'</ItemGroup>',_text);
-    if _EndProjectSection=-1 then begin
-      trace(2,'Problem in CreateGroupProj: Could not find the end of project section in file <%s>. Something wrong here.',[_projectGroupFilename]);
-      exit;
-    end;
-// remove the existing lines.
-    for j:=_BeginProjectSection+1 to  _EndProjectSection-1 do _file.delete(_BeginProjectSection+1);
-// now add the projects from the list <_listProjectFiles>.
-    j:=_BeginProjectSection+1;
-    for i:=0 to _lstProjectFiles.Count-1 do begin
-      _filename:=_lstProjectFiles.Items[i];
-      _lineToInsert:=format('    <Projects Include="%s" />',[ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-    end;
-    _BeginTargetSection:=FindLine(_file,'</ProjectExtensions>',_text);
-    if _BeginTargetSection=-1 then begin
-      trace(2,'Problem in CreateGroupProj: Could not find the begin of target section in file <%s>. Something wrong here.',[_projectGroupFilename]);
-      exit;
-    end;
-    _EndTargetSection:=FindLine(_file,'<Import Condition="',_text);
-    if _EndTargetSection=-1 then begin
-      trace(2,'Problem in CreateGroupProj: Could not find the end of target section in file <%s>. Something wrong here.',[_projectGroupFilename]);
-      exit;
-    end;
-// remove the existing lines.
-    for j:=_BeginTargetSection+1 to  _EndTargetSection-1 do _file.delete(_BeginTargetSection+1);
-// recreate the target section        
-    j:=_BeginTargetSection+1;
-    for i:=0 to _lstProjectFiles.Count-1 do begin
-      _filename:=_lstProjectFiles.Items[i];
-// build
-      _lineToInsert:=format('  <Target Name="%s">',[ExtractFileNameOnly(_filename)]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _lineToInsert:=format('    <MSBuild Projects="%s" Targets="" />',[ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _lineToInsert:=format('  </Target>',[]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _buildsection:=_buildsection+ExtractFileNameOnly(_filename)+';';
-// clean
-      _lineToInsert:=format('  <Target Name="%s:Clean">',[ExtractFileNameOnly(_filename)]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _lineToInsert:=format('    <MSBuild Projects="%s" Targets="Clean" />',[ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _lineToInsert:=format('  </Target>',[]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _cleansection:=_cleansection+ExtractFileNameOnly(_filename)+':Clean;';
-//make
-      _lineToInsert:=format('  <Target Name="%s:Make">',[ExtractFileNameOnly(_filename)]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _lineToInsert:=format('    <MSBuild Projects="%s" Targets="Make" />',[ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _lineToInsert:=format('  </Target>',[]);
-      _file.insert(j,_lineToInsert);
-      inc(j);
-      _makesection:=_makesection+ExtractFileNameOnly(_filename)+':Make;';
-    end;
-//build
-    _lineToInsert:=format('  <Target Name="Build">',[]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-    _lineToInsert:=format('    <CallTarget Targets="%s" />',[_buildsection]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-    _lineToInsert:=format('  </Target>',[]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-//clean
-    _lineToInsert:=format('  <Target Name="Clean">',[]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-    _lineToInsert:=format('    <CallTarget Targets="%s" />',[_cleansection]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-    _lineToInsert:=format('  </Target>',[]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-//make
-    _lineToInsert:=format('  <Target Name="Make">',[]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-    _lineToInsert:=format('    <CallTarget Targets="%s" />',[_makesection]);
-    _file.insert(j,_lineToInsert);
-    inc(j);
-    _lineToInsert:=format('  </Target>',[]);
-    _file.insert(j,_lineToInsert);
-//    inc(j);
-    if RenameFile(_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')) then begin
-      trace(1,'Renamed the file <%s> to <%s>.',[_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')]);
-    end;
-    _File.SaveToFile(_projectGroupFilename);
-    trace(1,'Saved ProjectGroup-File <%s>.',[_projectGroupFilename]);
-  finally
-    _File.Free;
-  end;
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: CreateProjectGroupFile
-  Author:    herzogs2
-  Date:      06-Nov-2008
-  Arguments: const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer
-  Result:    None
-  Description: create a project group file (either .bpg or .bdsgroup or .groupproj).
------------------------------------------------------------------------------}
-procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
-var
-_fileExt:string;
-begin
-  _fileExt:=lowercase(ExtractFileExt(_ProjectGroupFilename));
-  if _fileExt='.bpg'       then CreateBPGFile(_lstProjectFiles,_projectGroupFilename,_DelphiVersion)  else
-  if _fileExt='.bdsgroup'  then CreateBDSGroup(_lstProjectFiles,_projectGroupFilename,_DelphiVersion) else
-  if _fileExt='.groupproj' then CreateGroupProj(_lstProjectFiles,_projectGroupFilename,_DelphiVersion);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1893,7 +1508,6 @@ begin
   result := _filename;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: AddTag
   Author:    herzogs2
@@ -1923,7 +1537,6 @@ begin
     exit;
   end;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: PrepapreRegistryPath
@@ -4053,201 +3666,7 @@ begin
 {$IFEND}
 end;
 
-{-----------------------------------------------------------------------------
-  Procedure: AbsoluteFilename
-  Author:    Sami
-  Date:      03-Feb-2004
-  Arguments: _sourcedir, _filename: string
-  Result:    string
-  Description: make the relative filename <_filename> into an absolute filename with path <_realPath>.
------------------------------------------------------------------------------}
-function AbsoluteFilename(_realpath,_filename: string): string;
-var
-_pos:integer;
-_len:integer;
-_relativepath:string;
-begin
-  trace(5,'Enter method <AbsoluteFilename> with realpath <%s> and filename <%s>.',[_realpath,_filename]);
-  if (pos('\\',_filename)=1) or               // looks like the filename contains already a absolute path.
-     (pos(':\',_filename)>0) then begin
-    result:=_filename;
-    trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-    exit;
-  end;
 
-  if (pos('..\',_filename)=0) and
-     (pos('.\',_filename)=0) then begin    // its not a relative path, leave here.
-    _realpath:=IncludeTrailingPathDelimiter(_realpath);
-    result:=_realpath+_filename;
-    trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  _relativepath:=extractFilepath(_filename);
-  _filename:=extractFilename(_filename);
-
-
-  _pos:=Pos('.\',_relativepath);
-  if _pos=1 then begin
-    delete(_relativepath,1,2);
-    result:=_realpath+_relativepath+_filename;
-    trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-    exit;
-  end;
-  _pos:=Pos('..\',_relativepath);
-  if (_pos=0) then begin
-    if (pos('\\',_relativepath)>0) or
-       (pos(':\',_relativepath)>0) then begin
-      result:=_relativepath+_filename;
-      trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-      exit;
-    end else begin
-      result:=_realpath+_relativepath+_filename;
-      trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-      exit;
-    end;
-  end;
-
-  while _pos>0 do begin
-    Delete(_relativepath,1,_pos+2);
-    _pos:=LastPos(_realpath,'\');
-    _len:=length(_realpath);
-    if _pos=_len then delete(_realpath,_pos,1);
-    _pos:=LastPos(_realpath,'\');
-    _len:=length(_realpath);
-    if _pos>0 then delete(_realpath,_pos,_len);
-    _pos:=Pos('..\',_relativepath);
-  end;
-  _realpath:=IncludeTrailingPathDelimiter(_realpath);
-  result:=_realpath+_relativepath+_filename;
-  trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: AbsolutePath
-  Author:    sam
-  Date:      12-Mrz-2005
-  Arguments: _basepath,_path:string
-  Result:    string
-  Description: converts the path <_path> into an absolute pathname.
------------------------------------------------------------------------------}
-function  AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string;
-var
-_pos:integer;
-_len:integer;
-begin
-  _path:=ReplaceTag(_path,_DelphiVersion);
-
-  if (pos('\\',_path)=1) or               // looks like the filename contains already a absolute path.
-     (pos(':\',_path)>0) then begin
-    result:=IncludeTrailingPathDelimiter(_path);
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  if (pos('..\',_path)=0) and
-     (pos('.\',_path)=0) then begin    // its not a relative path, leave here.
-    if _path<>'' then begin
-      _path:=IncludeTrailingPathDelimiter(_path);
-      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
-    end;
-    result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  _pos:=Pos('..\',_path);
-  if _pos=0 then begin
-    if _path<>'' then begin
-      _path:=IncludeTrailingPathDelimiter(_path);
-      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
-    end;
-    result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  while _pos>0 do begin
-    Delete(_path,1,_pos+2);
-    _pos:=LastPos(_basepath,'\');
-    if _pos=0 then begin
-      result:='';
-      trace(1,'Error in AbsolutePath: Relative path <%s> can not be matched to base path <%s>.',[_path,_basepath]);
-      exit;
-    end;
-    _len:=length(_basepath);
-    if _pos=_len then delete(_basepath,_pos,1);
-    _pos:=LastPos(_basepath,'\');
-    _len:=length(_basepath);
-    if _pos>0 then delete(_basepath,_pos,_len);
-    _pos:=Pos('..\',_path);
-  end;
-  if _path<>'' then begin
-    _path:=IncludeTrailingPathDelimiter(_path);
-    if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
-  end;
-  result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-  trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: MakeAbsolutePath
-  Author:    herzogs2
-  Date:      30-Mrz-2010
-  Arguments: _basePath,_path.string;_DelphiVersion:integer
-  Result:    string
-  Description: convert all entries in the path-list <_path> into a path-list with absolut path-names.
-  e.g. $(Delphi)\bin;$(ProgramFiles)\test;..\..\library; will be converted into absolute path names.
------------------------------------------------------------------------------}
-function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string;
-var
-i:integer;
-_item:string;
-_list:TStrings;
-begin
-  result:='';
-  _list:=TStringList.create;
-  try
-    while _path<>'' do begin
-      _item:=GetField(';',_path);
-      _item:=lowercase(AbsolutePath(_basePath,_item,_DelphiVersion));
-      if _list.IndexOf(_item)=-1 then _list.Add(_item);
-    end;
-    for i:=0 to _list.Count-1 do result:=result+_list[i]+';';
-  finally
-    _list.free;
-  end;
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: RelativePath
-  Author:    sam
-  Date:      12-Mrz-2005
-  Arguments: _basepath,_path:string
-  Result:    string
-  Description: converts the path <_path> into a realtive pathname.
------------------------------------------------------------------------------}
-function  RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string;
-begin
-  if _ReplaceTags then _path:=AddTag(_path,_DelphiVersion);
-  result:=ExtractRelativePath(_basepath,_path)
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: RelativeFilename
-  Author:    sam
-  Date:      14-Mrz-2005
-  Arguments: _basepath,_filename:string
-  Result:    string
-  Description:
------------------------------------------------------------------------------}
-function  RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:integer):string; // converts the filename <_filename> into a relative filename.
-var
-_path:string;
-begin
-  _path:=Relativepath(_basePath,extractFilePath(_filename),_DelphiVersion);
-  result:=_path+ExtractFilename(_filename);
-end;
 
 {*-----------------------------------------------------------------------------
   Procedure: RemoveTrailingSemikolon

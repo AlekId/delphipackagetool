@@ -104,10 +104,13 @@ type
 
 implementation
 
-uses uDPTMisc,
-     uDPTDelphiPackage,
-     Windows,
-     MainDM;
+uses
+  uDPTDefinitions,
+  uDPTMisc,
+  uDPTDelphiPackage,
+  uDPTPathFilenameConvert,
+  Windows,
+  MainDM;
 
 {$R *.dfm}
 

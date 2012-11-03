@@ -50,11 +50,11 @@ function GetFileVersion(_filename: string): string;
 function IsFileInUse(const fName: TFileName): Boolean;
 function IsFileReadOnly(_filename:string):boolean;
 function IsLastChar(_char:char;_s:string):boolean; // checks if the last char of the string is equal to <_ch>.
-function  GetField(_ch:char;var _s:string):string;
-function  BuildTimeStamp(_datetime:TDateTime):String;
-function  VerifySeparator(_s:String):String;
-function  GetFileDateTime(const _Filename:TFileName;var FileDateTime:TDateTime):Boolean; // get the date&time of the file
-function  LastPos(_s:string;_ch:char):integer; // find the last occurence of the char <_ch> inside string <_s>.
+function GetField(_ch:char;var _s:string):string;
+function BuildTimeStamp(_datetime:TDateTime):String;
+function VerifySeparator(_s:String):String;
+function GetFileDateTime(const _Filename:TFileName;var FileDateTime:TDateTime):Boolean; // get the date&time of the file
+function LastPos(_s:string;_ch:char):integer; // find the last occurence of the char <_ch> inside string <_s>.
 function GetSystemPath(SystemPath: TSystemPath): string;
 function AllFilesOfDrive(_path,_mask:string;_FileList:TStrings;var AbortScan:Boolean):boolean; // search all file with mask <_mask> from Path <_path>
 function GetFileSize(const _filename: string; var filesize:Int64): boolean; // read the size of a file.
@@ -64,6 +64,7 @@ function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;
 procedure ShowFolder(strFolder: string);
 function Get7zAppName:string; // returns full filename&path to the 7z.exe file.
 function HKEYToStr(const _Key: HKEY): string;
+function FindLine(var content:TStrings;_Tag:string;var removedText:string):integer;
 
 var
   FWriteMsg:TNVBTraceProcedure;
@@ -77,6 +78,29 @@ uses Graphics,
      ShellAPI,
      shlObj;
 
+{-----------------------------------------------------------------------------
+  Procedure: FindLine
+  Author:    herzogs2
+  Date:      25-Mrz-2010
+  Arguments: var content:TStrings;_Tag:string;var removedText:string
+  Result:    integer
+  Description: find the text <_Tag> inside the string-list <content>
+-----------------------------------------------------------------------------}
+function FindLine(var content:TStrings;_Tag:string;var removedText:string):integer;
+var
+i:integer;
+_Text:String;
+begin
+  result:=-1;
+  removedText:='';
+  for i:=0 to content.Count-1 do begin
+    _text:=trim(content[i]);
+    if pos(_Tag,_text)<>1 then continue;
+    removedText:=_text;
+    result:=i;
+    break;
+  end;
+end;
 
 {*-----------------------------------------------------------------------------
   Procedure: HKEYToStr

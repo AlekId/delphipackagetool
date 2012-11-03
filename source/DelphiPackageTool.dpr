@@ -16,7 +16,9 @@ uses
   uDPTDelphiPackage in 'uDPTDelphiPackage.pas',
   uDPTSettings in 'uDPTSettings.pas',
   uDPTMisc in 'uDPTMisc.pas',
-  VersionFrm in 'VersionFrm.pas' {FrmVersion};
+  VersionFrm in 'VersionFrm.pas' {FrmVersion},
+  uDPTCreateProjectGroup in 'uDPTCreateProjectGroup.pas',
+  uDPTPathFilenameConvert in 'uDPTPathFilenameConvert.pas';
 
 {$R *.res}
 

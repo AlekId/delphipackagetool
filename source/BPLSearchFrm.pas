@@ -54,8 +54,8 @@ procedure ShowBPLSearchDialog(_searchLocation, _searchcriteria: string);  // mai
 implementation
 
 uses
+  uDPTDefinitions,
   uDPTMisc,
-  uDPTDelphiPackage,
   FileCtrl,
   MainDM,
   Windows;

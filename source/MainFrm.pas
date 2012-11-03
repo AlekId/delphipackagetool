@@ -275,6 +275,7 @@ uses
   OptionsFrm,
   uDPTMisc,
   uDPTStringGridExt,
+  uDPTPathFilenameConvert,
   AboutFrm,
   PathSelectionFrm,
   FileCtrl,
@@ -282,9 +283,7 @@ uses
   BPGEditorFrm,
   StartUpInfoFrm,
   BPLSearchFrm,
-  MainDM,
-  VersionFrm,
-  TypInfo;
+  MainDM;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.actSelectBPGFileExecute

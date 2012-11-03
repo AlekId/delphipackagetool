@@ -70,7 +70,9 @@ implementation
 
 uses FileCtrl,
      MainFrm,
+     uDPTDefinitions,
      uDPTDelphiPackage,
+     uDPTCreateProjectGroup,
      uDPTMisc,
      MainDM;
 {$R *.dfm}
