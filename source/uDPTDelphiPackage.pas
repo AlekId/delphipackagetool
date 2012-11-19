@@ -17,23 +17,6 @@ uses Classes,
      Registry,
      uDPTDefinitions;
 
-const
-  cLIBAutomaticTag='<Auto>';     
-  cLIBNoneTag='<None>';
-
-type
-
-// these settings are stored in the registry in SOFTWARE\Borland\Delphi\x.x\Library
-// or SOFTWARE\Borland\BDS\x.x\library.
-TDelphiLibraryPath=record
-  DCPpath:string;
-  BPLpath:string;
-  Searchpath:string;
-  DebugDCUpath:string;
-  BrowsingPath:string;
-  PackagePath:string
-end;
-
 function  GetDelphiPackageDir(const _DelphiVersion:integer;const _Platform:TDelphiPlatform=tdp_win32):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
 function  InstallPackage(_PackageName,_PackageDirectory,_PackageDescription,_PackageLibSuffix:String;_DelphiVersion:Integer;var msg:string):boolean; // add package into the regitstry.
@@ -66,7 +49,6 @@ function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
-function  CheckDirectory(const _name:string):boolean; // check if the directory exists. if not then ask the user and create it.
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
@@ -143,7 +125,6 @@ begin
   if _platform='osx'   then result:=tdp_osx;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: RemoveDoublePathEntries
   Author:    herzogs2
@@ -171,7 +152,6 @@ begin
     _list.free;
   end;
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: OldestIDEVersion
@@ -268,8 +248,7 @@ end;
 function ReadBDSCommonDir(const _DelphiVersion:integer):string;
 begin
   Result := '';
-  if _DelphiVersion > 11 then begin
-    //RAD Studio 2009, 2010
+  if _DelphiVersion > 11 then begin //RAD Studio 2009, 2010
     Result := GetSystemPath(spCommonDocs) + cRADStudioDirName + PathDelim + DelphiVersions[_DelphiVersion].IDEVersionStr;
   end
   else begin
@@ -776,35 +755,6 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: RelativePaths
-  Author:    sam
-  Date:      09-Jun-2007
-  Arguments: _basepath,_paths:string
-  Result:    string
-  Description: turns a collection of path's which are seperated by ';' into relative paths.
-               Inexistent Paths will be removed.
-               Doubled items will be removed.
------------------------------------------------------------------------------}
-function  RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer):string; // converts a list of paths to relative paths.
-var
-_path:string;
-_absolutepath:string;
-begin
-  _paths:=lowercase(_paths);
-  _path:=Getfield(';',_paths);
-  while _path<>'' do begin
-    _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion);
-    if DirectoryExists(_absolutepath) then begin
-      _path:=RelativePath(_basepath,_path,_DelphiVersion);
-      if _path<>'' then result:=result+_path+';';
-    end
-    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[]);
-    _path:=Getfield(';',_paths);
-  end;
-  result:=RemoveDoublePathEntries(result);
-end;
-
-{-----------------------------------------------------------------------------
   Procedure: WriteDOFFile
   Author:    herzogs2
   Date:      15-Jun-2007
@@ -1000,40 +950,6 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: CheckDirectory
-  Author:    HerzogS2
-  Date:      08-Mrz-2007
-  Arguments: const _name:string
-  Result:    boolean
-  Description: check if the directory with name <_name> exists. If not then
-  it asks if the directory shall be created.
------------------------------------------------------------------------------}
-function  CheckDirectory(const _name:string):boolean;
-resourcestring
-cAskToCreateFolder='Could not find the directory <%s>. Create it ?';
-begin
-  result:=false;
-  if _name='' then begin
-    result:=true;
-    exit;
-  end;
-  if DirectoryExists(_name) then begin
-    result:=true;
-    exit;
-  end;
-  if Application.MessageBox(pchar(format(cAskToCreateFolder,[_name])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
-  try
-    if not ForceDirectories(_name) then begin
-      trace(1,'Problem to create directory <%s>. Please check settings and user rights.',[_name]);
-      exit;
-    end;
-    result:=true;
-  except
-    on e:exception do trace(1,'Problem to create directory <%s>. Please check settings and user rights. <%s>.',[_name,e.message]);
-  end;
-end;
-
-{-----------------------------------------------------------------------------
   Procedure: CleanupByRegistry
   Author:    sam
   Date:      23-Okt-2006
@@ -1049,6 +965,7 @@ i:integer;
 _DelphiRootDirKey:string;
 _Reg: TRegistry;
 _ValueNames:TStrings;
+_ValueName:string;
 _packageName:string;
 begin
   result:=true;
@@ -1070,18 +987,17 @@ begin
       for i:=0 to _ValueNames.count-1 do begin
         _packageName:=lowercase(ReplaceTag(_ValueNames[i],_DelphiVersion));
         if fileexists(_packageName) then continue;
-        if not _Reg.DeleteValue(_ValueNames[i]) then begin
-          trace(3,'Problem in CleanupByRegistry: Could not remove value <%s> from key <%s,%s> from registry for delphi <%d>.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey,_DelphiVersion]);
+        _ValueName:=_ValueNames[i];
+        if not _Reg.DeleteValue(_ValueName) then begin
+          trace(3,'Problem in CleanupByRegistry: Could not remove value <%s> from key <%s,%s> from registry for delphi <%d>.',[_ValueName,HKEYToStr(_RootKey),_DelphiRootDirKey,_DelphiVersion]);
           result:=false;
           continue;
-        end ;
-        trace(3,'Removed value <%s> from registry key <%s,%s> because the referenced file <%s> does not exist.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey]);
+        end;
+        trace(3,'Removed value <%s> from registry key <%s,%s> because the referenced file <%s> does not exist.',[_ValueName,HKEYToStr(_RootKey),_DelphiRootDirKey,_packageName]);
         inc(NoOfRemovedKeys);
       end;
     except
-      on e:exception do begin
-        trace(1,'Problem in CleanupByRegistry: Could not remove value <%s> from registry key <%s,%s>.<%s>.',[_packageName,HKEYToStr(_RootKey),_DelphiRootDirKey,e.Message]);
-      end;
+      on e:exception do trace(1,'Problem in CleanupByRegistry: Could not remove value <%s> from registry key <%s,%s>.<%s>.',[_ValueName,HKEYToStr(_RootKey),_DelphiRootDirKey,e.Message]);
     end;
   finally
     _Reg.CloseKey;

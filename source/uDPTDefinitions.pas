@@ -60,6 +60,18 @@ type
               tp_bpl);    // project is a package
 
 
+// these settings are stored in the registry in SOFTWARE\Borland\Delphi\x.x\Library
+// or SOFTWARE\Borland\BDS\x.x\library.
+  TDelphiLibraryPath=record
+    DCPpath:string;
+    BPLpath:string;
+    Searchpath:string;
+    DebugDCUpath:string;
+    BrowsingPath:string;
+    PackagePath:string
+  end;
+
+
 resourcestring
 cConfirm='Confirm';
 cWarning='Warning';
@@ -85,6 +97,9 @@ const
   cCSharpName = 'C#Builder';
   cBDSName    = 'Borland Developer Studio';
   cRSName     = 'RAD Studio';
+
+  cLIBAutomaticTag='<Auto>';     
+  cLIBNoneTag='<None>';
 
 
   cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';

@@ -13,6 +13,7 @@ function AbsoluteFilename(_realpath,_filename: string): string;
 function AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string; // converts the path <_path> into an absolute pathname.
 function RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:integer):string; // converts the filename <_filename> into a relative filename.
 function RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string; // converts the path <_path> into a realtive pathname.
+function RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer):string; // converts a list of paths to relative paths.
 function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
 
 implementation
@@ -201,6 +202,35 @@ function  RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const
 begin
   if _ReplaceTags then _path:=AddTag(_path,_DelphiVersion);
   result:=ExtractRelativePath(_basepath,_path)
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: RelativePaths
+  Author:    sam
+  Date:      09-Jun-2007
+  Arguments: _basepath,_paths:string
+  Result:    string
+  Description: turns a collection of path's which are seperated by ';' into relative paths.
+               Inexistent Paths will be removed.
+               Doubled items will be removed.
+-----------------------------------------------------------------------------}
+function  RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer):string; // converts a list of paths to relative paths.
+var
+_path:string;
+_absolutepath:string;
+begin
+  _paths:=lowercase(_paths);
+  _path:=Getfield(';',_paths);
+  while _path<>'' do begin
+    _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion);
+    if DirectoryExists(_absolutepath) then begin
+      _path:=RelativePath(_basepath,_path,_DelphiVersion);
+      if _path<>'' then result:=result+_path+';';
+    end
+    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[]);
+    _path:=Getfield(';',_paths);
+  end;
+  result:=RemoveDoublePathEntries(result);
 end;
 
 {-----------------------------------------------------------------------------

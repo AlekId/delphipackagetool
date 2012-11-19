@@ -1,12 +1,19 @@
+1.9.0.173  ( 19.11.2012 )
+-SH: some code-cleanup and re-factoring.
+-SH: fix in CleanupByRegistry.
+
 1.9.0.172  ( 10.10.2012 )
-- SH: some code-cleanup and re-factoring.
+-SH: some code-cleanup and re-factoring.
+
+1.9.0.172  ( 10.10.2012 )
+-SH: some code-cleanup and re-factoring.
 
 1.9.0.171  ( 08.10.2012 )
-- SH: applied patch received from M.Mueller for detecting Delphi 2010
-      and resolved some warnings in XE2.
+-SH: applied patch received from M.Mueller for detecting Delphi 2010
+     and resolved some warnings in XE2.
 
 1.9.0.170  ( 15.09.2012 )
-- SH: add definitions for Delphi XE3. (not tested because I do not own XE3).
+-SH: add definitions for Delphi XE3. (not tested because I do not own XE3).
 
 1.9.0.168  ( 15.02.2012 )
 -SH: applied patch received from Andreas Heim about BDSBin-Tag for Delphi XE2.

@@ -59,6 +59,7 @@ function GetSystemPath(SystemPath: TSystemPath): string;
 function AllFilesOfDrive(_path,_mask:string;_FileList:TStrings;var AbortScan:Boolean):boolean; // search all file with mask <_mask> from Path <_path>
 function GetFileSize(const _filename: string; var filesize:Int64): boolean; // read the size of a file.
 function CreateDirectory(const _path:string):boolean;
+function CheckDirectory(const _path:string):boolean;
 function RemoveReadOnlyFlag(const _filename:string;const _silent:boolean):boolean;
 function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;Show: Word; bWait: Boolean; var ExitCode: LongWord): LongWord;
 procedure ShowFolder(strFolder: string);
@@ -246,6 +247,41 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
+  Procedure: CheckDirectory
+  Author:    HerzogS2
+  Date:      08-Mrz-2007
+  Arguments: const _name:string
+  Result:    boolean
+  Description: check if the directory with name <_name> exists. If not then
+  it asks if the directory shall be created.
+-----------------------------------------------------------------------------}
+function  CheckDirectory(const _path:string):boolean;
+resourcestring
+cConfirm='Confirm';
+cAskToCreateFolder='Could not find the directory <%s>. Create it ?';
+begin
+  result:=false;
+  if _path='' then begin
+    result:=true;
+    exit;
+  end;
+  if DirectoryExists(_path) then begin
+    result:=true;
+    exit;
+  end;
+  if Application.MessageBox(pchar(format(cAskToCreateFolder,[_path])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+  try
+    if not ForceDirectories(_path) then begin
+      trace(1,'Problem to create directory <%s>. Please check settings and user rights.',[_path]);
+      exit;
+    end;
+    result:=true;
+  except
+    on e:exception do trace(1,'Problem to create directory <%s>. Please check settings and user rights. <%s>.',[_path,e.message]);
+  end;
+end;
+
+{-----------------------------------------------------------------------------
   Procedure: GetFileSize
   Author:    sam
   Date:      06-Mai-2005
@@ -254,6 +290,8 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 function GetFileSize(const _filename: string; var filesize:Int64): boolean;
+var
+_filestream:TFilestream;
 begin
   result:=false;
   filesize:=0;
@@ -261,12 +299,12 @@ begin
     trace(3,'Could not find File <%s>. Can not read FileSize.',[_filename]);
     exit;
   end;
-  with TFileStream.Create(_filename, fmOpenRead or fmShareDenyNone) do
+  _filestream:=TFileStream.Create(_filename, fmOpenRead or fmShareDenyNone);
   try
-    filesize := Size;
+    filesize := _filestream.Size;
     result:=true;
   finally
-    Free;
+    _filestream.Free;
   end;
 end;
 
