@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
   Left = 49
   Top = 0
-  Width = 1224
-  Height = 632
+  Width = 1232
+  Height = 674
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,19 +25,19 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 381
-    Width = 1216
+    Top = 423
+    Width = 1224
     Height = 12
     Cursor = crVSplit
     Align = alBottom
   end
   object stgFiles: TStringGrid
     Left = 0
-    Top = 145
-    Width = 1216
-    Height = 236
+    Top = 190
+    Width = 1224
+    Height = 233
     Align = alClient
-    ColCount = 8
+    ColCount = 7
     Ctl3D = False
     Enabled = False
     RowCount = 2
@@ -47,6 +47,7 @@ object FrmMain: TFrmMain
     TabOrder = 0
     OnClick = stgFilesClick
     OnDblClick = stgFilesDblClick
+    OnMouseMove = stgFilesMouseMove
     ColWidths = (
       64
       481
@@ -54,14 +55,13 @@ object FrmMain: TFrmMain
       121
       118
       81
-      95
-      547)
+      224)
   end
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 1216
-    Height = 145
+    Width = 1224
+    Height = 190
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
@@ -75,9 +75,9 @@ object FrmMain: TFrmMain
     object lblPackageDirectory: TLabel
       Left = 240
       Top = 48
-      Width = 231
+      Width = 207
       Height = 13
-      Caption = 'Output Path for Package Directory (bpl+dcp files)'
+      Caption = 'Output Path for Package Directory (bpl files)'
     end
     object lblPackageGroupFile: TLabel
       Left = 240
@@ -86,28 +86,19 @@ object FrmMain: TFrmMain
       Height = 13
       Caption = 'ProjectGroup File <*.bpg/*.bdsgroup/*.groupproj>'
     end
-    object lblDcuPath: TLabel
+    object lblDcpPath: TLabel
       Left = 240
       Top = 96
-      Width = 135
+      Width = 250
       Height = 13
-      Caption = 'Output Path for the dcu-files.'
+      Caption = 'Output Path for Delphi Compiled Packages (dcp files)'
     end
-    object lblPlatform: TLabel
-      Left = 872
-      Top = 48
-      Width = 38
+    object lblDcuPath: TLabel
+      Left = 240
+      Top = 144
+      Width = 226
       Height = 13
-      Caption = 'Platform'
-      Visible = False
-    end
-    object lblConfig: TLabel
-      Left = 872
-      Top = 96
-      Width = 30
-      Height = 13
-      Caption = 'Config'
-      Visible = False
+      Caption = 'Output Path for Delphi Compiled Units (dcu files)'
     end
     object btnStart: TBitBtn
       Left = 8
@@ -138,7 +129,7 @@ object FrmMain: TFrmMain
     end
     object cbxSilentMode: TCheckBox
       Left = 8
-      Top = 104
+      Top = 112
       Width = 209
       Height = 17
       Caption = 'Silent Mode'
@@ -149,7 +140,7 @@ object FrmMain: TFrmMain
     end
     object cbxStopOnFailure: TCheckBox
       Left = 8
-      Top = 120
+      Top = 136
       Width = 217
       Height = 17
       Caption = 'Stop on failure'
@@ -177,7 +168,7 @@ object FrmMain: TFrmMain
       ParentShowHint = False
       ShowHint = True
       TabOrder = 5
-      OnExit = edtPackageBPLDirectoryExit
+      OnExit = edtPathExit
     end
     object btnLoadFile: TButton
       Left = 840
@@ -195,18 +186,18 @@ object FrmMain: TFrmMain
       Action = actSelectPackageBPLPath
       TabOrder = 7
     end
-    object edtDCUPath: TEdit
+    object edtDCPPath: TEdit
       Left = 240
       Top = 112
       Width = 601
       Height = 21
-      Hint = 'Enter/select the Delphi DCU Path.'
+      Hint = 'Enter/select the Delphi DCP Path.'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 8
-      OnExit = edtPackageBPLDirectoryExit
+      OnExit = edtPathExit
     end
-    object btnSelectDcuPath: TButton
+    object btnSelectDcpPath: TButton
       Left = 840
       Top = 112
       Width = 17
@@ -214,22 +205,70 @@ object FrmMain: TFrmMain
       Action = actSelectDcuPath
       TabOrder = 9
     end
-    object cbxPlatform: TComboBox
-      Left = 872
-      Top = 64
+    object gbxPlatform: TGroupBox
+      Left = 1040
+      Top = 48
       Width = 145
-      Height = 21
-      Style = csDropDownList
-      ItemHeight = 13
-      ItemIndex = 0
+      Height = 133
+      Caption = 'Platform'
       TabOrder = 10
-      Text = 'Win32'
-      Visible = False
-      OnChange = cbxPlatformChange
-      Items.Strings = (
-        'Win32'
-        'Win64'
-        'OSX')
+      DesignSize = (
+        145
+        133)
+      object clbPlatform: TCheckListBox
+        Left = 13
+        Top = 21
+        Width = 121
+        Height = 100
+        OnClickCheck = clbPlatformClickCheck
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        BorderStyle = bsNone
+        Color = clBtnFace
+        ItemHeight = 13
+        TabOrder = 0
+      end
+    end
+    object gbxConfig: TGroupBox
+      Left = 872
+      Top = 48
+      Width = 145
+      Height = 133
+      Caption = 'Config'
+      TabOrder = 11
+      DesignSize = (
+        145
+        133)
+      object clbConfig: TCheckListBox
+        Left = 13
+        Top = 21
+        Width = 121
+        Height = 100
+        OnClickCheck = clbConfigClickCheck
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        BorderStyle = bsNone
+        Color = clBtnFace
+        ItemHeight = 13
+        TabOrder = 0
+      end
+    end
+    object edtDCUPath: TEdit
+      Left = 240
+      Top = 163
+      Width = 601
+      Height = 21
+      Hint = 'Enter/select the Delphi DCU Path.'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 12
+      OnExit = edtPathExit
+    end
+    object btnSelectDcuPath: TButton
+      Left = 840
+      Top = 160
+      Width = 17
+      Height = 21
+      Action = actSelectDcuPath
+      TabOrder = 13
     end
   end
   object edtPackageBPGFile: TComboBox
@@ -244,10 +283,10 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 393
-    Width = 1216
+    Top = 435
+    Width = 1224
     Height = 193
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alBottom
     TabOrder = 3
     object TabSheet1: TTabSheet
@@ -255,7 +294,7 @@ object FrmMain: TFrmMain
       object mmoLogFile: TMemo
         Left = 0
         Top = 0
-        Width = 1208
+        Width = 1200
         Height = 165
         Align = alClient
         Ctl3D = False
@@ -273,7 +312,7 @@ object FrmMain: TFrmMain
       object mmoTrace: TMemo
         Left = 0
         Top = 0
-        Width = 1200
+        Width = 1216
         Height = 165
         Align = alClient
         Ctl3D = False
@@ -285,25 +324,8 @@ object FrmMain: TFrmMain
       end
     end
   end
-  object cbxConfig: TComboBox
-    Left = 872
-    Top = 112
-    Width = 145
-    Height = 21
-    Style = csDropDownList
-    ItemHeight = 13
-    ItemIndex = 0
-    TabOrder = 4
-    Text = 'Debug'
-    Visible = False
-    OnChange = cbxPlatformChange
-    Items.Strings = (
-      'Debug'
-      'Release')
-  end
   object ActionList1: TActionList
-    Left = 496
-    Top = 48
+    Left = 1120
     object actGetPackageListFromRegistry: TAction
       Caption = 'actGetPackageListFromRegistry'
       Enabled = False
@@ -446,18 +468,20 @@ object FrmMain: TFrmMain
       Caption = 'actSelectAll'
       OnExecute = actSelectAllExecute
     end
+    object actSelectDcpPath: TAction
+      Caption = '...'
+      OnExecute = actSelectDcpPathExecute
+    end
   end
   object OpenDialog1: TOpenDialog
     DefaultExt = '*.bpg'
     Filter = 
       'Delphi Package Group|*.bpg|BDS Group|*.bdsgroup|Group Files|*.bp' +
       'g;*.bdsgroup'
-    Left = 984
-    Top = 24
+    Left = 1160
   end
   object MainMenu1: TMainMenu
-    Left = 264
-    Top = 32
+    Left = 1072
     object F1: TMenuItem
       Caption = 'File'
       object NewPackageGroup1: TMenuItem
@@ -639,7 +663,7 @@ object FrmMain: TFrmMain
   object SaveDialog1: TSaveDialog
     DefaultExt = '.ini'
     Filter = 'Configuration File|*.ini'
-    Left = 480
-    Top = 240
+    Left = 280
+    Top = 288
   end
 end

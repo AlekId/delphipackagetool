@@ -1,3 +1,7 @@
+1.9.1.0    ( 30.11.2012 )
+- huge rework received from M.Mueller to support platforms and build modes of newer delphi versions.
+
+***********************************************
 1.9.0.173  ( 19.11.2012 )
 -SH: some code-cleanup and re-factoring.
 -SH: fix in CleanupByRegistry.

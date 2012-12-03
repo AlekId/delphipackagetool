@@ -18,7 +18,8 @@ uses
   uDPTMisc in 'uDPTMisc.pas',
   VersionFrm in 'VersionFrm.pas' {FrmVersion},
   uDPTCreateProjectGroup in 'uDPTCreateProjectGroup.pas',
-  uDPTPathFilenameConvert in 'uDPTPathFilenameConvert.pas';
+  uDPTPathFilenameConvert in 'uDPTPathFilenameConvert.pas',
+  uDTPProjectData in 'uDTPProjectData.pas';
 
 {$R *.res}
 
