@@ -34,7 +34,6 @@ type
     actCleanUpAll: TAction;
     actReCompile: TAction;
     actDeleteBPL: TAction;
-    actCompilePackage: TAction;
     actInstallPackage: TAction;
     actUninstallPackage: TAction;
     actResetDelphi: TAction;
@@ -57,7 +56,6 @@ type
     procedure actCleanUpAllExecute(Sender: TObject);
     procedure actReCompileExecute(Sender: TObject);
     procedure actDeleteBPLExecute(Sender: TObject);
-    procedure actCompilePackageExecute(Sender: TObject);
     procedure actInstallPackageExecute(Sender: TObject);
     procedure actUninstallPackageExecute(Sender: TObject);
     procedure actResetDelphiExecute(Sender: TObject);
@@ -149,6 +147,8 @@ type
     procedure SetPlatform(const Value: string);
     procedure SetConfig(const Value: string);
     procedure GetAllPlatformsAndConfigsOfBPG;
+    procedure CompileAndInstallCurrentPackage;
+    procedure ReCompileAndInstallCurrentPackage;
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -171,7 +171,7 @@ type
     procedure InitCurrentProject(const _ProjectName: string);
     procedure LoadCurrentProject;
     procedure ShowFile(_filename:string;_lineno:integer);
-    function  CompilePackage: boolean;
+    function  CompileCurrentPackage: boolean;
     function  OpenBPG(const _filename: string):boolean;
     procedure CloseBPG;
     function  GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
@@ -632,6 +632,8 @@ end;
   Description: close the package group file.
 -----------------------------------------------------------------------------}
 procedure TDMMain.CloseBPG;
+var
+  i: Integer;
 begin
   if FApplicationState <> tas_open then Exit;
   if ProjectSettings.FileName <> '' then begin
@@ -657,9 +659,12 @@ begin
   FCurrentCompilerSwitches := '';
   FCurrentBPGPlatformList.Clear;
   FCurrentBPGConfigList.Clear;
-  FApplicationState := tas_init;
-  DMMain.BPGProjectList.Clear;
-  if assigned(FOnApplicationStateEvent) then FOnApplicationStateEvent(self, FApplicationState, tas_init);
+  for i := FBPGProjectList.Count-1 downto 0 do begin
+    if Assigned(FBPGProjectList.Objects[i]) then
+      FBPGProjectList.Objects[i].Free;
+  end;
+  FBPGProjectList.Clear;
+  ApplicationState := tas_init;
   if assigned(FOnBPGClose) then FOnBPGClose(self);
 end;
 
@@ -748,11 +753,8 @@ begin
   NVBAppExecExternalCommand.CloseRunningProcess := False;
 
   FInstalledDelphiVersionList := TStringList.Create;
-{$ifdef CompilerVersion>21}
-  FBPGProjectList:=TStringList.Create(True);
-{$else}
+
   FBPGProjectList:=TStringList.Create;
-{$endif}
   FBPGPlatformList:=TStringList.Create;
   FBPGPlatformList.Sorted := True;
   FBPGPlatformList.Duplicates := dupIgnore;
@@ -958,6 +960,8 @@ begin
 end;
 
 procedure TDMMain.DataModuleDestroy(Sender: TObject);
+var
+  i: Integer;
 begin
   if ApplicationSettings.BoolValue('Application/StartDelphiOnClose',7) or
     ((FDelphiWasStartedOnApplicationStart) and
@@ -976,6 +980,10 @@ begin
   FCurrentBPGPlatformList.Free;
   FBPGConfigList.Free;
   FBPGPlatformList.Free;
+  for i := FBPGProjectList.Count-1 downto 0 do begin
+    if Assigned(FBPGProjectList.Objects[i]) then
+      FBPGProjectList.Objects[i].Free;
+  end;
   FBPGProjectList.Free;
 end;
 
@@ -1080,8 +1088,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpProjectBPLDirExecute(Sender: TObject);
 begin
-  if CleanUpPackagesByBPLPath(FCurrentDelphiVersion,FCurrentBPLOutputPath,true) then ExitCode := 0
-                                                                                else ExitCode := 1;
+  if CleanUpPackagesByPath(FCurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,true) then
+    ExitCode := 0
+  else
+    ExitCode := 1;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1209,10 +1219,33 @@ end;
   Description: uninstall,rebuild and install a package.
 -----------------------------------------------------------------------------}
 procedure TDMMain.actReCompileExecute(Sender: TObject);
+var
+  _ProjectsToCompile: TStringList;
+begin
+  if FCurrentProjectFilename <> '' then begin
+    _ProjectsToCompile := TStringList.Create;
+    try
+      _ProjectsToCompile.Add(RelativeFilename(FBPGPath, FCurrentProjectFilename, FCurrentDelphiVersion));
+      CompileAndInstallProjects(_ProjectsToCompile);
+    finally
+      _ProjectsToCompile.Free;
+    end;
+  end;
+end;
+
+{ *-----------------------------------------------------------------------------
+  Procedure: ReCompileAndInstallCurrentPackage
+  Author:    Muem
+  Date:      04-Dec-2012
+  Arguments: Sender: TObject
+  Result:    None
+  Description: delete BPL, uninstall, rebuild and install the current package.
+-----------------------------------------------------------------------------}
+procedure TDMMain.ReCompileAndInstallCurrentPackage;
 begin
   CheckDelphiRunning;
   actDeleteBPLExecute(nil);
-  actCompilePackageExecute(nil);
+  CompileAndInstallCurrentPackage;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1254,7 +1287,7 @@ var
 begin
   if FCurrentProjectType<>tp_bpl then exit;
   _bplFilename:=FCurrentBPLFilename;
-  _dcpFilename:=FCurrentBPLOutputPath+ChangeFileExt(ExtractFilename(_bplFilename),'.dcp');
+  _dcpFilename:=FCurrentDCPOutputPath+ChangeFileExt(ExtractFilename(_bplFilename),'.dcp');
   if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
     if MessageBox(0,pchar(format(cDeleteBPL_and_DCP_Files,[_bplFilename,_dcpFilename])),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  <> IdYes then exit;
   end;
@@ -1263,17 +1296,17 @@ begin
 end;
 
 {*-----------------------------------------------------------------------------
-  Procedure: actCompilePackageExecute
-  Author:    sam
-  Date:      12-Mrz-2008
-  Arguments: Sender: TObject
+  Procedure: CompileAndInstallCurrentPackage
+  Author:    muem
+  Date:      04-Dec-2012
+  Arguments: None
   Result:    None
-  Description: compile a package file.
+  Description: uninstall, compile and install the current package file.
 -----------------------------------------------------------------------------}
-procedure TDMMain.actCompilePackageExecute(Sender: TObject);
+procedure TDMMain.CompileAndInstallCurrentPackage;
 begin
   actUninstallPackageExecute(nil);
-  CompilePackage;
+  CompileCurrentPackage;
   if FPlatformConfigCompiled then actInstallPackageExecute(nil);
   WriteLog('*************************************************************************', []);
 end;
@@ -1351,7 +1384,7 @@ begin
                    end;
     tpr_projectsbpl:begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesInBPL),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByBPLPath(CurrentDelphiVersion,FCurrentBPLOutputPath,_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByPath(CurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,_DeleteBplAndDCPFiles);
                     end;
   end;
 end;
@@ -1425,7 +1458,7 @@ begin
             continue;
           end;
           FireCurrentProjectChanged;
-          actCompilePackage.Execute;
+          CompileAndInstallCurrentPackage;
           if (FPlatformConfigCompiled = False) and ApplicationSettings.BoolValue('Application/StopOnFailure', 6) then begin
             Break;
           end;
@@ -1530,7 +1563,7 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function TDMMain.CompilePackage: Boolean;
+function TDMMain.CompileCurrentPackage: Boolean;
 var
   _CompilerSwitches: string;
   _Output: string;
@@ -1705,7 +1738,6 @@ begin
     tas_init:begin
       actUninstallPackage.Enabled := False;
       actInstallPackage.Enabled := False;
-      actCompilePackage.Enabled := False;
       actUninstallAllPackages.Enabled := False;
       actInstallAllPackages.Enabled := False;
       actCompileAllPackages.Enabled := False;
@@ -1717,7 +1749,6 @@ begin
     tas_open:begin
       actUninstallPackage.Enabled := True;
       actInstallPackage.Enabled := True;
-      actCompilePackage.Enabled := True;
       actUninstallAllPackages.Enabled := True;
       actInstallAllPackages.Enabled := True;
       actCompileAllPackages.Enabled := True;
@@ -2127,7 +2158,7 @@ begin
           continue;
         end;
         FireCurrentProjectChanged;
-        actReCompileExecute(nil);
+        ReCompileAndInstallCurrentPackage;
         if (FPlatformConfigCompiled = False) and ApplicationSettings.BoolValue('Application/StopOnFailure', 6) then begin
           Break;
         end;

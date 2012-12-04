@@ -66,7 +66,7 @@ function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) 
 function  VersionNoToIDEName(const _version:integer;const _NameType:TDelphiNameType=tdn_long):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
 function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0 into 6 or bds 4.0 into 10.
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
-function  CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
+function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
 function  CheckDirectory(const _name:string):boolean; // check if the directory exists. if not then ask the user and create it.
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
@@ -1129,14 +1129,14 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: CleanUpPackagesByBPLPath
+  Procedure: CleanUpPackagesByPath
   Author:    sam
   Date:      05-Jul-2006
-  Arguments: const _DelphiVersion:integerconst _BPLPath:stringconst _deletefiles:boolean
+  Arguments: const _DelphiVersion:integerconst _Path:stringconst _deletefiles:boolean
   Result:    boolean
-  Description: find all files .dcp/.bpl files in the folder <_BPLPath> and delete them. remove the registry entries also.
+  Description: find all files .dcp/.bpl files in the folder <_Path> and delete them. remove the registry entries also.
 -----------------------------------------------------------------------------}
-function CleanUpPackagesByBPLPath(const _DelphiVersion:integer;_BPLPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
+function CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 var
 i:integer;
 _fileList:TStrings;
@@ -1152,27 +1152,27 @@ begin
   end;
   _fileList:=TStringList.create;
   try
-    AllFilesOfPath(_bplpath,'*.bpl',_fileList,true);
+    AllFilesOfPath(_BPLPath,'*.bpl',_fileList,true);
     for i:=0 to _filelist.count-1 do begin
       _filename:=_filelist[i];
-      RemoveValueFromRegistry(HKEY_CURRENT_USER ,_PackageKey+'Known Packages',_bplpath+_filename);
-      RemoveValueFromRegistry(HKEY_LOCAL_MACHINE,_PackageKey+'Known Packages',_bplpath+_filename);
-      RemoveValueFromRegistry(HKEY_CURRENT_USER ,_PackageKey+'Disabled Packages',_bplpath+_filename);
-      RemoveValueFromRegistry(HKEY_LOCAL_MACHINE,_PackageKey+'Disabled Packages',_bplpath+_filename);
+      RemoveValueFromRegistry(HKEY_CURRENT_USER ,_PackageKey+'Known Packages',_BPLPath+_filename);
+      RemoveValueFromRegistry(HKEY_LOCAL_MACHINE,_PackageKey+'Known Packages',_BPLPath+_filename);
+      RemoveValueFromRegistry(HKEY_CURRENT_USER ,_PackageKey+'Disabled Packages',_BPLPath+_filename);
+      RemoveValueFromRegistry(HKEY_LOCAL_MACHINE,_PackageKey+'Disabled Packages',_BPLPath+_filename);
       if _deletefiles then begin
-        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
+        if uDPTDelphiPackage.DeleteFile(_BPLPath+_filename) then result:=true;
         _filename:=changefileext(_filename,'.dcp');
-        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
+        if uDPTDelphiPackage.DeleteFile(_DCPPath+_filename) then result:=true;
       end;
     end;
     _fileList.clear;
-    AllFilesOfPath(_bplpath,'*.dcp',_fileList,true);
+    AllFilesOfPath(_BPLPath,'*.dcp',_fileList,true);
     for i:=0 to _filelist.count-1 do begin
       _filename:=_filelist[i];
       if _deletefiles then begin
-        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
+        if uDPTDelphiPackage.DeleteFile(_DCPPath+_filename) then result:=true;
         _filename:=changefileext(_filename,'.bpl');
-        if uDPTDelphiPackage.DeleteFile(_bplpath+_filename) then result:=true;
+        if uDPTDelphiPackage.DeleteFile(_BPLPath+_filename) then result:=true;
       end;
     end;
   finally
@@ -1848,6 +1848,9 @@ begin
 
   Result := _filename;
 end;
+
+
+
 
 {-----------------------------------------------------------------------------
   Procedure: PrepapreRegistryPath

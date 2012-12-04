@@ -26,12 +26,6 @@ object DMMain: TDMMain
       Caption = 'Delete Package Files (.dcp/.bpl)'
       OnExecute = actDeleteBPLExecute
     end
-    object actCompilePackage: TAction
-      Caption = 'Compile Project'
-      Hint = 'Compile a Package'
-      ShortCut = 120
-      OnExecute = actCompilePackageExecute
-    end
     object actInstallPackage: TAction
       Caption = 'Install Package'
       Hint = 'Add Package to Delphi IDE'
@@ -57,6 +51,7 @@ object DMMain: TDMMain
     object actCompileAllPackages: TAction
       Caption = 'Compile All Projects'
       Hint = 'Compile all Packages/Projects of the current Project Group.'
+      ShortCut = 16504
       OnExecute = actCompileAllPackagesExecute
     end
     object actUninstallAllPackages: TAction

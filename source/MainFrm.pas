@@ -4,23 +4,24 @@
  Purpose:
  History:
 
+1.9.1.1    ( 04.12.2012 )
+-another patch from M.Mueller to make F9,Shift-F9 work again.
+
 1.9.1.0    ( 30.11.2012 )
 - huge rework received from M.Mueller to support platforms and build modes of newer delphi versions.
-
 ***********************************************
 1.9.0.173  ( 19.11.2012 )
 -SH: some code-cleanup and re-factoring.
 -SH: fix in CleanupByRegistry.
-
 1.9.0.172  ( 10.10.2012 )
--SH: some code-cleanup and re-factoring.
+- SH: some code-cleanup and re-factoring.
 
 1.9.0.171  ( 08.10.2012 )
--SH: applied patch received from M.Mueller for detecting Delphi 2010
+- SH: applied patch received from M.Mueller for detecting Delphi 2010
       and resolved some warnings in XE2.
 
 1.9.0.170  ( 15.09.2012 )
--SH: add definitions for Delphi XE3. (not tested because I do not own XE3).
+- SH: add definitions for Delphi XE3. (not tested because I do not own XE3).
 
 1.9.0.168  ( 15.02.2012 )
 -SH: applied patch received from Andreas Heim about BDSBin-Tag for Delphi XE2.
@@ -55,17 +56,13 @@ uses
   uDPTSettings,
 {$ifdef withTrace}
   cNVBTraceFile,
-{$endif}
+{$endif}  
   uDPTAppExec,
   ExtCtrls,
   uDPTDelphiPackage,
   uDPTDefinitions,
   ComCtrls,
-{$ifdef CompilerVersion>21}
-  Vcl.CheckLst, CheckLst;
-{$else}
   CheckLst;
-{$endif}
 
 type
 
@@ -193,6 +190,7 @@ type
     btnSelectDcuPath: TButton;
     lblDcuPath: TLabel;
     actSelectDcpPath: TAction;
+    actCompileProject: TAction;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -245,6 +243,7 @@ type
     procedure clbConfigClickCheck(Sender: TObject);
     procedure stgFilesMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure actSelectDcpPathExecute(Sender: TObject);
+    procedure actCompileProjectExecute(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -404,6 +403,14 @@ begin
   DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
   DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
   DMMain.OnCurrentProjectChanged:=DoCurrentProjectChanged;
+  case DMMain.ApplicationState of
+    tas_init: begin
+      actCompileProject.Enabled := False;
+    end;
+    tas_open: begin
+      actCompileProject.Enabled := True;
+    end;
+  end;
 end;
 
 {-----------------------------------------------------------------------------
@@ -635,6 +642,29 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
+  Procedure: actCompileProjectExecute
+  Author:    muem
+  Date:      04-Dec-2012
+  Arguments: Sender: TObject
+  Result:    None
+  Description: compile the current project.
+-----------------------------------------------------------------------------}
+procedure TFrmMain.actCompileProjectExecute(Sender: TObject);
+var
+  _ProjectsToCompile: TStringList;
+begin
+  if DMMain.CurrentProjectFilename <> '' then begin
+    _ProjectsToCompile := TStringList.Create;
+    try
+      _ProjectsToCompile.Add(RelativeFilename(DMMain.BPGPath, DMMain.CurrentProjectFilename, DMMAin.CurrentDelphiVersion));
+      DMMain.CompileAndInstallProjects(_ProjectsToCompile);
+    finally
+      _ProjectsToCompile.Free;
+    end;
+  end;
+end;
+
+{-----------------------------------------------------------------------------
   Procedure: actCompileSelectedProjectsExecute
   Author:    sam
   Date:      03-Jun-2004
@@ -643,8 +673,6 @@ end;
   Description: compile the selected projects.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actCompileSelectedProjectsExecute(Sender: TObject);
-resourcestring
-  cAbortedByUser = 'Aborted by User.';
 var
   i: Integer;
   _SelectedRows: TNVBRowArray;
@@ -656,9 +684,7 @@ begin
     for i := 0 to length(_SelectedRows)-1 do begin
       _ProjectsToCompile.Add(stgFiles.cells[1, _SelectedRows[i]]);
     end;
-
     DMMain.CompileAndInstallProjects(_ProjectsToCompile);
-
   finally
     _ProjectsToCompile.Free;
   end;
@@ -1525,9 +1551,17 @@ end;
 procedure TFrmMain.DoApplicationStateChange(Sender: TObject;const _OldState, _NewState: TApplicationState);
 begin
   case _NewState of
-    tas_init:   stgFiles.Enabled:=false;
-    tas_working:stgFiles.Enabled:=false;
-    tas_open   :stgFiles.Enabled:=true;
+    tas_init: begin
+      stgFiles.Enabled:=false;
+      actCompileProject.Enabled := False;
+    end;
+    tas_working: begin
+      stgFiles.Enabled:=false;
+    end;
+    tas_open: begin
+      stgFiles.Enabled:=true;
+      actCompileProject.Enabled := True;
+    end;
   end;
 end;
 
@@ -1634,32 +1668,34 @@ begin
   stgFiles.MouseToCell(X, Y, ACol, ARow);
   // show hint if row in valid range
   if (ARow > 0) and (ARow < stgFiles.RowCount) then begin
-    case ACol of
-      1: begin
-        stgFiles.Hint := 'Output Filename    := '+extractfilename(TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputFilename)+#10#13+
-                         'Project Output Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath+#10#13+
-                         'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath+#10#13+
-                         'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath+#10#13+
-                         'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath+#10#13+
-                         'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).SearchPath+#10#13+
-                         'DPT Search Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath;
-      end;
-      2: begin
+    if ARow <= DMMain.BPGProjectList.Count  then begin
+      case ACol of
+        1: begin
+          stgFiles.Hint := 'Output Filename    := '+extractfilename(TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputFilename)+#10#13+
+                           'Project Output Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath+#10#13+
+                           'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath+#10#13+
+                           'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath+#10#13+
+                           'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath+#10#13+
+                           'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).SearchPath+#10#13+
+                           'DPT Search Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath;
+        end;
+        2: begin
+          stgFiles.Hint := '';
+          for i := 0 to TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).CompileResultsList.Count-1 do begin
+            if stgFiles.Hint <> '' then stgFiles.Hint := stgFiles.Hint + #10#13;
+            stgFiles.Hint := stgFiles.Hint + TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).CompileResultsList[i];
+          end;
+        end;
+        5: begin
+         stgFiles.Hint := '';
+          for i := 0 to TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).VersionsList.Count-1 do begin
+            if stgFiles.Hint <> '' then stgFiles.Hint := stgFiles.Hint + #10#13;
+            stgFiles.Hint := stgFiles.Hint + TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).VersionsList[i];
+          end;
+        end;
+      else
         stgFiles.Hint := '';
-        for i := 0 to TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).CompileResultsList.Count-1 do begin
-          if stgFiles.Hint <> '' then stgFiles.Hint := stgFiles.Hint + #10#13;
-          stgFiles.Hint := stgFiles.Hint + TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).CompileResultsList[i];
-        end;
       end;
-      5: begin
-       stgFiles.Hint := '';
-        for i := 0 to TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).VersionsList.Count-1 do begin
-          if stgFiles.Hint <> '' then stgFiles.Hint := stgFiles.Hint + #10#13;
-          stgFiles.Hint := stgFiles.Hint + TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).VersionsList[i];
-        end;
-      end;
-    else
-      stgFiles.Hint := '';
     end;
   end;
   if (ACol <> FStgFilesLastCol) or (ARow <> FStgFilesLastRow) then begin
@@ -1721,8 +1757,6 @@ end;
   Description: set the version for the selected projects/packages.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actSetVersionSelectedProjectsExecute(Sender: TObject);
-resourcestring
-cAbortedByUser='Aborted by User.';
 var
 i:integer;
 _SelectedRows:TNVBRowArray;

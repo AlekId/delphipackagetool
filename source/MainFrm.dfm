@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
   Left = 49
   Top = 0
-  Width = 1232
-  Height = 674
+  Width = 1240
+  Height = 641
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -25,8 +25,8 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 423
-    Width = 1224
+    Top = 390
+    Width = 1232
     Height = 12
     Cursor = crVSplit
     Align = alBottom
@@ -34,8 +34,8 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 190
-    Width = 1224
-    Height = 233
+    Width = 1232
+    Height = 200
     Align = alClient
     ColCount = 7
     Ctl3D = False
@@ -60,7 +60,7 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 1224
+    Width = 1232
     Height = 190
     Align = alTop
     BevelOuter = bvNone
@@ -283,10 +283,10 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 435
-    Width = 1224
+    Top = 402
+    Width = 1232
     Height = 193
-    ActivePage = TabSheet2
+    ActivePage = TabSheet1
     Align = alBottom
     TabOrder = 3
     object TabSheet1: TTabSheet
@@ -294,7 +294,7 @@ object FrmMain: TFrmMain
       object mmoLogFile: TMemo
         Left = 0
         Top = 0
-        Width = 1200
+        Width = 1224
         Height = 165
         Align = alClient
         Ctl3D = False
@@ -312,7 +312,7 @@ object FrmMain: TFrmMain
       object mmoTrace: TMemo
         Left = 0
         Top = 0
-        Width = 1216
+        Width = 1208
         Height = 165
         Align = alClient
         Ctl3D = False
@@ -472,6 +472,11 @@ object FrmMain: TFrmMain
       Caption = '...'
       OnExecute = actSelectDcpPathExecute
     end
+    object actCompileProject: TAction
+      Caption = 'Compile Project'
+      ShortCut = 120
+      OnExecute = actCompileProjectExecute
+    end
   end
   object OpenDialog1: TOpenDialog
     DefaultExt = '*.bpg'
@@ -527,7 +532,7 @@ object FrmMain: TFrmMain
           Action = DMMain.actDeleteBPL
         end
         object C1: TMenuItem
-          Action = DMMain.actCompilePackage
+          Action = actCompileProject
         end
         object I1: TMenuItem
           Action = DMMain.actInstallPackage
