@@ -70,10 +70,10 @@ type
 
 
 resourcestring
-cConfirm='Confirm';
-cWarning='Warning';
-cError='Error';
-cInformation='Information';
+  cConfirm='Confirm';
+  cWarning='Warning';
+  cError='Error';
+  cInformation='Information';
 
 const
   cDelphiKey='SOFTWARE\BORLAND\DELPHI';
@@ -88,6 +88,8 @@ const
   cBDSUserDirTag='$(BDSUSERDIR)';
   cProgramFilesTag='$(PROGRAMFILES)';
   cDelphiVersionTag='$(DELPHIVERSION)';
+  cPlatformTag='$(PLATFORM)';
+  cConfigTag='$(CONFIG)';
   cRADStudioDirName='RAD Studio';
   cDelphiName = 'Delphi';
   cBCBName    = 'C++Builder';

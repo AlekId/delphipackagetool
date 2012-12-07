@@ -1792,52 +1792,21 @@ end;
 ----------------------------------------------------------------------------}
 function ReplaceTag(_filename: string; _DelphiVersion: Integer): string;
 var
-  _pos:integer;
+  _pos: Integer;
 begin
-  _filename := LowerCase(_filename);
-  _filename := StringReplace(_filename, LowerCase(cDelphiVersionTag), DelphiVersions[_DelphiVersion].ShortName, []);
+  _filename := StringReplace(_filename, cDelphiVersionTag, DelphiVersions[_DelphiVersion].ShortName, [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cDelphiTag), _filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1 ,_pos + length(cDelphiTag));
-    Result := IncludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cDelphiTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cBDSTag), _filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1, _pos + length(cBDSTag));
-    Result := IncludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cBDSTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cBDSBINTag), _filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1, _pos + length(cBDSBINTag));
-    Result := IncludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cBDSBINTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cProgramFilesTag), _filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1, _pos + length(cProgramFilesTag));
-    Result := IncludeTrailingPathDelimiter(GetSystemPath(spProgFiles)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cProgramFilesTag, ExcludeTrailingPathDelimiter(GetSystemPath(spProgFiles)), [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cBDSCommonDirTag),_filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1, _pos + length(cBDSCommonDirTag));
-    Result := IncludeTrailingPathDelimiter(ReadBDSCommonDir(_DelphiVersion)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cBDSCommonDirTag, ExcludeTrailingPathDelimiter(ReadBDSCommonDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cBDSProjectsDirTag), _filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1, _pos + length(cBDSProjectsDirTag));
-    Result := IncludeTrailingPathDelimiter(ReadBDSProjectsDir(_DelphiVersion)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cBDSProjectsDirTag, ExcludeTrailingPathDelimiter(ReadBDSProjectsDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
   _pos := Pos(LowerCase(cBDSUserDirTag), _filename);
   if _pos > 0 then begin
@@ -1848,9 +1817,6 @@ begin
 
   Result := _filename;
 end;
-
-
-
 
 {-----------------------------------------------------------------------------
   Procedure: PrepapreRegistryPath

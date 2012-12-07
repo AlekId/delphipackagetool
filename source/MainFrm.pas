@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.1.2    ( 07.12.2012 )
+-another patch from M.Mueller. Code clean-up.
+
 1.9.1.1    ( 04.12.2012 )
 -another patch from M.Mueller to make F9,Shift-F9 work again.
 

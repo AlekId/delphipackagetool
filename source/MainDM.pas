@@ -149,6 +149,7 @@ type
     procedure GetAllPlatformsAndConfigsOfBPG;
     procedure CompileAndInstallCurrentPackage;
     procedure ReCompileAndInstallCurrentPackage;
+    function  ReplaceTag(_filename: string): string;
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -436,7 +437,7 @@ begin
     // otherwise take the path from the cfg-file.
     FCurrentBPLOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentBPLOutputPath, FCurrentDelphiVersion);
   end;
-  FCurrentBPLOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentBPLOutputPath, FCurrentDelphiVersion));
+  FCurrentBPLOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentBPLOutputPath));
 
   if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
     if (FCurrentBPLOutputPath <> '') and (not DirectoryExists(FCurrentBPLOutputPath)) then begin
@@ -457,7 +458,7 @@ begin
     // otherwise take the path from the cfg-file.
     FCurrentDCPOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCPOutputPath, FCurrentDelphiVersion);
   end;
-  FCurrentDCPOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentDCPOutputPath, FCurrentDelphiVersion));
+  FCurrentDCPOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentDCPOutputPath));
 
   if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
     if (FCurrentDCPOutputPath <> '') and (not DirectoryExists(FCurrentDCPOutputPath)) then begin
@@ -479,7 +480,7 @@ begin
     // otherwise take the path from the cfg-file.
     FCurrentDCUOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCUOutputPath, FCurrentDelphiVersion);
   end;
-  FCurrentDCUOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentDCUOutputPath, FCurrentDelphiVersion));
+  FCurrentDCUOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentDCUOutputPath));
 
   if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
     if (FCurrentDCUOutputPath <> '') and (not DirectoryExists(FCurrentDCUOutputPath)) then begin
@@ -540,7 +541,7 @@ begin
       if LastPos(_currentPath, ';') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if LastPos(_currentPath, '\') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if _absolutePaths then begin
-        _currentPath:=ReplaceTag(_currentpath,FCurrentDelphiVersion);
+        _currentPath:=ReplaceTag(_currentpath);
         _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion);
         if (_currentPath<>'') and (DirectoryExists(_currentPath)) then begin
           Result := Result + _currentPath + ';';
@@ -1439,7 +1440,6 @@ begin
   FAbortCompile := False;
   ApplicationState := tas_working;
   try
-    FProjectCompiled := True;
     for _ProjectIndex := 0 to FBPGProjectList.Count - 1 do begin
       InitCurrentProject(FBPGProjectList[_ProjectIndex]);
       ElaboratePlatformsAndConfigsToCompileList;
@@ -1447,6 +1447,7 @@ begin
       TProjectData(FBPGProjectList.Objects[_ProjectIndex]).VersionsList.Clear;
       if assigned(FOnCurrentProjectCompileStateChanged) then FOnCurrentProjectCompileStateChanged(self, FCurrentProjectFilename, 'Compiling...', DateTimeToStr(Now), '', FCurrentProjectNo, FCurrentPackageDescription);
 
+      FProjectCompiled := True;
       for _PlatformIndex := 0 to FPlatformsToCompileList.Count - 1 do begin
         for _ConfigIndex := 0 to FConfigsToCompileList.Count - 1 do begin
           FPlatformToCompile := FPlatformsToCompileList[_PlatformIndex];
@@ -1807,6 +1808,32 @@ begin
   result:=uDPTDelphiPackage.RemoveProjectFromProjectGroup(FBPGFilename,FCurrentProjectFilename,FCurrentProjectType);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: ReplaceTag
+  Author:    Muem
+  Date:      06-Dec-2012
+  Arguments: _filename: string
+  Result:    string
+  Description: replaces the Tag <$(DELPHI)> with the real delphi path.
+               replaces the Tag <$(BDS)> with the real delphi path.
+               replaces the Tag <$(PROGRAMFILES)> with the real program files path.
+               replaces  the Tag <$(DELPHIVERSION)> with the real delphi version.
+               replaces  the Tag <$(BDSCOMMONDIR)> with the real bds common path.
+               replaces  the Tag <$(BDSPROJECTSDIR)> with the real bds projects path.
+               replaces  the Tag <$(PLATFORM)> with the current platform.
+               replaces  the Tag <$(CONFIG)> with the current config.
+----------------------------------------------------------------------------}
+function TDMMain.ReplaceTag(_filename: string): string;
+begin
+  _filename := StringReplace(_filename, cPlatformTag, FPlatformToCompile, [rfReplaceAll, rfIgnoreCase]);
+
+  _filename := StringReplace(_filename, cConfigTag, FConfigToCompile, [rfReplaceAll, rfIgnoreCase]);
+
+  _filename := uDPTDelphiPackage.ReplaceTag(_filename, FCurrentDelphiVersion);
+
+  Result := _filename;
+end;
+
 function TDMMain.PrepareEXEParams(_filename: string; _lineNo: integer;_SourceCodeEditorParams: string): string;
 begin
   result:='';
@@ -2139,7 +2166,6 @@ var
   _DelimiterPos: Integer;
 begin
   Result := 0;
-  FProjectCompiled := True;
   for _ProjectIndex := 0 to ProjectsList.Count - 1 do begin
     InitCurrentProject(ProjectsList[_ProjectIndex]);
     ElaboratePlatformsAndConfigsToCompileList;
@@ -2147,6 +2173,7 @@ begin
     TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Clear;
     if assigned(FOnCurrentProjectCompileStateChanged) then FOnCurrentProjectCompileStateChanged(self, FCurrentProjectFilename, 'Compiling...', DateTimeToStr(Now), '', FCurrentProjectNo, FCurrentPackageDescription);
 
+    FProjectCompiled := True;
     for _PlatformIndex := 0 to FPlatformsToCompileList.Count - 1 do begin
       for _ConfigIndex := 0 to FConfigsToCompileList.Count - 1 do begin
         FPlatformToCompile := FPlatformsToCompileList[_PlatformIndex];
