@@ -130,6 +130,8 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
+[Excluded Packages]
+c:\programme\borland\delphi7\projects\bpl\dcctd7.bpl=Dream Controls (vcl dsgn)
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source

@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.1.3    ( 11.12.2012 ) 
+-SH: some code-cleanup and re-factoring. 
+ 
 1.9.1.2    ( 07.12.2012 )
 -another patch from M.Mueller. Code clean-up.
 
@@ -181,8 +184,8 @@ type
     actRevertChanges1: TMenuItem;
     actWriteDPTPathsToProject1: TMenuItem;
     pgcInfo: TPageControl;
-    TabSheet1: TTabSheet;
-    TabSheet2: TTabSheet;
+    tabInfo: TTabSheet;
+    tabTrace: TTabSheet;
     mmoLogFile: TMemo;
     mmoTrace: TMemo;
     gbxPlatform: TGroupBox;
@@ -354,6 +357,7 @@ begin
   top                               :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Top',24);
   width                             :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Width',25);
   height                            :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Height',26);
+  pgcInfo.ActivePage:=tabInfo;
   cbxDelphiVersions.Items.Assign(DMMain.InstalledDelphiVersionList);
   SetPlatformCheckListBox('');
   SetConfigCheckListBox('');
@@ -379,7 +383,6 @@ begin
     FWriteMsg:=DoWriteTrace;
     DMMain.OnWriteLog:=DoWriteLog;
     DMMain.OnDeleteLog:=DoDeleteLog;
-    DMMain.OnApplicationStateChange:=DoApplicationStateChange;
     DMMain.OnPackageInstalledEvent:=DoPackageInstallEvent;
     DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
     DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
@@ -408,13 +411,10 @@ begin
   DMMain.OnPlatformChangeEvent:=DoPlatformChangeEvent;
   DMMain.OnBPGOpen:=DoProjectGroupOpen;
   DMMain.OnBPGClose:=DoProjectGroupClose;
+  DMMain.OnApplicationStateChange:=DoApplicationStateChange;
   case DMMain.ApplicationState of
-    tas_init: begin
-      actCompileProject.Enabled := False;
-    end;
-    tas_open: begin
-      actCompileProject.Enabled := True;
-    end;
+    tas_init: actCompileProject.Enabled := False;
+    tas_open: actCompileProject.Enabled := True;
   end;
 end;
 

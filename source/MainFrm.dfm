@@ -286,10 +286,10 @@ object FrmMain: TFrmMain
     Top = 402
     Width = 1232
     Height = 193
-    ActivePage = TabSheet2
+    ActivePage = tabTrace
     Align = alBottom
     TabOrder = 3
-    object TabSheet1: TTabSheet
+    object tabInfo: TTabSheet
       Caption = 'Information'
       object mmoLogFile: TMemo
         Left = 0
@@ -306,7 +306,7 @@ object FrmMain: TFrmMain
         OnDblClick = mmoLogFileDblClick
       end
     end
-    object TabSheet2: TTabSheet
+    object tabTrace: TTabSheet
       Caption = 'Trace'
       ImageIndex = 1
       object mmoTrace: TMemo
