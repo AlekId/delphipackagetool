@@ -54,9 +54,9 @@ type
     procedure AddDirToCombobox(_dir:string);
     procedure cbxSearchLocationExit(Sender: TObject);
   private
-    FAbortScan: boolean;
-    FSearchCriteria: string;
-    FSearchLocation: string;
+    AbortScan: boolean;
+    SearchCriteria: string;
+    SearchLocation: string;
   public
   end;
 
@@ -72,7 +72,6 @@ uses
   MainDM,
   FileCtrl,
   Windows,
-//  uDPTDelphiPackage,
   OptionsFrm;
 
 {$R *.dfm}
@@ -92,27 +91,23 @@ var
 begin
   result := '';
   _FrmPathSelection := TFrmPathSelection.create(nil);
-  with _FrmPathSelection do begin
-    btnAddPath.Visible:=_showButtonAddToProject;
-    FSearchLocation := lowercase(_searchLocation);
-    FSearchCriteria := _searchcriteria;
-    _index:=cbxSearchLocation.Items.IndexOf(FSearchLocation);
+  try
+    _FrmPathSelection.btnAddPath.Visible:=_showButtonAddToProject;
+    _FrmPathSelection.SearchLocation := lowercase(_searchLocation);
+    _FrmPathSelection.SearchCriteria := _searchcriteria;
+    _index:=_FrmPathSelection.cbxSearchLocation.Items.IndexOf(_FrmPathSelection.SearchLocation);
     if _index=-1 then begin  // its not already in the list.
-      cbxSearchLocation.Items.Insert(0,FSearchLocation);
-      cbxSearchLocation.ItemIndex:=0;
+      _FrmPathSelection.cbxSearchLocation.Items.Insert(0,_FrmPathSelection.SearchLocation);
+      _FrmPathSelection.cbxSearchLocation.ItemIndex:=0;
     end
-    else begin // this entry is already in the list.
-      cbxSearchLocation.ItemIndex:=_index;
-    end;
+    else _FrmPathSelection.cbxSearchLocation.ItemIndex:=_index; // this entry is already in the list.
 
-    edtSearchMask.Text := _searchcriteria;
-    btnFind.Caption:=format('Search <%s>',[_searchcriteria]);
-    try
-      showmodal;
-      if lstFiles.itemindex > -1 then result := lstFiles.Items[lstFiles.itemindex];
-    finally
-      if assigned(_FrmPathSelection) then FreeAndNil(_FrmPathSelection);
-    end;
+    _FrmPathSelection.edtSearchMask.Text := _searchcriteria;
+    _FrmPathSelection.btnFind.Caption:=format('Search <%s>',[_searchcriteria]);
+    _FrmPathSelection.showmodal;
+    if _FrmPathSelection.lstFiles.itemindex > -1 then result := _FrmPathSelection.lstFiles.Items[_FrmPathSelection.lstFiles.itemindex];
+  finally
+    _FrmPathSelection.free;
   end;
 end;
 
@@ -138,7 +133,7 @@ begin
     edtSearchMask.SetFocus;
     exit;
   end;
-  FAbortScan := false;
+  AbortScan := false;
   btnOk.Enabled := false;
   btnAbort.Enabled:=true;
   Screen.cursor := crHourGlass;
@@ -149,9 +144,9 @@ begin
     _path:=IncludeTrailingPathDelimiter(cbxSearchLocation.Text);
     if _fileext = '.dcu' then begin
       _Mask := ChangeFileExt(_Mask, '.pas');
-      AllFilesOfDrive(_path, _Mask, lstFiles.Items, FAbortScan);
+      AllFilesOfDrive(_path, _Mask, lstFiles.Items, AbortScan);
     end;
-    AllFilesOfDrive(_path, edtSearchMask.Text, lstFiles.Items, FAbortScan);
+    AllFilesOfDrive(_path, edtSearchMask.Text, lstFiles.Items, AbortScan);
     if lstFiles.Count>0 then lstFiles.ItemIndex:=0;
   finally
     Screen.cursor := crDefault;
@@ -171,7 +166,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmPathSelection.FormCreate(Sender: TObject);
 begin
-  FAbortScan := false;
+  AbortScan := false;
   btnAbort.Enabled:=false;
   btnAddPath.Enabled:=false;
 end;
@@ -186,7 +181,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmPathSelection.btnAbortClick(Sender: TObject);
 begin
-  FAbortScan := true;
+  AbortScan := true;
   Screen.cursor := crDefault;
   btnOk.enabled := true;
   btnAbort.Enabled:=false;
@@ -202,7 +197,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmPathSelection.btnCancelClick(Sender: TObject);
 begin
-  FAbortScan := true;
+  AbortScan := true;
   Screen.cursor := crDefault;
   btnOk.Enabled := true;
 end;
@@ -217,7 +212,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmPathSelection.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  FAbortScan := true;
+  AbortScan := true;
   Screen.cursor := crDefault;
 end;
 
@@ -244,25 +239,13 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmPathSelection.btnSelectPathClick(Sender: TObject);
 var
-//  i:integer;
   _Dir: string;
-//  _index:integer;
 begin
   _Dir := cbxSearchLocation.text;
   if (_dir<>'') and (not SysUtils.DirectoryExists(_dir)) then _dir:='';
-//  if not SelectDirectory(_Dir, [sdAllowCreate, sdPerformCreate, sdPrompt], 0) then exit;
   if not SelectDirectory('Select Search-Path','',_Dir) then exit;
   _Dir:=lowercase(IncludeTrailingPathDelimiter(_Dir));
   AddDirToCombobox(_Dir);
-//  _index:=cbxSearchLocation.Items.IndexOf(_Dir);
-//  if _index=-1 then begin  // its not already in the list.
-//    cbxSearchLocation.Items.Insert(0,_Dir);
-//    cbxSearchLocation.ItemIndex:=0;
-//    for i:=1 to cbxSearchLocation.Items.count do DMMain.ApplicationSettings.SetString(format('Application/SearchPathHistory/Item%d',[i]),100+i,cbxSearchLocation.Items[i-1]);
-//  end
-//  else cbxSearchLocation.ItemIndex:=_index; // this entry is already in the list.
-//
-//  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',15,cbxSearchLocation.text);
 end;
 
 procedure TFrmPathSelection.AddDirToCombobox(_dir:string);

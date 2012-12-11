@@ -253,7 +253,6 @@ type
     FFullTrace:boolean;
     FStgFilesLastRow: Integer;
     FStgFilesLastCol: Integer;
-    procedure LoadBPG(_filename:string); // load a BPG-File.
     procedure OpenBPGFileInEditor;
     procedure SetCurrentPackage(const _ProjectName:string);
     procedure PrepareGrid;
@@ -284,6 +283,7 @@ type
     procedure DoCurrentProjectChanged(Sender:TObject;const _ProjectName:string;const _ProjectNumber:integer);
     procedure DoWriteTrace(_level:byte;_msg:String;_params:Array of Const);
     procedure DoPlatformChangeEvent(Sender:TObject;const _Platforms:string);
+    procedure ClearLog;
   public
     NVBAppExecExternalCommand: TNVBAppExec;
     procedure SetLastUsedFile(_filename: string);
@@ -332,7 +332,7 @@ begin
   OpenDialog1.FilterIndex := 3;
   if not OpenDialog1.Execute then exit;
   DMMain.ApplicationSettings.SetString('Application/LastUsedExtension',27,OpenDialog1.DefaultExt);
-  LoadBPG(OpenDialog1.FileName);
+  DMMain.LoadBPG(OpenDialog1.FileName);
 end;
 
 {-----------------------------------------------------------------------------
@@ -365,15 +365,25 @@ begin
     ShowStartUpDlg(_showagain);
     DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
   end;
-  if DMMain.BPGFilename<>'' then LoadBPG(DMMain.BPGFilename)
+  if DMMain.BPGFilename<>'' then DMMain.LoadBPG(DMMain.BPGFilename)
   else begin
     if DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3)<>'' then begin
-      LoadBPG(DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3));
+      DMMain.LoadBPG(DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3));
     end;
   end;
   if assigned(DMMain.CommandLineAction) then begin
     DMMain.CommandLineAction.Execute;
     if exitcode=0 then close;
+  end
+  else begin
+    FWriteMsg:=DoWriteTrace;
+    DMMain.OnWriteLog:=DoWriteLog;
+    DMMain.OnDeleteLog:=DoDeleteLog;
+    DMMain.OnApplicationStateChange:=DoApplicationStateChange;
+    DMMain.OnPackageInstalledEvent:=DoPackageInstallEvent;
+    DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
+    DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
+    DMMain.OnCurrentProjectChanged:=DoCurrentProjectChanged;
   end;
 end;
 
@@ -387,7 +397,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
-  FWriteMsg:=DoWriteTrace;
   FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
@@ -395,17 +404,10 @@ begin
   NVBAppExecExternalCommand.WindowState := wsNormal;
   NVBAppExecExternalCommand.Priority := ppNormal;
   NVBAppExecExternalCommand.CloseRunningProcess := False;
-  DMMain.OnWriteLog:=DoWriteLog;
-  DMMain.OnDeleteLog:=DoDeleteLog;
   DMMain.OnDelphiVersionChange:=DoDelphiVersionChangeEvent;
   DMMain.OnPlatformChangeEvent:=DoPlatformChangeEvent;
   DMMain.OnBPGOpen:=DoProjectGroupOpen;
   DMMain.OnBPGClose:=DoProjectGroupClose;
-  DMMain.OnApplicationStateChange:=DoApplicationStateChange;
-  DMMain.OnPackageInstalledEvent:=DoPackageInstallEvent;
-  DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
-  DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
-  DMMain.OnCurrentProjectChanged:=DoCurrentProjectChanged;
   case DMMain.ApplicationState of
     tas_init: begin
       actCompileProject.Enabled := False;
@@ -505,10 +507,15 @@ begin
   {$endif}
 end;
 
-procedure TFrmMain.ClearLog1Click(Sender: TObject);
+procedure TFrmMain.ClearLog;
 begin
   mmoLogFile.Clear;
   mmoTrace.Clear;
+end;
+
+procedure TFrmMain.ClearLog1Click(Sender: TObject);
+begin
+  ClearLog;
 end;
 
 procedure TFrmMain.WriteLog(_msg: string;_params:array of const);
@@ -575,7 +582,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actFindFilePathExecute(Sender: TObject);
 begin
-  ShowSelectPathDialog(DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15),'',true);
+  ShowSelectPathDialog(DMMain.SearchPath,'',true);
 end;
 
 {-----------------------------------------------------------------------------
@@ -917,25 +924,6 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: LoadBPG
-  Author:    sam
-  Date:      09-Feb-2005
-  Arguments: _filename: string
-  Result:    None
-  Description: load a bpg-file
------------------------------------------------------------------------------}
-procedure TFrmMain.LoadBPG(_filename: string);
-begin
-  if not fileexists(_filename) then begin
-    trace(1,'Problem in TFrmMain.LoadBPG: Could not find file <%s>.',[_filename]);
-    exit;
-  end;
-  ClearLog1.Click;
-  DMMain.CloseBPG;
-  DMMain.OpenBPG(AbsoluteFilename(ExtractFilePath(Application.ExeName),_filename));
-end;
-
-{-----------------------------------------------------------------------------
   Procedure: OpenBPGFileInEditor
   Author:    sam
   Date:      10-Mrz-2005
@@ -964,7 +952,7 @@ begin
   _bpgFilename:=DMMain.BPGFilename;
   DMMain.CloseBPG;
   _bpgFilename:=ShowBPGEditor(_bpgFilename);
-  LoadBPG(_bpgFilename);
+  DMMain.LoadBPG(_bpgFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1001,7 +989,7 @@ begin
   SaveDialog1.FilterIndex:=0;
   if not SaveDialog1.Execute then exit;
   _bpgFilename:=ShowBPGEditor(SaveDialog1.FileName);
-  LoadBPG(_bpgFilename);
+  DMMain.LoadBPG(_bpgFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1081,7 +1069,7 @@ begin
   end;
   _currentRow:=stgFiles.row;
   if DMMain.RemoveProjectFromProjectGroup then begin
-    LoadBPG(DMMain.BPGFilename);  // reload the file.
+    DMMain.LoadBPG(DMMain.BPGFilename);  // reload the file.
     if _currentRow<stgFiles.RowCount then stgFiles.Row:=_currentRow
                                      else stgFiles.Row:=stgFiles.RowCount-1;
   end else Application.MessageBox(pchar(format(cProblemToRemoveProject,[DMMain.CurrentProjectFilename])),pchar(cError),MB_ICONERROR or MB_OK);
@@ -1169,7 +1157,7 @@ begin
   _filename:=lowercase(_filename);
   if ExtractFileExt(_filename)='' then _filename:=_filename+'*.*';
   if (Pos(cFileNotFoundTagGerman,_compilerOutput)>0) or  //TODO we need a better way to find out if the compilation was successfull.
-     (Pos(cFileNotFoundTagEnglish,_compilerOutput)>0) then ShowSelectPathDialog(DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15),_filename,true) else
+     (Pos(cFileNotFoundTagEnglish,_compilerOutput)>0) then ShowSelectPathDialog(DMMain.SearchPath,_filename,true) else
   if (Pos('.dpr',_filename)>0) or
      (Pos('.dpk',_filename)>0) or
      (Pos('.pas',_filename)>0) then begin
@@ -1179,7 +1167,6 @@ begin
     DMMain.ShowFile(_filename,_lineNo);
   end;
 end;
-
 
 procedure TFrmMain.ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
 begin
@@ -1227,7 +1214,7 @@ begin
     _pos:=Pos('&',_filename);
     if _pos<>0 then Delete(_filename,_pos,1);
   end;
-  LoadBPG(_filename);
+  DMMain.LoadBPG(_filename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1311,7 +1298,7 @@ procedure TFrmMain.mitRecentFilesClick(Sender: TObject);
 begin
   OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile',19));
   if not OpenDialog1.Execute then exit;
-  LoadBPG(OpenDialog1.filename);
+  DMMain.LoadBPG(OpenDialog1.filename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1531,6 +1518,7 @@ procedure TFrmMain.DoProjectGroupOpen(Sender: TObject);
 var
 _index:integer;
 begin
+  ClearLog;
   FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
   SetLastUsedFile(DMMain.BPGFilename);
   _index:=edtPackageBPGFile.Items.IndexOf(DMMain.BPGFilename);
@@ -1915,13 +1903,14 @@ end;
 
 procedure TFrmMain.edtPackageBPGFileChange(Sender: TObject);
 begin
-  LoadBPG(edtPackageBPGFile.Text);
+  DMMain.LoadBPG(edtPackageBPGFile.Text);
 end;
 
 procedure TFrmMain.mmoTraceDblClick(Sender: TObject);
 begin
   mmoTrace.clear;
 end;
+
 
 end.
 

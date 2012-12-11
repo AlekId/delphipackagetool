@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
-  Left = 49
-  Top = 0
+  Left = 195
+  Top = 194
   Width = 1240
   Height = 641
   Caption = 'Package Group Rebuilder/Installer'
@@ -286,7 +286,7 @@ object FrmMain: TFrmMain
     Top = 402
     Width = 1232
     Height = 193
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alBottom
     TabOrder = 3
     object TabSheet1: TTabSheet
@@ -312,7 +312,7 @@ object FrmMain: TFrmMain
       object mmoTrace: TMemo
         Left = 0
         Top = 0
-        Width = 1208
+        Width = 1224
         Height = 165
         Align = alClient
         Ctl3D = False

@@ -150,6 +150,7 @@ type
     procedure CompileAndInstallCurrentPackage;
     procedure ReCompileAndInstallCurrentPackage;
     function  ReplaceTag(_filename: string): string;
+    procedure DeleteBPLAndDCPFiles;    
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -183,6 +184,8 @@ type
     procedure ElaboratePlatformsAndConfigsToCompileList;
     procedure InitProjectDataForHint;
     function  CompileAndInstallProjects(ProjectsList: TStringList): Integer;
+    function  SearchPath:string;
+    procedure LoadBPG(_filename: string);
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectType:TProjectType read FCurrentProjectType;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
@@ -355,7 +358,7 @@ begin
         exit;
       end;
       if _lstFiles.count=1 then _filename:=_lstFiles[0]
-      else _filename:=ShowSelectPathDialog(FBPGPath,ExtractFileName(_filename),false);
+                           else _filename:=ShowSelectPathDialog(SearchPath,ExtractFileName(_filename),false);
     finally
       _lstFiles.free;
     end;
@@ -833,6 +836,25 @@ begin
   FDelphiWasStartedOnApplicationStart := isDelphiStarted(FCurrentDelphiVersion);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: LoadBPG
+  Author:    sam
+  Date:      09-Feb-2005
+  Arguments: _filename: string
+  Result:    None
+  Description: load a bpg-file
+-----------------------------------------------------------------------------}
+procedure TDMMain.LoadBPG(_filename: string);
+begin
+  if not fileexists(_filename) then begin
+    trace(1,'Problem in TDMMain.LoadBPG: Could not find file <%s>.',[_filename]);
+    exit;
+  end;
+  CloseBPG;
+  OpenBPG(AbsoluteFilename(ExtractFilePath(Application.ExeName),_filename));
+end;
+
+
 {*-----------------------------------------------------------------------------
   Procedure: SaveBackup
   Author:    sam
@@ -940,15 +962,15 @@ end;
 
 procedure TDMMain.WriteLog(_msg: string;const _params: array of const);
 begin
-  _msg:=format(_msg,_params);
-  if assigned(FOnWriteLog) then FOnWriteLog(self,_msg);
+  if not assigned(FOnWriteLog) then exit;
+  if sizeof(_params)>0 then _msg:=format(_msg,_params);
+  FOnWriteLog(self,_msg);
 end;
 
 procedure TDMMain.DeleteLog;
 begin
   if assigned(FOnDeleteLog) then FOnDeleteLog(self);
 end;
-
 
 procedure TDMMain.ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
 begin
@@ -1240,12 +1262,12 @@ end;
   Date:      04-Dec-2012
   Arguments: Sender: TObject
   Result:    None
-  Description: delete BPL, uninstall, rebuild and install the current package.
+  Description: delete BPL,DCP, uninstall, rebuild and install the current package.
 -----------------------------------------------------------------------------}
 procedure TDMMain.ReCompileAndInstallCurrentPackage;
 begin
   CheckDelphiRunning;
-  actDeleteBPLExecute(nil);
+  DeleteBPLAndDCPFiles;
   CompileAndInstallCurrentPackage;
 end;
 
@@ -1277,9 +1299,21 @@ end;
   Date:      12-Mrz-2008
   Arguments: Sender: TObject
   Result:    None
-  Description:  delete bpl and dcp file.
+  Description:
 -----------------------------------------------------------------------------}
 procedure TDMMain.actDeleteBPLExecute(Sender: TObject);
+begin
+  DeleteBPLAndDCPFiles;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: DeleteBPLAndDCPFiles
+  Author:    herzogs2
+  Date:      10-Dez-2012
+  Arguments: None
+  Result:    None delete bpl and dcp file.
+-----------------------------------------------------------------------------}
+procedure TDMMain.DeleteBPLAndDCPFiles;
 resourcestring
   cDeleteBPL_and_DCP_Files='Do you want to delete the file <%s> and <%s>?';
 var
@@ -1295,6 +1329,7 @@ begin
   if uDPTDelphiPackage.DeleteFile(_bplFilename) then WriteLog('Deleted file <%s>.',[_bplFilename]);
   if uDPTDelphiPackage.DeleteFile(_dcpFilename) then WriteLog('Deleted file <%s>.',[_dcpFilename]);
 end;
+
 
 {*-----------------------------------------------------------------------------
   Procedure: CompileAndInstallCurrentPackage
@@ -1716,7 +1751,7 @@ procedure TDMMain.SearchFile(_filename:string;_compilerOutput:string);
 begin
   if ExtractFileExt(_filename)='' then _filename:=_filename+'*.*';
   if (Pos('nicht gefunden',_compilerOutput)>0) or
-     (Pos('not found',_compilerOutput)>0) then ShowSelectPathDialog(ApplicationSettings.StringValue('Application/LastUsedSearchPath',15),_filename,true) else
+     (Pos('not found',_compilerOutput)>0) then ShowSelectPathDialog(SearchPath,_filename,true) else
   if (Pos('.dpr',_filename)>0) or
      (Pos('.dpk',_filename)>0) or
      (Pos('.pas',_filename)>0) then begin
@@ -2186,9 +2221,7 @@ begin
         end;
         FireCurrentProjectChanged;
         ReCompileAndInstallCurrentPackage;
-        if (FPlatformConfigCompiled = False) and ApplicationSettings.BoolValue('Application/StopOnFailure', 6) then begin
-          Break;
-        end;
+        if (not FPlatformConfigCompiled) and ApplicationSettings.BoolValue('Application/StopOnFailure', 6) then break;
         if FAbortCompile then begin
           WriteLog('Aborted by User.', []);
           Break;
@@ -2197,7 +2230,7 @@ begin
       end;
     end;
 
-    if FProjectCompiled = True then begin
+    if FProjectCompiled then begin
       Inc(Result);
       if TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Count = 1 then begin
           _TmpStr := TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).VersionsList[0];
@@ -2504,6 +2537,20 @@ end;
 procedure TDMMain.FirePlatformChanged;
 begin
   if assigned(FOnPlatformChangeEvent) then FOnPlatformChangeEvent(self,FCurrentBPGPlatformList.CommaText);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: SearchPath
+  Author:    sam
+  Date:      03-Dez-2012
+  Arguments: None
+  Result:    string
+-----------------------------------------------------------------------------}
+function TDMMain.SearchPath: string;
+begin
+  result:=FBPGPath;
+  if (ApplicationSettings.StringValue('Application/LastUsedSearchPath',15)<>'') and
+     DirectoryExists(ApplicationSettings.StringValue('Application/LastUsedSearchPath',15)) then result:= ApplicationSettings.StringValue('Application/LastUsedSearchPath',15);
 end;
 
 end.

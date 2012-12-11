@@ -658,16 +658,20 @@ end;
   Description: Write the to the debug log.
 -----------------------------------------------------------------------------}
 procedure Trace(const _level:byte;const _msg:String;const _params:array of const);
+{$ifdef debug}
 var
 _s:string;
+{$endif}
 begin
   if assigned(FWriteMsg) then begin
      FWriteMsg(_level,_msg,_params);
      exit;
   end;
+  {$ifdef debug}
   if SizeOf(_params)>0 then _s:=format(_msg,_params)
                        else _s:=_msg;
   OutputDebugString(PChar(_s));
+  {$endif}
 end;
 
 {-----------------------------------------------------------------------------
