@@ -1041,7 +1041,7 @@ begin
           result:=false;
           continue;
         end ;
-        trace(3,'Removed value <%s> from registry key <%s,%s> because the referenced file <%s> does not exist.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey]);
+        trace(3,'Removed value <%s> from registry key <%s,%s> because the referenced file <%s> does not exist.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey,_packageName]);
         inc(NoOfRemovedKeys);
       end;
     except
