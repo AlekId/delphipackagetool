@@ -1,13 +1,10 @@
-del /s *.dcu
-del /s *.dcp
-del /s *.bpl
+rem Remove un-needed files.
+
+del /s *.ddp
 del /s *.~*
-del /s *.bk*
-del /s *.*_new
 del /s *.*_old
+del /s *.*_new
 del /s *.map
-del /s *.identcache
-del /s *.local
-del /s *.2007
-del /s __history
-del /s *.log
+
+pause
+

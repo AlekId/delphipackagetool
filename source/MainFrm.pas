@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.1.4    ( 14.12.2012 )
+-another patch from M.Mueller. Code clean-up.
+-Replace-Tag's right before feeding the command-line.
+
 1.9.1.3    ( 11.12.2012 ) 
 -SH: some code-cleanup and re-factoring. 
  

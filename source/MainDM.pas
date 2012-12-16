@@ -440,7 +440,7 @@ begin
     // otherwise take the path from the cfg-file.
     FCurrentBPLOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentBPLOutputPath, FCurrentDelphiVersion);
   end;
-  FCurrentBPLOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentBPLOutputPath));
+  FCurrentBPLOutputPath := IncludeTrailingPathDelimiter(FCurrentBPLOutputPath);
 
   if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
     if (FCurrentBPLOutputPath <> '') and (not DirectoryExists(FCurrentBPLOutputPath)) then begin
@@ -461,7 +461,7 @@ begin
     // otherwise take the path from the cfg-file.
     FCurrentDCPOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCPOutputPath, FCurrentDelphiVersion);
   end;
-  FCurrentDCPOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentDCPOutputPath));
+  FCurrentDCPOutputPath := IncludeTrailingPathDelimiter(FCurrentDCPOutputPath);
 
   if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
     if (FCurrentDCPOutputPath <> '') and (not DirectoryExists(FCurrentDCPOutputPath)) then begin
@@ -483,7 +483,7 @@ begin
     // otherwise take the path from the cfg-file.
     FCurrentDCUOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCUOutputPath, FCurrentDelphiVersion);
   end;
-  FCurrentDCUOutputPath := IncludeTrailingPathDelimiter(ReplaceTag(FCurrentDCUOutputPath));
+  FCurrentDCUOutputPath := IncludeTrailingPathDelimiter(FCurrentDCUOutputPath);
 
   if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
     if (FCurrentDCUOutputPath <> '') and (not DirectoryExists(FCurrentDCUOutputPath)) then begin
@@ -544,7 +544,6 @@ begin
       if LastPos(_currentPath, ';') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if LastPos(_currentPath, '\') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if _absolutePaths then begin
-        _currentPath:=ReplaceTag(_currentpath);
         _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion);
         if (_currentPath<>'') and (DirectoryExists(_currentPath)) then begin
           Result := Result + _currentPath + ';';
@@ -853,8 +852,6 @@ begin
   CloseBPG;
   OpenBPG(AbsoluteFilename(ExtractFilePath(Application.ExeName),_filename));
 end;
-
-
 {*-----------------------------------------------------------------------------
   Procedure: SaveBackup
   Author:    sam
@@ -964,13 +961,14 @@ procedure TDMMain.WriteLog(_msg: string;const _params: array of const);
 begin
   if not assigned(FOnWriteLog) then exit;
   if sizeof(_params)>0 then _msg:=format(_msg,_params);
-  FOnWriteLog(self,_msg);
+  if assigned(FOnWriteLog) then FOnWriteLog(self,_msg);
 end;
 
 procedure TDMMain.DeleteLog;
 begin
   if assigned(FOnDeleteLog) then FOnDeleteLog(self);
 end;
+
 
 procedure TDMMain.ProjectSettingsError(Sender: TObject; ErrorMsg: String;Id: Integer);
 begin
@@ -1245,14 +1243,13 @@ procedure TDMMain.actReCompileExecute(Sender: TObject);
 var
   _ProjectsToCompile: TStringList;
 begin
-  if FCurrentProjectFilename <> '' then begin
-    _ProjectsToCompile := TStringList.Create;
-    try
-      _ProjectsToCompile.Add(RelativeFilename(FBPGPath, FCurrentProjectFilename, FCurrentDelphiVersion));
-      CompileAndInstallProjects(_ProjectsToCompile);
-    finally
-      _ProjectsToCompile.Free;
-    end;
+  if FCurrentProjectFilename = '' then exit;
+  _ProjectsToCompile := TStringList.Create;
+  try
+    _ProjectsToCompile.Add(RelativeFilename(FBPGPath, FCurrentProjectFilename, FCurrentDelphiVersion));
+    CompileAndInstallProjects(_ProjectsToCompile);
+  finally
+    _ProjectsToCompile.Free;
   end;
 end;
 
@@ -1305,7 +1302,6 @@ procedure TDMMain.actDeleteBPLExecute(Sender: TObject);
 begin
   DeleteBPLAndDCPFiles;
 end;
-
 {-----------------------------------------------------------------------------
   Procedure: DeleteBPLAndDCPFiles
   Author:    herzogs2
@@ -1329,7 +1325,6 @@ begin
   if uDPTDelphiPackage.DeleteFile(_bplFilename) then WriteLog('Deleted file <%s>.',[_bplFilename]);
   if uDPTDelphiPackage.DeleteFile(_dcpFilename) then WriteLog('Deleted file <%s>.',[_dcpFilename]);
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: CompileAndInstallCurrentPackage
@@ -1645,9 +1640,9 @@ begin
   FPlatformConfigCompiled := CompileProject(FDelphiCompilerFile,
                                             _CompilerSwitches,
                                             ReadProjectFilenameFromDProj(FCurrentProjectFilename),
-                                            FCurrentProjectOutputPath,
-                                            FCurrentDCUOutputPath,
-                                            FCurrentDCPOutputPath,
+                                            ReplaceTag(FCurrentProjectOutputPath),
+                                            ReplaceTag(FCurrentDCUOutputPath),
+                                            ReplaceTag(FCurrentDCPOutputPath),
                                             ExtractFilePath(ReadProjectFilenameFromDProj(FCurrentProjectFilename)),
                                             FCurrentNameSpaces,
                                             FCurrentProjectType,
@@ -2552,5 +2547,4 @@ begin
   if (ApplicationSettings.StringValue('Application/LastUsedSearchPath',15)<>'') and
      DirectoryExists(ApplicationSettings.StringValue('Application/LastUsedSearchPath',15)) then result:= ApplicationSettings.StringValue('Application/LastUsedSearchPath',15);
 end;
-
 end.

@@ -57,9 +57,6 @@ function  GetPackageVersion(const _PackageName,_PackageOutputPath,_PackageLibSuf
 function  ReplaceTag(_filename:string;_DelphiVersion:integer):string;
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType; // find out if the source file contains a application or library or package.
 function  AbsoluteFilename(_realpath,_filename: string):string; // converts a relative package filename into absolute filename
-function  AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string; // converts the path <_path> into an absolute pathname.
-function  RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:integer):string; // converts the filename <_filename> into a relative filename.
-function  RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string; // converts the path <_path> into a realtive pathname.
 function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;const _libsuffix:string=''):string; // input is a source code filename, output is the name of the compiled target.
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
@@ -84,7 +81,6 @@ function  OldestIDEVersion:integer; // returns the VersionNo of the oldest IDE i
 function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE installed.
 function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
-function  MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
 function  RemoveTrailingSemikolon(const _path:string):string;
 function AddTag(_filename: string;_DelphiVersion:integer): string;
 
@@ -106,11 +102,11 @@ uses
   Controls,
   Dialogs,
   ShellApi,
+  uDPTPathFilenameConvert,
   uDPTXMLReader,
   uDPTJclFuncs,
   uDTPProjectData,
   MSXML_TLB;
-
 
 var
   FBatchFile:TStrings;
@@ -773,36 +769,6 @@ begin
     Screen.cursor:=crDefault;
   end;
 end;
-
-{-----------------------------------------------------------------------------
-  Procedure: RelativePaths
-  Author:    sam
-  Date:      09-Jun-2007
-  Arguments: _basepath,_paths:string
-  Result:    string
-  Description: turns a collection of path's which are seperated by ';' into relative paths.
-               Inexistent Paths will be removed.
-               Doubled items will be removed.
------------------------------------------------------------------------------}
-function  RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer):string; // converts a list of paths to relative paths.
-var
-_path:string;
-_absolutepath:string;
-begin
-  _paths:=lowercase(_paths);
-  _path:=Getfield(';',_paths);
-  while _path<>'' do begin
-    _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion);
-    if DirectoryExists(_absolutepath) then begin
-      _path:=RelativePath(_basepath,_path,_DelphiVersion);
-      if _path<>'' then result:=result+_path+';';
-    end
-    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[]);
-    _path:=Getfield(';',_paths);
-  end;
-  result:=RemoveDoublePathEntries(result);
-end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: WriteDOFFile
@@ -4526,132 +4492,6 @@ begin
   _realpath:=IncludeTrailingPathDelimiter(_realpath);
   result:=_realpath+_relativepath+_filename;
   trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: AbsolutePath
-  Author:    sam
-  Date:      12-Mrz-2005
-  Arguments: _basepath,_path:string
-  Result:    string
-  Description: converts the path <_path> into an absolute pathname.
------------------------------------------------------------------------------}
-function  AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string;
-var
-_pos:integer;
-_len:integer;
-begin
-  _path:=ReplaceTag(_path,_DelphiVersion);
-
-  if (pos('\\',_path)=1) or               // looks like the filename contains already a absolute path.
-     (pos(':\',_path)>0) then begin
-    result:=IncludeTrailingPathDelimiter(_path);
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  if (pos('..\',_path)=0) and
-     (pos('.\',_path)=0) then begin    // its not a relative path, leave here.
-    if _path<>'' then begin
-      _path:=IncludeTrailingPathDelimiter(_path);
-      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
-    end;
-    result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  _pos:=Pos('..\',_path);
-  if _pos=0 then begin
-    if _path<>'' then begin
-      _path:=IncludeTrailingPathDelimiter(_path);
-      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
-    end;
-    result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-    exit;
-  end;
-
-  while _pos>0 do begin
-    Delete(_path,1,_pos+2);
-    _pos:=LastPos(_basepath,'\');
-    if _pos=0 then begin
-      result:='';
-      trace(1,'Error in AbsolutePath: Relative path <%s> can not be matched to base path <%s>.',[_path,_basepath]);
-      exit;
-    end;
-    _len:=length(_basepath);
-    if _pos=_len then delete(_basepath,_pos,1);
-    _pos:=LastPos(_basepath,'\');
-    _len:=length(_basepath);
-    if _pos>0 then delete(_basepath,_pos,_len);
-    _pos:=Pos('..\',_path);
-  end;
-  if _path<>'' then begin
-    _path:=IncludeTrailingPathDelimiter(_path);
-    if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
-  end;
-  result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-  trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: MakeAbsolutePath
-  Author:    herzogs2
-  Date:      30-Mrz-2010
-  Arguments: _basePath,_path.string;_DelphiVersion:integer
-  Result:    string
-  Description: convert all entries in the path-list <_path> into a path-list with absolut path-names.
-  e.g. $(Delphi)\bin;$(ProgramFiles)\test;..\..\library; will be converted into absolute path names.
------------------------------------------------------------------------------}
-function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string;
-var
-i:integer;
-_item:string;
-_list:TStrings;
-begin
-  result:='';
-  _list:=TStringList.create;
-  try
-    while _path<>'' do begin
-      _item:=GetField(';',_path);
-      _item:=lowercase(AbsolutePath(_basePath,_item,_DelphiVersion));
-      if _list.IndexOf(_item)=-1 then _list.Add(_item);
-    end;
-    for i:=0 to _list.Count-1 do result:=result+_list[i]+';';
-  finally
-    _list.free;
-  end;
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: RelativePath
-  Author:    sam
-  Date:      12-Mrz-2005
-  Arguments: _basepath,_path:string
-  Result:    string
-  Description: converts the path <_path> into a realtive pathname.
------------------------------------------------------------------------------}
-function  RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string;
-begin
-  if _ReplaceTags then _path:=AddTag(_path,_DelphiVersion);
-  result:=ExtractRelativePath(_basepath,_path)
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: RelativeFilename
-  Author:    sam
-  Date:      14-Mrz-2005
-  Arguments: _basepath,_filename:string
-  Result:    string
-  Description:
------------------------------------------------------------------------------}
-function  RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:integer):string; // converts the filename <_filename> into a relative filename.
-var
-_path:string;
-begin
-  _path:=Relativepath(_basePath,extractFilePath(_filename),_DelphiVersion);
-  result:=_path+ExtractFilename(_filename);
 end;
 
 {*-----------------------------------------------------------------------------
