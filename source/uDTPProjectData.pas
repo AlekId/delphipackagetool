@@ -25,6 +25,11 @@ type
     DCUOutputPath: string;
     SearchPath: string;
     DPTSearchPath: string;
+    CompileDate:string;
+    CompileState:string;
+    IDEInstall:string;
+    Description:string;
+    Version:string;
     CompileResultsList: TStringList;
     VersionsList: TStringList;
     constructor Create;

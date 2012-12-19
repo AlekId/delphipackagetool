@@ -23,11 +23,39 @@ uses
 
 {$R *.res}
 
+var
+  _showagain:boolean;
+  _CreateMainForm:boolean;
 begin
+  _CreateMainForm:=true;
   Application.Initialize;
   Application.Title := 'Delphi Package Tool';
   Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);
-  Application.CreateForm(TFrmMain, FrmMain);
+
+// show startup dialog
+  _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);
+  if _showagain then begin
+    ShowStartUpDlg(_showagain);
+    DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
+  end;
+
+// load the bpg file
+  if DMMain.BPGFilename<>'' then DMMain.LoadBPG(DMMain.BPGFilename)
+  else begin
+    if DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3)<>'' then
+      DMMain.LoadBPG(DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3));
+  end;
+// if dpt is used with command line
+  if assigned(DMMain.CommandLineAction) then begin
+    DMMain.CommandLineAction.Execute;
+    _CreateMainForm:=exitcode<>0;
+  end;
+// show main gui. 
+  if _CreateMainForm then begin
+    Application.CreateForm(TFrmMain, FrmMain);
+    FrmMain.PrepareGUI(DMMain.BPGFilename);
+  end;
+  
   Application.Run;
 end.

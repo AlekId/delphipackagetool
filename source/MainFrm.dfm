@@ -1,7 +1,7 @@
 object FrmMain: TFrmMain
-  Left = 195
-  Top = 194
-  Width = 1240
+  Left = 72
+  Top = 177
+  Width = 1378
   Height = 641
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
@@ -19,6 +19,7 @@ object FrmMain: TFrmMain
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
+  OnHide = FormHide
   OnKeyPress = FormKeyPress
   OnShow = FormShow
   PixelsPerInch = 96
@@ -26,7 +27,7 @@ object FrmMain: TFrmMain
   object Splitter1: TSplitter
     Left = 0
     Top = 390
-    Width = 1232
+    Width = 1370
     Height = 12
     Cursor = crVSplit
     Align = alBottom
@@ -34,7 +35,7 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 190
-    Width = 1232
+    Width = 1370
     Height = 200
     Align = alClient
     ColCount = 7
@@ -55,12 +56,12 @@ object FrmMain: TFrmMain
       121
       118
       81
-      224)
+      499)
   end
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 1232
+    Width = 1370
     Height = 190
     Align = alTop
     BevelOuter = bvNone
@@ -284,7 +285,7 @@ object FrmMain: TFrmMain
   object pgcInfo: TPageControl
     Left = 0
     Top = 402
-    Width = 1232
+    Width = 1370
     Height = 193
     ActivePage = tabTrace
     Align = alBottom
@@ -312,7 +313,7 @@ object FrmMain: TFrmMain
       object mmoTrace: TMemo
         Left = 0
         Top = 0
-        Width = 1224
+        Width = 1362
         Height = 165
         Align = alClient
         Ctl3D = False

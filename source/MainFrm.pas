@@ -4,12 +4,17 @@
  Purpose:
  History:
 
+1.9.1.5    ( 19.12.2012 )
+-SH: some code-cleanup and re-factoring.
+-SH: Logic and GUI are now separated.
+-SH: ESC is working again to abort "Compile All".
+
 1.9.1.4    ( 14.12.2012 )
 -another patch from M.Mueller. Code clean-up.
 -Replace-Tag's right before feeding the command-line.
 
-1.9.1.3    ( 11.12.2012 ) 
--SH: some code-cleanup and re-factoring. 
+1.9.1.3    ( 11.12.2012 )
+-SH: some code-cleanup and re-factoring.
  
 1.9.1.2    ( 07.12.2012 )
 -another patch from M.Mueller. Code clean-up.
@@ -254,6 +259,7 @@ type
     procedure stgFilesMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure actSelectDcpPathExecute(Sender: TObject);
     procedure actCompileProjectExecute(Sender: TObject);
+    procedure FormHide(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -269,6 +275,7 @@ type
     procedure GUItoApplicationSettings;  // copy GUI fields into settings.
     procedure ProjectSettingstoGUI;  // copy settings into GUI fields.
     procedure GUItoProjectSettings;  // copy GUI fields into settings.
+    procedure PrepareBPGEditBox(_BPGFilename:string);
     procedure SearchFileSelected;
     procedure SearchFile(_filename:string;_lineno:integer;_compilerOutput:string);
     procedure PrepareRecentFiles;
@@ -291,9 +298,11 @@ type
     procedure DoWriteTrace(_level:byte;_msg:String;_params:Array of Const);
     procedure DoPlatformChangeEvent(Sender:TObject;const _Platforms:string);
     procedure ClearLog;
+    procedure AttachGUIEvents;
+    procedure DetachGUIEvents;
   public
     NVBAppExecExternalCommand: TNVBAppExec;
-    procedure SetLastUsedFile(_filename: string);
+    procedure PrepareGUI(_BPGFilename:string);
   end;
 
 var
@@ -353,8 +362,6 @@ end;
                          - check if the compiler file exits. If not, show the OpenDialog.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormShow(Sender: TObject);
-var
-  _showagain:boolean;
 begin
   caption:='Package Group Rebuilder/Installer '+Getversion;
   left                              :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Left',23);
@@ -367,31 +374,8 @@ begin
   SetConfigCheckListBox('');
   ApplicationSettingstoGUI;
   PrepareGrid;
-  Application.ProcessMessages;
-  _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);
-  if _showagain then begin
-    ShowStartUpDlg(_showagain);
-    DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
-  end;
-  if DMMain.BPGFilename<>'' then DMMain.LoadBPG(DMMain.BPGFilename)
-  else begin
-    if DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3)<>'' then begin
-      DMMain.LoadBPG(DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3));
-    end;
-  end;
-  if assigned(DMMain.CommandLineAction) then begin
-    DMMain.CommandLineAction.Execute;
-    if exitcode=0 then close;
-  end
-  else begin
-    FWriteMsg:=DoWriteTrace;
-    DMMain.OnWriteLog:=DoWriteLog;
-    DMMain.OnDeleteLog:=DoDeleteLog;
-    DMMain.OnPackageInstalledEvent:=DoPackageInstallEvent;
-    DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
-    DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
-    DMMain.OnCurrentProjectChanged:=DoCurrentProjectChanged;
-  end;
+  PrepareGUI(DMMain.BPGFilename);
+  AttachGUIEvents;
 end;
 
 {-----------------------------------------------------------------------------
@@ -667,14 +651,13 @@ procedure TFrmMain.actCompileProjectExecute(Sender: TObject);
 var
   _ProjectsToCompile: TStringList;
 begin
-  if DMMain.CurrentProjectFilename <> '' then begin
-    _ProjectsToCompile := TStringList.Create;
-    try
-      _ProjectsToCompile.Add(RelativeFilename(DMMain.BPGPath, DMMain.CurrentProjectFilename, DMMAin.CurrentDelphiVersion));
-      DMMain.CompileAndInstallProjects(_ProjectsToCompile);
-    finally
-      _ProjectsToCompile.Free;
-    end;
+  if DMMain.CurrentProjectFilename = '' then exit;
+  _ProjectsToCompile := TStringList.Create;
+  try
+    _ProjectsToCompile.Add(RelativeFilename(DMMain.BPGPath, DMMain.CurrentProjectFilename, DMMain.CurrentDelphiVersion));
+    DMMain.CompileAndInstallProjects(_ProjectsToCompile);
+  finally
+    _ProjectsToCompile.Free;
   end;
 end;
 
@@ -794,7 +777,6 @@ begin
   DMMain.LoadCurrentProject;
 end;
 
-
 procedure TFrmMain.VersionHistory1Click(Sender: TObject);
 var
 _showagain:boolean;
@@ -810,7 +792,7 @@ end;
 procedure TFrmMain.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if key=chr(vk_return) then DMMain.actExecuteApp.execute;
-  if key=chr(vk_space)  then actShowFile.Execute;
+  if key=chr(vk_space)  then DMMain.ShowFile(DMMain.CurrentProjectFilename,0);
   if key=chr(vk_escape) then DMMain.AbortCompile;
 end;
 
@@ -1257,38 +1239,6 @@ begin
   end;
 end;
 
-{-----------------------------------------------------------------------------
-  Procedure: SetLastUsedFile
-  Author:    sam
-  Date:      24-Jul-2005
-  Arguments: _filename: string
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-procedure TFrmMain.SetLastUsedFile(_filename: string);
-var
-i:integer;
-_tmp:string;
-_settingID:Integer;
-begin
-  DMMain.ApplicationSettings.SetString('Application/LastUsedInputFile', 19, _filename);
-  _settingID:=DMMain.ApplicationSettings.FindStringIndex('Application/FileHistory/',_filename);
-  if _settingID=-1 then begin   // check if the file is not already in the history list.
-    for i:=10 downto 2 do begin
-      _tmp:=DMMain.ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i-1]),50+i-1);
-      DMMain.ApplicationSettings.SetString(format('Application/FileHistory/Item%d',[i]),50+i,_tmp);
-    end;
-  end
-  else begin // the file is already in the recent file list.
-    DMMain.ApplicationSettings.SetString('',_settingID,'');
-    for i:=_settingID-50 downto 2 do begin
-      _tmp:=DMMain.ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i-1]),50+i-1);
-      DMMain.ApplicationSettings.SetString(format('Application/FileHistory/Item%d',[i]),50+i,_tmp);
-    end;
-  end;
-  DMMain.ApplicationSettings.SetString('Application/FileHistory/Item1',51,_filename);
-  PrepareRecentFiles;
-end;
 
 {*-----------------------------------------------------------------------------
   Procedure: mitRecentFilesClick
@@ -1519,20 +1469,10 @@ end;
   Description: this event is fired when the project group is loaded.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoProjectGroupOpen(Sender: TObject);
-var
-_index:integer;
 begin
   ClearLog;
   FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
-  SetLastUsedFile(DMMain.BPGFilename);
-  _index:=edtPackageBPGFile.Items.IndexOf(DMMain.BPGFilename);
-  if _index=-1 then begin
-    edtPackageBPGFile.Items.add(DMMain.BPGFilename);
-    _index:=edtPackageBPGFile.Items.IndexOf(DMMain.BPGFilename);
-  end;
-  edtPackageBPGFile.ItemIndex:=_index;
-  ProjectSettingstoGUI;
-  FillProjectGrid;
+  PrepareGUI(DMMain.BPGFilename);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1577,12 +1517,12 @@ begin
   if DMMain.BPGProjectList.Count = 0 then exit;
   for i := 1 to DMMain.BPGProjectList.Count do begin
     stgFiles.cells[0,i] := inttostr(i);
-    stgFiles.cells[1,i] := DMMain.BPGProjectList.Strings[i-1];
-    stgFiles.cells[2,i] := '';
-    stgFiles.cells[3,i] := '';
-    stgFiles.cells[4,i] := '';
-    stgFiles.cells[5,i] := '';
-    stgFiles.cells[6,i] := '';
+    stgFiles.cells[1,i] := DMMain.BPGProjectList.Strings[i-1];     // project-filename
+    stgFiles.cells[2,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).CompileState;
+    stgFiles.cells[3,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).CompileDate;
+    stgFiles.cells[4,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).IDEInstall;
+    stgFiles.cells[5,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).Version;
+    stgFiles.cells[6,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).Description;
   end;
   stgFiles.RowCount := DMMain.BPGProjectList.Count+1;
 end;
@@ -1915,6 +1855,53 @@ begin
   mmoTrace.clear;
 end;
 
+procedure TFrmMain.AttachGUIEvents;
+begin
+  FWriteMsg:=DoWriteTrace;
+  DMMain.OnWriteLog:=DoWriteLog;
+  DMMain.OnDeleteLog:=DoDeleteLog;
+  DMMain.OnPackageInstalledEvent:=DoPackageInstallEvent;
+  DMMain.OnPackageUnInstalledEvent:=DoPackageUninstallEvent;
+  DMMain.OnCurrentProjectCompileStateChanged:=DoCurrentProjectCompileStateChanged;
+  DMMain.OnCurrentProjectChanged:=DoCurrentProjectChanged;
+end;
+
+procedure TFrmMain.DetachGUIEvents;
+begin
+  FWriteMsg:=nil;
+  DMMain.OnWriteLog:=nil;
+  DMMain.OnDeleteLog:=nil;
+  DMMain.OnPackageInstalledEvent:=nil;
+  DMMain.OnPackageUnInstalledEvent:=nil;
+  DMMain.OnCurrentProjectCompileStateChanged:=nil;
+  DMMain.OnCurrentProjectChanged:=nil;
+end;
+
+procedure TFrmMain.FormHide(Sender: TObject);
+begin
+  DetachGUIEvents;
+end;
+
+procedure TFrmMain.PrepareBPGEditBox(_BPGFilename: string);
+var
+_index:integer;
+begin
+  _BPGFilename:=lowercase(_BPGFilename);
+  _index:=edtPackageBPGFile.Items.IndexOf(_BPGFilename);  // check if already in the list.
+  if _index=-1 then begin                              // if not then add it.
+    edtPackageBPGFile.Items.add(_BPGFilename);
+    _index:=edtPackageBPGFile.Items.IndexOf(_BPGFilename);
+  end;  
+  edtPackageBPGFile.ItemIndex:=_index;
+end;
+
+procedure TFrmMain.PrepareGUI(_BPGFilename: string);
+begin
+  PrepareBPGEditBox(_BPGFilename);
+  ProjectSettingstoGUI;
+  FillProjectGrid;
+  DoApplicationStateChange(nil,DMMain.ApplicationState,DMMain.ApplicationState);
+end;
 
 end.
 

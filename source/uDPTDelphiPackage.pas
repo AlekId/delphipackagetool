@@ -3861,7 +3861,7 @@ begin
           end;
         end;
         Application.ProcessMessages;
-      until (Result <> STILL_ACTIVE) and (not Application.Terminated);
+      until (Result <> STILL_ACTIVE) or (Application.Terminated);
       CloseHandle(ProcessInfo.hProcess);
       _line:=Output;
       _prev_field:='';
