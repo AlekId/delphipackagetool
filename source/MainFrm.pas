@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.1.6    ( 21.12.2012 )
+-patch from M.Mueller. Right-Click and Compile.
+
 1.9.1.5    ( 19.12.2012 )
 -SH: some code-cleanup and re-factoring.
 -SH: Logic and GUI are now separated.
@@ -260,6 +263,8 @@ type
     procedure actSelectDcpPathExecute(Sender: TObject);
     procedure actCompileProjectExecute(Sender: TObject);
     procedure FormHide(Sender: TObject);
+    procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -787,6 +792,26 @@ end;
 procedure TFrmMain.stgFilesClick(Sender: TObject);
 begin
   if DMMain.ApplicationState<>tas_working then SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
+end;
+
+procedure TFrmMain.stgFilesContextPopup(Sender: TObject;
+                                        MousePos: TPoint;
+                                        var Handled: Boolean);
+var
+  ACol,
+  ARow: Integer;
+begin
+  stgFiles.MouseToCell(MousePos.X, MousePos.Y, ACol, ARow);
+  if (ARow > 0) and (ARow < stgFiles.RowCount) then begin
+    if ARow <= DMMain.BPGProjectList.Count  then begin
+      stgFiles.Col := ACol;
+      stgFiles.Row := ARow;
+      if DMMain.ApplicationState<>tas_working then SetCurrentPackage(stgFiles.cells[1, stgFiles.Row]);
+    end;
+  end
+  else begin
+    Handled := True;
+  end;
 end;
 
 procedure TFrmMain.FormKeyPress(Sender: TObject; var Key: Char);
