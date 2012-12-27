@@ -416,6 +416,7 @@ var
   CSIDL: Integer;
   Reg: TRegistry;
 begin
+  result:='';
   CSIDL := -1;
   Reg := TRegistry.Create;
   try

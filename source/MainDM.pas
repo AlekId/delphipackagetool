@@ -23,7 +23,6 @@ type
   TOnDelphiVersionChangeEvent=procedure(Sender:TObject;const _DelphiVersion:integer) of object;
   TOnPlatformChangeEvent=procedure(Sender:TObject;const _Platforms:string) of object;
   TOnApplicationStateChangeEvent=procedure(Sender:TObject;const _OldState,_NewState:TApplicationState) of object;
-  TOnProcessStateChangeEvent=procedure(Sender:TObject;const _ProcessStates:TProcessStates) of object;
   TOnPackageInstallEvent=procedure(Sender:TObject;const _PackageName:string;const _Message:string;const _ProjectNumber:integer) of object;
   TOnCurrentProjectChanged=procedure(Sender:TObject;const _ProjectName:string;const _ProjectNumber:integer) of object;
   TOnCurrentProjectCompileStateChanged=procedure(Sender:TObject;const _ProjectName:string;const _CompileState:string;const _CompileDateTime:string;const _ProjectVersion:string;const _ProjectNumber:integer;const _Description:string) of object;
@@ -75,7 +74,6 @@ type
     FProjectCompiled: Boolean;
     FDelphiWasStartedOnApplicationStart: Boolean;
     FApplicationState: TApplicationState;
-    FProcessStates: TProcessStates;
     FCurrentProjectType: TProjectType;        // holds the type of the current project.
     FCurrentProjectFilename: string;          // real path and filename of the dpk or dpr file.
     FCurrentProjectOutputFilename: string;    // the filename only of the output file. e.g. .exe,.dll,.bpl
@@ -111,7 +109,6 @@ type
     FOnDelphiVersionChangeEvent: TOnDelphiVersionChangeEvent;
     FOnPlatformChangeEvent: TOnPlatformChangeEvent;
     FOnApplicationStateEvent: TOnApplicationStateChangeEvent;
-    FOnProcessStateChangeEvent: TOnProcessStateChangeEvent;
     FOnPackageInstalledEvent: TOnPackageInstallEvent;
     FOnPackageUnInstalledEvent: TOnPackageInstallEvent;
     FOnCurrentProjectChanged: TOnCurrentProjectChanged;
@@ -130,7 +127,7 @@ type
     procedure WriteLog(_msg: string;const _params:array of const);
     procedure DeleteLog;
     procedure FireDelphiVersionChanged;
-    procedure FirePlatformChanged;
+//    procedure FirePlatformChanged;
     procedure FireCurrentProjectChanged;
     procedure SetApplicationState(const _newState:TApplicationState);
     procedure SetDelphiVersion(const Value: Integer);
@@ -145,8 +142,8 @@ type
     function  SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer):boolean;
     function  GetProjectVersionOfFile(_filename:string;var Major,Minor,Release,Build:integer):boolean;
     function  OldFilesExist(_ChangedFiles:string):boolean;
-    procedure SetPlatform(const Value: string);
-    procedure SetConfig(const Value: string);
+//    procedure SetPlatform(const Value: string);
+//    procedure SetConfig(const Value: string);
     procedure GetAllPlatformsAndConfigsOfBPG;
     procedure CompileAndInstallCurrentPackage;
     function  ReplaceTag(_filename: string): string;
@@ -190,21 +187,21 @@ type
     procedure LoadBPG(_filename: string);
     procedure SetLastUsedBPGFile(_BPGfilename: string);
     property  Compiler:string read FDelphiCompilerFile;
-    property  CurrentProjectType:TProjectType read FCurrentProjectType;
+//    property  CurrentProjectType:TProjectType read FCurrentProjectType;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
-    property  CurrentProjectOutputFilename:string read FCurrentProjectOutputFilename;
-    property  CurrentProjectOutputPath:string read FCurrentProjectOutputPath;
-    property  CurrentConfigFilename:string read FCurrentConfigFilename;
-    property  CurrentBPLFilename:string read FCurrentBPLFilename;
+//    property  CurrentProjectOutputFilename:string read FCurrentProjectOutputFilename;
+//    property  CurrentProjectOutputPath:string read FCurrentProjectOutputPath;
+//    property  CurrentConfigFilename:string read FCurrentConfigFilename;
+//    property  CurrentBPLFilename:string read FCurrentBPLFilename;
     property  CurrentBPLOutputPath:string read FCurrentBPLOutputPath;
-    property  CurrentDCUOutputPath:string read FCurrentDCUOutputPath;
-    property  CurrentSearchPath:string read FCurrentSearchPath;
-    property  CurrentPackageDescription:string read FCurrentPackageDescription;
-    property  CurrentPackageSuffix:string read FCurrentPackageSuffix;
-    property  CurrentConditions:string read     FCurrentConditions;
+//    property  CurrentDCUOutputPath:string read FCurrentDCUOutputPath;
+//    property  CurrentSearchPath:string read FCurrentSearchPath;
+//    property  CurrentPackageDescription:string read FCurrentPackageDescription;
+//    property  CurrentPackageSuffix:string read FCurrentPackageSuffix;
+//    property  CurrentConditions:string read     FCurrentConditions;
     property  CurrentDelphiVersion:Integer read FCurrentDelphiVersion write SetDelphiVersion; // currently selected delphi version.
-    property  CurrentConfig:string read FConfigToCompile  write SetConfig; // config for the current project (Delphi 2010 and above)
-    property  CurrentPlatform:string read FPlatformToCompile  write SetPlatform; // platform for the current project (Delphi XE2 and above)
+//    property  CurrentConfig:string read FConfigToCompile  write SetConfig; // config for the current project (Delphi 2010 and above)
+//    property  CurrentPlatform:string read FPlatformToCompile  write SetPlatform; // platform for the current project (Delphi XE2 and above)
     property  BPGPath:string read FBPGPath;
     property  BPGFilename:string read FBPGFilename write SetBPGFilename;
     property  DPTSearchPath:string read FDPTSearchPath write FDPTSearchPath;
@@ -222,7 +219,6 @@ type
     property  OnBPGOpen:TNotifyEvent  read FOnBPGOpen write FOnBPGOpen;
     property  OnBPGClose:TNotifyEvent read FOnBPGClose write FOnBPGClose;
     property  OnApplicationStateChange:TOnApplicationStateChangeEvent read FOnApplicationStateEvent write FOnApplicationStateEvent;
-    property  OnProcessStateChange:TOnProcessStateChangeEvent read FOnProcessStateChangeEvent write FOnProcessStateChangeEvent;
     property  OnPackageInstalledEvent:TOnPackageInstallEvent read FOnPackageInstalledEvent write FOnPackageInstalledEvent;
     property  OnPackageUnInstalledEvent:TOnPackageInstallEvent read FOnPackageUnInstalledEvent write FOnPackageUnInstalledEvent;
     property  OnCurrentProjectChanged:TOnCurrentProjectChanged read FOnCurrentProjectChanged write FOnCurrentProjectChanged;
@@ -415,7 +411,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.LoadCurrentProject;
 resourcestring
-  cAskToChangeFiles = 'DelphiPackageTool will change your files. Ok ?';
   cCouldNotFindDCUOutputPath = 'Could not find the DCU Output Path <%s>. Do you want to edit this path ?';
   cCouldNotFindDCPOutputPath = 'Could not find the DCP Output Path <%s>. Do you want to edit this path ?';
   cCouldNotFindBPLOutputPath = 'Could not find the BPL Output Path <%s>. Do you want to edit this path ?';
@@ -588,6 +583,8 @@ end;
   Description: open the package group file.
 -----------------------------------------------------------------------------}
 function TDMMain.OpenBPG(const _Filename: string): Boolean;
+const
+cDefaultDCPPath='dcp\$(DELPHIVERSION)\';
 begin
   Result := False;
   if not FileExists(_Filename) then begin
@@ -603,7 +600,7 @@ begin
   ProjectSettings.GetBoolValue('Application/CreateInstallBatch',4,false,'If this setting is on then a Install Batch-file and the Registry-Files .reg will be created.',true,false,false);
   ProjectSettings.GetIntegerValue('Application/DelphiVersion',5,7,'The compiler Version used for this project.',true,false,false);
   ProjectSettings.GetPathValue('Application/PackageOutputPath', 6, 'bpl\$(DELPHIVERSION)\', 'Path to the Delphi Projects\BPL directory.', true,false,false);
-  ProjectSettings.GetPathValue('Application/DCPOutputPath', 17, 'dcp\$(DELPHIVERSION)\', 'Output Path for the dcp-files.', true,false,false);
+  ProjectSettings.GetPathValue('Application/DCPOutputPath', 17, cDefaultDCPPath , 'Output Path for the dcp-files.', true,false,false);
   ProjectSettings.GetPathValue('Application/DCUOutputPath', 7, 'dcu\$(DELPHIVERSION)\', 'Output Path for the dcu-files.', true,false,false);
   ProjectSettings.GetBoolValue('Application/ChangeFiles', 8, false,'If set to <True>, then DelphiPackageTool is allowed to change the *.dof and *.cfg files.', true,false,false);
   ProjectSettings.GetBoolValue('Application/ModifyEnvironmentPath', 9, true,'If set to <True>, then DelphiPackageTool tries to add the location of the bpl-files to the environment settings.', true,false,false);
@@ -618,6 +615,11 @@ begin
   CurrentDelphiVersion := ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   CurrentBPGPlatformList.CommaText := ProjectSettings.StringValue('Application/Platform',14);
   CurrentBPGConfigList.CommaText := ProjectSettings.StringValue('Application/Config',16);
+// this will avoid breaking changes for version before D2010 for existing projects.
+  if (FCurrentDelphiVersion<=14) and
+     (ProjectSettings.PathValue('Application/DCPOutputPath', 17)=cDefaultDCPPath)
+  then ProjectSettings.SetPath('Application/DCPOutputPath', 17,ProjectSettings.PathValue('Application/PackageOutputPath', 6));
+
   ReadPackageListfromFile(FBPGFilename, FBPGProjectList);
   FDPTSearchPath := GetGlobalSearchPath(False);
   GetAllPlatformsAndConfigsOfBPG;
@@ -710,7 +712,6 @@ var
   i: integer;
 begin
   ApplicationState := tas_init;
-  FProcessStates := [];
   FCurrentDelphiVersion := LatestIDEVersion;
   FCurrentBPLOutputPath := GetDelphiPackageDir(FCurrentDelphiVersion);
   FCurrentDCUOutputPath := '';
@@ -2470,10 +2471,10 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure TDMMain.SetConfig(const Value: string);
-begin
-  FConfigToCompile := Value;
-end;
+//procedure TDMMain.SetConfig(const Value: string);
+//begin
+//  FConfigToCompile := Value;
+//end;
 
 {*-----------------------------------------------------------------------------
   Procedure: SetPlatform
@@ -2483,11 +2484,11 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure TDMMain.SetPlatform(const Value: string);
-begin
-  FPlatformToCompile := Value;
-  FirePlatformChanged;
-end;
+//procedure TDMMain.SetPlatform(const Value: string);
+//begin
+//  FPlatformToCompile := Value;
+//  FirePlatformChanged;
+//end;
 
 {*-----------------------------------------------------------------------------
   Procedure: FirePlatformChanged
@@ -2497,10 +2498,10 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure TDMMain.FirePlatformChanged;
-begin
-  if assigned(FOnPlatformChangeEvent) then FOnPlatformChangeEvent(self,FCurrentBPGPlatformList.CommaText);
-end;
+//procedure TDMMain.FirePlatformChanged;
+//begin
+//  if assigned(FOnPlatformChangeEvent) then FOnPlatformChangeEvent(self,FCurrentBPGPlatformList.CommaText);
+//end;
 
 {-----------------------------------------------------------------------------
   Procedure: SearchPath

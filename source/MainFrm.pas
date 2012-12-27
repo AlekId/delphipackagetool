@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.1.7    ( 27.12.2012 )
+-SH: code-cleanup. removed/commented un-used code.
+-SH: change about dcp-path to be backwards compatible with existing projects.
+
 1.9.1.6    ( 21.12.2012 )
 -patch from M.Mueller. Right-Click and Compile.
 
@@ -600,10 +604,7 @@ end;
   Description: if the user changes the delphi version.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.cbxDelphiVersionsChange(Sender: TObject);
-var
-_PackagePath:string;
 begin
-  _PackagePath:=IncludeTrailingPathDelimiter(edtPackageBPLDirectory.Text);
   DMMain.CurrentDelphiVersion:=IDENameToVersionNo(cbxDelphiVersions.Text);
 end;
 
@@ -1622,8 +1623,7 @@ var
   i: Integer;
 begin
   // set ShowHint
-  if stgFiles.ShowHint = False then
-     stgFiles.ShowHint := True;
+  stgFiles.ShowHint := True;
   // read col und row position
   stgFiles.MouseToCell(X, Y, ACol, ARow);
   // show hint if row in valid range

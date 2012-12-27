@@ -26,12 +26,6 @@ type
                      tas_open,
                      tas_working);
 
-  TProcessState=(tps_new,
-                 tps_changed,
-                 tps_unchanged);
-
-  TProcessStates=set of TProcessState;
-
   TPackageRemoveType=(tpr_none,          // no packages will be remove.
                       tpr_3rdparty,      // all packages except the borland packages in the directory ($DELPHI)\bin
                       tpr_projectsbpl);  // all packages which are in the directory ($DELPHI)\Projects\bpl
