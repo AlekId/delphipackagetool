@@ -719,9 +719,9 @@ begin
   FConfigToCompile := '';
   FPlatformToCompile := '';
   if not fileexists(FApplicationIniFilename) then begin  // on the first start, ask if the filetypes shall be registered.
-    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)           = IdYes then RegisterFileType('bpg'      ,Application.ExeName);
-    if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName);
-    if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName);
+    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)           = IdYes then RegisterFileType('bpg'      ,Application.ExeName,'DelphiPackageTool File-Type BPG');
+    if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName,'DelphiPackageTool File-Type BDSGroup');
+    if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName,'DelphiPackageTool File-Type GROUPPROJ');
   end;
 // prepare trace file
 {$ifdef withTrace}
