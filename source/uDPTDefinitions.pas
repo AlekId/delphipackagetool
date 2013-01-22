@@ -19,6 +19,9 @@ const
   sWin32Compiler = 'bin\dcc32.exe';
   sWin64Compiler = 'bin\dcc64.exe';
 
+  sMSBuild       = 'msbuild.exe';
+  sRadStudioVars = 'bin\rsvars.bat';
+
   sNoConfig = 'NoConfig';
 
 type

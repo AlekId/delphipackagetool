@@ -1,6 +1,6 @@
 object frmAbout: TfrmAbout
   Left = 200
-  Top = 185
+  Top = 212
   BorderStyle = bsDialog
   Caption = 'frmBaseAbout'
   ClientHeight = 366
@@ -182,7 +182,7 @@ object frmAbout: TfrmAbout
     object lblAppLocationValue: TLabel
       Left = 140
       Top = 136
-      Width = 17
+      Width = 3
       Height = 13
       Caption = '-'
     end

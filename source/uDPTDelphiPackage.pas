@@ -9,6 +9,8 @@
 
 unit uDPTDelphiPackage;
 
+{$I jedi.inc}
+
 interface
 uses
   Classes,
@@ -27,7 +29,7 @@ function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:intege
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
 function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
-function  WinExecAndWait(FileName,CommandLine,WorkPath: string; Visibility: Integer;Var Output:String): LongWord;
+function  WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;Var Output:String): LongWord;
 function  isDelphiStarted(const _DelphiVersion:Integer): Boolean;
 procedure ShutDownDelphi(const _DelphiVersion:Integer;_Blocking : Boolean);
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
@@ -3404,7 +3406,7 @@ end;
   Description:
   Changes: -SH 05.06.2003 Bugfix for deadlock of the external app.
 -----------------------------------------------------------------------------}
-function WinExecAndWait(FileName,CommandLine,WorkPath: string; Visibility: Integer;var Output:String): LongWord;
+function WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;var Output:String): LongWord;
 const
   BufSize = 1024;
 var
@@ -3418,6 +3420,8 @@ var
   BytesRead: cardinal;
   _prev_field,_field:string;
   _line:string;
+  _lpEnvironment: Pointer;
+  _creationFlags: Cardinal;
 begin
    result:=0;
    Output:='';
@@ -3438,17 +3442,32 @@ begin
     StartupInfo.dwFlags     := STARTF_USESHOWWINDOW  or  STARTF_USESTDHANDLES;
     StartupInfo.wShowWindow := Visibility;
     StartupInfo.hStdInput   := GetStdHandle(STD_INPUT_HANDLE); // don't redirect std input
-    StartupInfo.hStdOutput := StdOutPipeWrite;
-    StartupInfo.hStdError  := StdOutPipeWrite;
+    StartupInfo.hStdOutput  := StdOutPipeWrite;
+    StartupInfo.hStdError   := StdOutPipeWrite;
+    if Environment = '' then begin
+      _lpEnvironment := nil;
+    end
+    else begin
+      _lpEnvironment := Pointer(Environment);
+    end;
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
+    _creationFlags := CREATE_NEW_CONSOLE or
+                      NORMAL_PRIORITY_CLASS or
+                      CREATE_UNICODE_ENVIRONMENT;
+{$ELSE}
+    _creationFlags := CREATE_NEW_CONSOLE or
+                      NORMAL_PRIORITY_CLASS;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
     if not CreateProcess(
-      nil,
-      PChar(FileName+' '+CommandLine), // command line.
-      nil,
+      nil,    { application name }
+      PChar(FileName + ' ' + CommandLine), { command line }
+      nil, { pointer to process security attributes }
       nil, { pointer to thread security attributes }
       true, { handle inheritance flag }
-      CREATE_NEW_CONSOLE or { creation flags }
-      NORMAL_PRIORITY_CLASS,
-      nil, { pointer to new environment block }
+      _creationFlags, { creation flags }
+      _lpEnvironment, { pointer to new environment block }
       PChar(WorkPath), { pointer to current directory name }
       StartupInfo, { pointer to STARTUPINFO }
       ProcessInfo) { pointer to PROCESS_INF }
@@ -3600,6 +3619,7 @@ begin
   _returnValue := WinExecAndWait(_compiler,
                                  _commandLine,
                                  _WorkPath,
+                                 '',
                                  SW_HIDE,
                                  Output);
   if _returnValue = 0 then begin

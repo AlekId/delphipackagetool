@@ -1,6 +1,6 @@
 object FrmStartUpInfo: TFrmStartUpInfo
   Left = 184
-  Top = 165
+  Top = 189
   BorderStyle = bsDialog
   Caption = 'Read me ...'
   ClientHeight = 453

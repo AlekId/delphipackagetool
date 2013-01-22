@@ -1,6 +1,6 @@
 object FrmVersion: TFrmVersion
-  Left = 355
-  Top = 203
+  Left = 506
+  Top = 245
   Width = 410
   Height = 177
   Caption = 'Set Version'

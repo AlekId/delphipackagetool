@@ -1,6 +1,6 @@
 object FrmRemovePackage: TFrmRemovePackage
   Left = 241
-  Top = 282
+  Top = 323
   Width = 774
   Height = 195
   Caption = 'Remove Packages Dialog'
