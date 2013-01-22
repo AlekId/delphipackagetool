@@ -1,5 +1,5 @@
 {*-----------------------------------------------------------------------------
- Unit Name: uDPTDefinitions
+ Unit Name: uDPTJclFuncs
  Author:    Muem
  Date:      02-Mar-2010
  Purpose:   contains some Jcl (Jedi Code Library) functions. Thanks!
@@ -9,6 +9,9 @@
 unit uDPTJclFuncs;
 
 interface
+
+uses
+  Classes;
 
 type
   WideStringArray = array of WideString;
@@ -21,6 +24,9 @@ type
 
 function LoadResStrings(const BaseBinName: string;
                         const ResEn: array of WideString): WideStringArray;
+function ExpandEnvironmentVar(var Value: string): Boolean;
+function GetEnvironmentVars(const Vars: TStrings): Boolean; overload;
+function GetEnvironmentVars(const Vars: TStrings; Expand: Boolean): Boolean; overload;
 
 implementation
 
@@ -69,6 +75,40 @@ begin
 
 end;
 
+procedure StrResetLength(var S: string);
+var
+  I: Integer;
+begin
+  for I := 0 to Length(S) - 1 do
+    if S[I + 1] = #0 then
+    begin
+      SetLength(S, I);
+      Exit;
+    end;
+end;
+
+procedure MultiSzToStrings(const Dest: TStrings; const Source: PChar);
+var
+  P: PChar;
+begin
+  Assert(Dest <> nil);
+  Dest.BeginUpdate;
+  try
+    Dest.Clear;
+    if Source <> nil then
+    begin
+      P := Source;
+      while P^ <> #0 do
+      begin
+        Dest.Add(P);
+        P := StrEnd(P);
+        Inc(P);
+      end;
+    end;
+  finally
+    Dest.EndUpdate;
+  end;
+end;
 
 // helper function to find strings in current string table
 function LoadResCallBack(hModule: HMODULE; lpszType, lpszName: PChar;
@@ -184,5 +224,57 @@ begin
     FreeLibrary(H);
   end;
 end;
+
+function ExpandEnvironmentVar(var Value: string): Boolean;
+var
+  R: Integer;
+  Expanded: string;
+begin
+  SetLength(Expanded, 1);
+  R := ExpandEnvironmentStrings(PChar(Value), PChar(Expanded), 0);
+  SetLength(Expanded, R);
+  Result := ExpandEnvironmentStrings(PChar(Value), PChar(Expanded), R) <> 0;
+  if Result then
+  begin
+    StrResetLength(Expanded);
+    Value := Expanded;
+  end;
+end;
+
+function GetEnvironmentVars(const Vars: TStrings): Boolean;
+begin
+  Result := GetEnvironmentVars(Vars, True);
+end;
+
+function GetEnvironmentVars(const Vars: TStrings; Expand: Boolean): Boolean;
+var
+  Raw: PChar;
+  Expanded: string;
+  I: Integer;
+begin
+  Vars.BeginUpdate;
+  try
+    Vars.Clear;
+    Raw := GetEnvironmentStrings;
+    try
+      MultiSzToStrings(Vars, Raw);
+      Result := True;
+    finally
+      FreeEnvironmentStrings(Raw);
+    end;
+    if Expand then
+    begin
+      for I := 0 to Vars.Count - 1 do
+      begin
+        Expanded := Vars[I];
+        if ExpandEnvironmentVar(Expanded) then
+          Vars[I] := Expanded;
+      end;
+    end;
+  finally
+    Vars.EndUpdate;
+  end;
+end;
+
 
 end.

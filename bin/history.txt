@@ -1,3 +1,7 @@
+1.9.1.8    ( 22.01.2013 )
+- huge rework received from M.Mueller to use
+  msbuild instead of dcc32 for delphi 2007 and newer.
+
 1.9.1.7    ( 27.12.2012 )
 -SH: code-cleanup. removed/commented un-used code.
 -SH: change about dcp-path to be backwards compatible with existing projects.

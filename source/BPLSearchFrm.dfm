@@ -1,6 +1,6 @@
 object FrmBPLSearch: TFrmBPLSearch
-  Left = 0
-  Top = 50
+  Left = 172
+  Top = 197
   Width = 800
   Height = 535
   Color = clBtnFace

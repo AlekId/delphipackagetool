@@ -1,6 +1,6 @@
 object FrmPathSelection: TFrmPathSelection
   Left = 170
-  Top = 115
+  Top = 132
   Width = 887
   Height = 492
   Caption = 'Path selection'

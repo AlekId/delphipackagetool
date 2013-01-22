@@ -127,7 +127,6 @@ type
     procedure WriteLog(_msg: string;const _params:array of const);
     procedure DeleteLog;
     procedure FireDelphiVersionChanged;
-//    procedure FirePlatformChanged;
     procedure FireCurrentProjectChanged;
     procedure SetApplicationState(const _newState:TApplicationState);
     procedure SetDelphiVersion(const Value: Integer);
@@ -142,9 +141,9 @@ type
     function  SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer):boolean;
     function  GetProjectVersionOfFile(_filename:string;var Major,Minor,Release,Build:integer):boolean;
     function  OldFilesExist(_ChangedFiles:string):boolean;
-//    procedure SetPlatform(const Value: string);
-//    procedure SetConfig(const Value: string);
     procedure GetAllPlatformsAndConfigsOfBPG;
+    function  CompileCurrentPackageWithDcc: Boolean;
+    function  CompileCurrentPackageWithMsBuild: Boolean;
     procedure CompileAndInstallCurrentPackage;
     function  ReplaceTag(_filename: string): string;
     procedure DeleteBPLAndDCPFiles;
@@ -187,21 +186,9 @@ type
     procedure LoadBPG(_filename: string);
     procedure SetLastUsedBPGFile(_BPGfilename: string);
     property  Compiler:string read FDelphiCompilerFile;
-//    property  CurrentProjectType:TProjectType read FCurrentProjectType;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
-//    property  CurrentProjectOutputFilename:string read FCurrentProjectOutputFilename;
-//    property  CurrentProjectOutputPath:string read FCurrentProjectOutputPath;
-//    property  CurrentConfigFilename:string read FCurrentConfigFilename;
-//    property  CurrentBPLFilename:string read FCurrentBPLFilename;
     property  CurrentBPLOutputPath:string read FCurrentBPLOutputPath;
-//    property  CurrentDCUOutputPath:string read FCurrentDCUOutputPath;
-//    property  CurrentSearchPath:string read FCurrentSearchPath;
-//    property  CurrentPackageDescription:string read FCurrentPackageDescription;
-//    property  CurrentPackageSuffix:string read FCurrentPackageSuffix;
-//    property  CurrentConditions:string read     FCurrentConditions;
     property  CurrentDelphiVersion:Integer read FCurrentDelphiVersion write SetDelphiVersion; // currently selected delphi version.
-//    property  CurrentConfig:string read FConfigToCompile  write SetConfig; // config for the current project (Delphi 2010 and above)
-//    property  CurrentPlatform:string read FPlatformToCompile  write SetPlatform; // platform for the current project (Delphi XE2 and above)
     property  BPGPath:string read FBPGPath;
     property  BPGFilename:string read FBPGFilename write SetBPGFilename;
     property  DPTSearchPath:string read FDPTSearchPath write FDPTSearchPath;
@@ -235,9 +222,11 @@ uses
   Forms,
   Windows,
   Controls,
+  StrUtils,
   RemovePackagesQuestionFrm,
   BPLSearchFrm,
   PathSelectionFrm,
+  uDPTJclFuncs,
   uDPTEnvironmentPath,
   uDPTMisc,
   uDTPProjectData,
@@ -543,10 +532,13 @@ begin
       if LastPos(_currentPath, '\') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if _absolutePaths then begin
         _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion);
-        if (_currentPath<>'') and (DirectoryExists(_currentPath)) then begin
+        if (_currentPath<>'') then begin
           Result := Result + _currentPath + ';';
           trace(5,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
-        end else trace(3, 'Problem in GetGlobalSearchPath: Could not find path <%s>.', [_currentPath]);
+          if not DirectoryExists(_currentPath) then begin
+            trace(3, 'Possible problem in GetGlobalSearchPath: Could not find path <%s>.', [_currentPath]);
+          end;
+        end;
       end
       else if _currentPath<>'' then Result := Result + _currentPath + ';';
     end;
@@ -1532,14 +1524,14 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: CompilePackage
+  Procedure: CompileCurrentPackageWithDcc
   Author:    sam
-  Date:      29-Mai-2008
-  Arguments: const _updateCursor: boolean
+  Date:      09-Jan-2013
+  Arguments: -
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function TDMMain.CompileCurrentPackage: Boolean;
+function TDMMain.CompileCurrentPackageWithDcc: Boolean;
 var
   _CompilerSwitches: string;
   _Output: string;
@@ -1569,6 +1561,7 @@ begin
   if FCurrentConditions <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + FCurrentConditions + ' ';
   if _SearchPath <> '' then begin
     _SearchPath := RemoveDoublePathEntries(_SearchPath);
+    _SearchPath := ReplaceTag(_SearchPath);
     _SearchPath := '"' + _SearchPath + '"';
     _CompilerSwitches := _CompilerSwitches + ' ' + '-U' + _SearchPath;
     _CompilerSwitches := _CompilerSwitches + ' ' + '-O' + _SearchPath;
@@ -1616,6 +1609,196 @@ begin
     Trace(3,'There are problems/warnings in project <%s>. Please see log-file.', [FCurrentProjectFilename]);
   end;
   Result := FPlatformConfigCompiled;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: CompileCurrentPackageWithMsBuild
+  Author:    sam
+  Date:      10-Jan-2013
+  Arguments: -
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
+function TDMMain.CompileCurrentPackageWithMsBuild: Boolean;
+var
+  _envVariables: TStringList;
+  _delphiEnvVariables: TStringList;
+  i: Integer;
+  _index, _offset: Integer;
+  _tmpString: string;
+  _frameworkDir: string;
+  _environmentBlock: string;
+  _commandLine: string;
+  _returnValue: Cardinal;
+  _Output: string;
+  _SearchPath: string;
+  _OutputPath: string;
+begin
+  FPlatformConfigCompiled := False;
+
+  //Update environment block with RAD Studio variables
+  _envVariables := TStringList.Create;
+  _delphiEnvVariables := TStringList.Create;
+  try
+    GetEnvironmentVars(_envVariables);
+    _delphiEnvVariables.LoadFromFile(FDelphiRootDirectory + sRadStudioVars);
+    for i := _delphiEnvVariables.Count - 1 downto 0 do begin
+      if Pos('@', _delphiEnvVariables[i]) = 1 then begin
+        //Echo off found
+        _tmpString := _delphiEnvVariables[i];
+        Delete(_tmpString, 1, 1);
+        _delphiEnvVariables[i] := TrimLeft(_tmpString);
+      end;
+      if (Pos('SET ', _delphiEnvVariables[i]) = 1) then begin
+        //Environment variable found
+        _tmpString := _delphiEnvVariables[i];
+        Delete(_tmpString, 1, 4);
+        _delphiEnvVariables[i] := TrimLeft(_tmpString);
+      end
+      else begin
+        _delphiEnvVariables.Delete(i);
+      end;
+    end;
+    _frameworkDir := _delphiEnvVariables.Values['FrameworkDir'];
+    for i := 0 to _delphiEnvVariables.Count-1 do begin
+      //Expand if possible
+      _index := Pos('%', _delphiEnvVariables.ValueFromIndex[i]);
+      while _index > 0 do begin
+        _offset := PosEx('%', _delphiEnvVariables.ValueFromIndex[i], _index + 1);
+        _tmpString := Copy(_delphiEnvVariables.ValueFromIndex[i], _index + 1, _offset - _index - 1);
+        _delphiEnvVariables[i] := StringReplace(_delphiEnvVariables[i], '%'+_tmpString+'%', _envVariables.Values[_tmpString], [rfReplaceAll, rfIgnoreCase]);
+        _index := Pos('%', _delphiEnvVariables.ValueFromIndex[i]);
+      end;
+
+      _index := _envVariables.IndexOfName(_delphiEnvVariables.Names[i]);
+      if _index < 0 then begin
+        //Variable not found, add variable
+        _envVariables.Add(_delphiEnvVariables[i]);
+      end
+      else begin
+        //Variable found, overwrite value
+        _envVariables.ValueFromIndex[_index] := _delphiEnvVariables.ValueFromIndex[i];
+      end;
+    end;
+    _envVariables.Sort;
+    _environmentBlock := '';
+    for i := 0 to _envVariables.Count - 1 do begin
+      if _environmentBlock = '' then begin
+        _environmentBlock := _envVariables[i];
+      end
+      else begin
+        _environmentBlock := _environmentBlock + #0 + _envVariables[i];
+      end;
+    end;
+    _environmentBlock := _environmentBlock + #0#0;
+  finally
+    _delphiEnvVariables.Free;
+    _envVariables.Free;
+  end;
+  FDelphiCompilerFile := IncludeTrailingPathDelimiter(_frameworkDir) + sMSBuild;
+  Trace(3, 'Set the Compiler File to <%s>.', [FDelphiCompilerFile]);
+
+  _SearchPath := '';
+  _OutputPath := '';
+  if FDPTSearchPath  <> '' then _SearchPath := GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
+  if _SearchPath <> '' then begin
+    // global search path is defined. It will override project specific search paths, so add project specific search path
+    if FCurrentSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
+      _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename), FCurrentSearchPath, FCurrentDelphiVersion);
+    end;
+    _SearchPath := RemoveDoublePathEntries(_SearchPath);
+    _SearchPath := ReplaceTag(_SearchPath);
+    _SearchPath := '"' + _SearchPath + '"';
+  end;
+
+  if ProjectSettings.PathValue('Application/PackageOutputPath', 6) <> '' then begin
+    // then take it from the dpt
+    _OutputPath := _OutputPath + ';DCC_ExeOutput=' + ReplaceTag(FCurrentProjectOutputPath) +
+                                 ';DCC_BplOutput=' + ReplaceTag(FCurrentProjectOutputPath);
+  end;
+  if ProjectSettings.PathValue('Application/DCPOutputPath', 17) <> '' then begin
+    // then take it from the dpt
+    _OutputPath := _OutputPath + ';DCC_DcpOutput=' + ReplaceTag(FCurrentDCPOutputPath);
+  end;
+
+  if ProjectSettings.PathValue('Application/DCUOutputPath', 7) <> '' then begin
+    // then take it from the dpt
+    _OutputPath := _OutputPath + ';DCC_DcuOutput=' + ReplaceTag(FCurrentDCUOutputPath);
+  end;
+
+  WriteLog('Compiling Project <%s>. Please wait...', [FCurrentProjectFilename]);
+  WriteLog('  Platform: %s / Config: %s', [FPlatformToCompile, FConfigToCompile]);
+  WriteLog('  Output Target <%s>.',[FCurrentProjectOutputPath + OutputFileName(FCurrentProjectFilename, FCurrentProjectType)]);
+
+  Screen.Cursor := crHourGlass;
+  _commandLine := '"' + FCurrentProjectFilename + '" /t:build' +
+                                                  ' /p:config=' + FConfigToCompile +
+                                                  ' /p:platform=' + FPlatformToCompile;
+  if _SearchPath <> '' then begin
+    _commandLine := _commandLine + ' /p:UnitSearchPath=' + _SearchPath +
+                                   ' /p:_ObjectPath=' + _SearchPath +
+                                   ' /p:IncludePath=' + _SearchPath +
+                                   ' /p:ResourcePath=' + _SearchPath;
+  end;
+
+  if _OutputPath <> '' then begin
+    if Pos(';', _OutputPath) = 1 then Delete(_OutputPath, 1, 1);
+    _commandLine := _commandLine + ' "/p:' + _OutputPath + '"';
+  end;
+
+  _returnValue := WinExecAndWait(FDelphiCompilerFile,
+                                 _commandLine,
+                                 ExtractFilePath(FCurrentProjectFilename),
+                                 _environmentBlock,
+                                 SW_HIDE,
+                                 _Output);
+  if _returnValue = 0 then begin
+    Trace(5, 'CompileProject: Successfully build Project file <%s>.', [ReadProjectFilenameFromDProj(FCurrentProjectFilename)]);
+    FPlatformConfigCompiled := True;
+  end;
+  FProjectCompiled := FProjectCompiled and FPlatformConfigCompiled;
+  if FPlatformConfigCompiled then begin
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Compiled ok!');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + GetCurrentPackageVersion);
+    Trace(2,'Successfully compiled Project <%s>.', [FCurrentProjectFilename]);
+  end
+  else begin
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed!');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed');
+    if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) and
+       (ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18)) then SearchFileCompilerOutput(_Output);
+  end;
+  Screen.Cursor := crDefault;
+  WriteLog(_Output,[]);
+  if ((Pos('fatal', LowerCase(_Output)) > 0) or
+     ((Pos(pchar(cWarning), LowerCase(_Output)) > 0))) then begin
+    if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) then begin
+      if Length(_Output) > 2000 then _Output := Copy(_Output, Length(_Output) - 2000, 2000);
+      Application.MessageBox(pchar(_Output), pchar(cInformation), MB_ICONINFORMATION or MB_OK);
+    end;
+    Trace(3,'There are problems/warnings in project <%s>. Please see log-file.', [FCurrentProjectFilename]);
+  end;
+  Result := FPlatformConfigCompiled;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: CompileCurrentPackage
+  Author:    sam
+  Date:      29-Mai-2008
+  Arguments: -
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
+function TDMMain.CompileCurrentPackage: Boolean;
+begin
+  if FCurrentDelphiVersion < 11 then begin
+    // pre Delphi 2007: use dcc32
+    Result := CompileCurrentPackageWithDcc;
+  end
+  else begin
+    // Delphi 2007 and later: use msbuild
+    Result := CompileCurrentPackageWithMsBuild;
+  end;
 end;
 
 
@@ -2412,6 +2595,7 @@ begin
   _returnValue:=WinExecAndWait(extractfilepath(application.exename)+cSetVersionApplicationName,
                      '-p -s "'+_filename+'"',
                      extractfilepath(application.exename),
+                     '',
                      SW_HIDE,
                      _Output);
   if _returnValue<>0 then begin
