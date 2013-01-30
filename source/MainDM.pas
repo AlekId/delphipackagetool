@@ -1061,7 +1061,7 @@ begin
   ApplicationSettings.GetBoolValue('Application/UseSkins', 17, True, 'If true then the application will be skinned.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', 18, True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile',19,'','Last used project name.',true,false,false);
-  ApplicationSettings.GetPathValue('Application/DCUOutputPath', 20, 'dcu\$(DELPHIVERSION)\', 'Path to the DCU directory.', true,false,false);
+  ApplicationSettings.GetPathValue('Application/DCUOutputPath', 20, '', 'Path to the DCU directory.', true,false,false);
   ApplicationSettings.GetPathValue('Application/LastLogOutputPath',21,'','Last used path to store the log file.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastZipOutputPath',22,'','Last used path to store the zip file.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Position/Left',23,0,'Stores the last left position of the Main-Form.',true,false,false);

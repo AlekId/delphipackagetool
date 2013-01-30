@@ -227,7 +227,7 @@ begin
       _path:=RelativePath(_basepath,_path,_DelphiVersion);
       if _path<>'' then result:=result+_path+';';
     end
-    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[]);
+    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[_absolutepath]);
     _path:=Getfield(';',_paths);
   end;
   result:=RemoveDoublePathEntries(result);
