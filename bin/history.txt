@@ -1,3 +1,6 @@
+1.9.1.9    ( 30.01.2013 )
+- fixed bug in RelativePaths.
+ 
 1.9.1.8    ( 22.01.2013 )
 - huge rework received from M.Mueller to use
   msbuild instead of dcc32 for delphi 2007 and newer.

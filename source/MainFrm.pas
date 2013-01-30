@@ -3,6 +3,9 @@
  Author:    Samuel Herzog
  Purpose:
  History:
+ 
+1.9.1.9    ( 30.01.2013 )
+- fixed bug in RelativePaths.
 
 1.9.1.8    ( 22.01.2013 )
 - huge rework received from M.Mueller to use
