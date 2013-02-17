@@ -3,7 +3,10 @@
  Author:    Samuel Herzog
  Purpose:
  History:
- 
+
+1.9.1.10   ( 17.02.2013 )
+-SH: fixes minor bug on updating the main-form.
+
 1.9.1.9    ( 30.01.2013 )
 - fixed bug in RelativePaths.
 
@@ -1835,9 +1838,7 @@ begin
   end;
 end;
 
-{*----------------------------------------------------------------------------
 
------------------------------------------------------------------------------}
 procedure TFrmMain.cbxStopOnFailureExit(Sender: TObject);
 begin
   DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', 6, cbxStopOnFailure.checked);
@@ -1927,11 +1928,20 @@ begin
   edtPackageBPGFile.ItemIndex:=_index;
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: PrepareGUI
+  Author:    muem/sam
+  Date:      17-Feb-2013
+  Arguments: _BPGFilename: string
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.PrepareGUI(_BPGFilename: string);
 begin
   PrepareBPGEditBox(_BPGFilename);
   ProjectSettingstoGUI;
   FillProjectGrid;
+  DoDelphiVersionChangeEvent(nil,DMMain.CurrentDelphiVersion);
   DoApplicationStateChange(nil,DMMain.ApplicationState,DMMain.ApplicationState);
 end;
 

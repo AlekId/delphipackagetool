@@ -2647,46 +2647,6 @@ begin
   UpdateProjectFiles(true);
 end;
 
-{*-----------------------------------------------------------------------------
-  Procedure: SetConfig
-  Author:    muem
-  Date:      08-Nov-2012
-  Arguments: const Value: string
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-//procedure TDMMain.SetConfig(const Value: string);
-//begin
-//  FConfigToCompile := Value;
-//end;
-
-{*-----------------------------------------------------------------------------
-  Procedure: SetPlatform
-  Author:    sam
-  Date:      02-Sep-2011
-  Arguments: const Value: string
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-//procedure TDMMain.SetPlatform(const Value: string);
-//begin
-//  FPlatformToCompile := Value;
-//  FirePlatformChanged;
-//end;
-
-{*-----------------------------------------------------------------------------
-  Procedure: FirePlatformChanged
-  Author:    sam
-  Date:      03-Sep-2011
-  Arguments: None
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-//procedure TDMMain.FirePlatformChanged;
-//begin
-//  if assigned(FOnPlatformChangeEvent) then FOnPlatformChangeEvent(self,FCurrentBPGPlatformList.CommaText);
-//end;
-
 {-----------------------------------------------------------------------------
   Procedure: SearchPath
   Author:    sam
