@@ -1,3 +1,6 @@
+1.9.1.10   ( 17.02.2013 )
+-SH: fixes minor bug on updating the main-form.
+
 1.9.1.9    ( 30.01.2013 )
 - fixed bug in RelativePaths.
  
