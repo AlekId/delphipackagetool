@@ -133,7 +133,7 @@ begin
   _path := lowercase(_path);
   _path := RelativePath(DMMain.BPGPath,_path,DMMain.CurrentDelphiVersion);
   if trim(_path)='' then exit;
-  mmoSearchPath.Lines.add(_path+';');
+  mmoSearchPath.Lines.add(_path);
 end;
 
 {-----------------------------------------------------------------------------

@@ -1,3 +1,7 @@
+1.9.1.11   ( 12.03.2013 )
+-MM: don't save application settings when dpt is called as command line tool.
+-SH: don't save project settings when dpt is called as command line tool.
+
 1.9.1.10   ( 17.02.2013 )
 -SH: fixes minor bug on updating the main-form.
 
