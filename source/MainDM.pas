@@ -637,7 +637,8 @@ var
   i: Integer;
 begin
   if FApplicationState <> tas_open then Exit;
-  if ProjectSettings.FileName <> '' then begin
+  if (ProjectSettings.FileName <> '') and
+     (not assigned(CommandLineAction)) then begin
     Trace(3, 'Save project settings to file <%s>.', [ProjectSettings.FilePath + ProjectSettings.FileName]);
     ProjectSettings.SaveConfig;
   end;
@@ -985,7 +986,7 @@ begin
     ((FDelphiWasStartedOnApplicationStart) and
     (not ApplicationSettings.BoolValue('Application/SilentMode',5))) then actStartUpDelphiexecute(nil);
 
-  ApplicationSettings.SaveConfig;
+  if not assigned(CommandLineAction) then ApplicationSettings.SaveConfig;
   ApplicationSettings.Close;
   FWriteMsg:=nil;
 {$ifdef withTrace}
