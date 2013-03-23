@@ -19,10 +19,14 @@ const
   sWin32Compiler = 'bin\dcc32.exe';
   sWin64Compiler = 'bin\dcc64.exe';
 
+  //Config names
+  sNoConfig = 'NoConfig';
+  sDebug    = 'Debug';
+  sRelease  = 'Release';
+
   sMSBuild       = 'msbuild.exe';
   sRadStudioVars = 'bin\rsvars.bat';
 
-  sNoConfig = 'NoConfig';
 
 type
   TApplicationState=(tas_init,
@@ -219,29 +223,29 @@ const
       IDEVersionStr: '5.0';
       CoreIdeVersion: '100';
       ShortName: 'D2007';
-      LongName: 'CodeGear Developer Studio 2007/CodeGear Delphi 2007 for Win32';
+      LongName: 'CodeGear RAD Studio 2007/CodeGear Delphi 2007 for Win32';
       CompilerVersion:18.5;
       CompilerVersionStr:'VER185';
       Supported: True),
     (
       Name: cRSName;              //12
-      VersionStr: '2008';
-      IDEVersion: 0;
-      IDEVersionStr: '';
-      CoreIdeVersion: '0';
-      ShortName: 'n/a';
-      Supported: False),
-    (
-      Name: cRSName;              //13
       VersionStr: '2009';
       IDEVersion: 6;
       IDEVersionStr: '6.0';
       CoreIdeVersion: '120';
       ShortName: 'D2009';
-      LongName: 'CodeGear Delphi 2009';
+      LongName: 'CodeGear RAD Studio 2009/CodeGear Delphi 2009 for Win32';
       CompilerVersion:20;
       CompilerVersionStr:'VER200';
       Supported: True),
+    (
+      Name: cRSName;              //13
+      VersionStr: 'n/a';
+      IDEVersion: 0;
+      IDEVersionStr: 'n/a';
+      CoreIdeVersion: '0';
+      ShortName: 'n/a';
+      Supported: False),
     (
       Name: cRSName;              //14
       VersionStr: '2010';

@@ -3,10 +3,10 @@ object FrmOptions: TFrmOptions
   Top = 26
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 689
-  ClientWidth = 707
+  ClientHeight = 280
+  ClientWidth = 710
   Color = clBtnFace
-  Constraints.MinHeight = 612
+  Constraints.MinHeight = 280
   Constraints.MinWidth = 710
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,23 +22,16 @@ object FrmOptions: TFrmOptions
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 16
-    Top = 8
-    Width = 58
-    Height = 13
-    Caption = 'Search path'
-  end
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 707
-    Height = 648
+    Width = 710
+    Height = 239
     Align = alClient
-    TabOrder = 4
+    TabOrder = 1
     object btnSelectCodeEditor: TSpeedButton
-      Left = 480
-      Top = 384
+      Left = 479
+      Top = 80
       Width = 23
       Height = 22
       Caption = '...'
@@ -46,167 +39,61 @@ object FrmOptions: TFrmOptions
     end
     object lblSourceCodeEditor: TLabel
       Left = 8
-      Top = 368
+      Top = 64
       Width = 92
       Height = 13
       Caption = 'Source Code Editor'
     end
-    object lblSearchPath: TLabel
-      Left = 8
-      Top = 8
-      Width = 56
-      Height = 13
-      Caption = 'Library Path'
-    end
     object lblCompilerSwitches: TLabel
       Left = 8
-      Top = 288
+      Top = 8
       Width = 86
       Height = 13
       Caption = 'Compiler Switches'
     end
-    object lblBeforeInstallAll: TLabel
-      Left = 8
-      Top = 448
-      Width = 104
-      Height = 13
-      Caption = 'On Before <Install All>'
-    end
-    object btnSelectOnBeforeInstallAll: TSpeedButton
-      Left = 656
-      Top = 464
-      Width = 23
-      Height = 22
-      Caption = '...'
-      OnClick = btnSelectOnBeforeInstallAllClick
-    end
-    object lblAfterInstallAll: TLabel
-      Left = 8
-      Top = 488
-      Width = 95
-      Height = 13
-      Caption = 'On After <Install All>'
-    end
-    object btnOnAfterInstallAll: TSpeedButton
-      Left = 656
-      Top = 504
-      Width = 23
-      Height = 22
-      Caption = '...'
-      OnClick = btnOnAfterInstallAllClick
-    end
-    object lblLibSuffix: TLabel
-      Left = 8
-      Top = 328
-      Width = 43
-      Height = 13
-      Caption = 'Lib-Suffix'
-    end
     object lblSourceEditorParams: TLabel
       Left = 520
-      Top = 368
+      Top = 64
       Width = 53
       Height = 13
       Caption = 'Parameters'
     end
     object lblDiffTool: TLabel
       Left = 8
-      Top = 408
+      Top = 104
       Width = 40
       Height = 13
       Caption = 'Diff-Tool'
     end
     object btnDiffTool: TSpeedButton
       Left = 656
-      Top = 424
+      Top = 120
       Width = 23
       Height = 22
       Caption = '...'
       OnClick = btnDiffToolClick
     end
-    object lblOnBeforeBuildProject: TLabel
-      Left = 8
-      Top = 528
-      Width = 187
-      Height = 13
-      Caption = 'On Before <Build Project/Package/Dll>'
-    end
-    object btnOnBeforeBuildProject: TSpeedButton
-      Left = 656
-      Top = 544
-      Width = 23
-      Height = 22
-      Caption = '...'
-      OnClick = btnOnBeforeBuildProjectClick
-    end
     object edtCodeEditor: TEdit
       Left = 8
-      Top = 384
+      Top = 80
       Width = 465
       Height = 21
       Hint = 'Define here your favorit source code editor.'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 0
+      TabOrder = 1
     end
     object edtCompilerSwitches: TEdit
       Left = 8
-      Top = 304
+      Top = 24
       Width = 641
       Height = 21
-      TabOrder = 1
+      TabOrder = 0
       Text = '-B -Q -W -H'
-    end
-    object btnAddpath: TBitBtn
-      Left = 8
-      Top = 256
-      Width = 233
-      Height = 25
-      Caption = 'Add Path'
-      TabOrder = 2
-      OnClick = btnAddPathClick
-      Glyph.Data = {
-        76010000424D7601000000000000760000002800000020000000100000000100
-        04000000000000010000120B0000120B00001000000000000000000000000000
-        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00303333333333
-        333337F3333333333333303333333333333337F33FFFFF3FF3FF303300000300
-        300337FF77777F77377330000BBB0333333337777F337F33333330330BB00333
-        333337F373F773333333303330033333333337F3377333333333303333333333
-        333337F33FFFFF3FF3FF303300000300300337FF77777F77377330000BBB0333
-        333337777F337F33333330330BB00333333337F373F773333333303330033333
-        333337F3377333333333303333333333333337FFFF3FF3FFF333000003003000
-        333377777F77377733330BBB0333333333337F337F33333333330BB003333333
-        333373F773333333333330033333333333333773333333333333}
-      NumGlyphs = 2
-    end
-    object edtBeforeInstallAll: TEdit
-      Left = 8
-      Top = 464
-      Width = 641
-      Height = 21
-      Hint = 
-        'The file defined here will be executed when button <Install All>' +
-        ' is pressed.'
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 3
-    end
-    object edtAfterInstallAll: TEdit
-      Left = 8
-      Top = 504
-      Width = 641
-      Height = 21
-      Hint = 
-        'The file defined here will be executed when button <Install All>' +
-        ' is pressed and all projects are compiled successfully.'
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 4
     end
     object cbxAutomaticShowAddPathDialog: TCheckBox
       Left = 272
-      Top = 576
+      Top = 160
       Width = 185
       Height = 17
       Hint = 
@@ -221,7 +108,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxCreateBatchFile: TCheckBox
       Left = 544
-      Top = 576
+      Top = 160
       Width = 145
       Height = 17
       Hint = 'Create the Install-Batch and .Reg-Files'
@@ -232,7 +119,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxChangeFiles: TCheckBox
       Left = 8
-      Top = 576
+      Top = 160
       Width = 233
       Height = 17
       Hint = 
@@ -241,11 +128,11 @@ object FrmOptions: TFrmOptions
       Caption = 'Allow DelphiPackageTool to change files'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 7
+      TabOrder = 4
     end
     object cbxModifyEnvironment: TCheckBox
       Left = 8
-      Top = 600
+      Top = 184
       Width = 185
       Height = 17
       Hint = 
@@ -256,18 +143,11 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 8
-    end
-    object edtLibSuffix: TEdit
-      Left = 8
-      Top = 344
-      Width = 121
-      Height = 21
-      TabOrder = 9
+      TabOrder = 7
     end
     object edtSourceEditorParams: TEdit
       Left = 520
-      Top = 384
+      Top = 80
       Width = 158
       Height = 21
       Hint = 
@@ -275,12 +155,12 @@ object FrmOptions: TFrmOptions
         '%FILENAME% and %LINENO%.'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 10
+      TabOrder = 2
       Text = '%FILENAME%'
     end
     object cbxAutoBackup: TCheckBox
       Left = 272
-      Top = 600
+      Top = 184
       Width = 185
       Height = 17
       Hint = 
@@ -291,45 +171,33 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 11
+      TabOrder = 8
       OnExit = cbxAutoBackupExit
     end
     object edtDiffTool: TEdit
       Left = 8
-      Top = 424
+      Top = 120
       Width = 641
       Height = 21
-      Hint = 'Define here your favorit source code editor.'
+      Hint = 'Define here your favorite Diff-Tool.'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 12
-    end
-    object edtOnBeforeBuildProject: TEdit
-      Left = 8
-      Top = 544
-      Width = 641
-      Height = 21
-      Hint = 
-        'The file defined here will be executed when button <Install All>' +
-        ' is pressed.'
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 13
+      TabOrder = 3
     end
     object cbxTrace: TCheckBox
       Left = 544
-      Top = 600
+      Top = 184
       Width = 120
       Height = 17
       Hint = 'Disable/Enable Trace'
       Caption = 'Trace'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 14
+      TabOrder = 9
     end
     object cbxBackupSourceOnly: TCheckBox
       Left = 272
-      Top = 624
+      Top = 208
       Width = 185
       Height = 17
       Hint = 'Only backup source files. No compiled stuff.'
@@ -338,35 +206,34 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 15
+      TabOrder = 10
       OnExit = cbxAutoBackupExit
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 648
-    Width = 707
+    Top = 239
+    Width = 710
     Height = 41
     Align = alBottom
-    TabOrder = 3
+    TabOrder = 0
     object btnOk: TBitBtn
       Left = 512
-      Top = 8
+      Top = 6
       Width = 90
       Height = 25
+      Kind = bkOK
+      NumGlyphs = 2
       TabOrder = 0
       OnClick = btnOkClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 608
-      Top = 8
+      Top = 6
       Width = 90
       Height = 25
       Cancel = True
       Caption = 'Cancel'
-      ModalResult = 2
-      TabOrder = 1
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -384,65 +251,13 @@ object FrmOptions: TFrmOptions
         38F338F300003333333333333919333333388333338FFF830000333333333333
         3333333333333333333888330000333333333333333333333333333333333333
         0000}
+      ModalResult = 2
       NumGlyphs = 2
+      TabOrder = 1
     end
-    object cbxLanguage: TComboBox
-      Left = 8
-      Top = 8
-      Width = 145
-      Height = 21
-      Style = csDropDownList
-      ItemHeight = 13
-      TabOrder = 2
-      Items.Strings = (
-        'default'
-        'english'
-        'german'
-        'french')
-    end
-  end
-  object mmoSearchPath: TMemo
-    Left = 8
-    Top = 24
-    Width = 689
-    Height = 225
-    ScrollBars = ssBoth
-    TabOrder = 0
-  end
-  object btnAddDefaultPath: TBitBtn
-    Left = 480
-    Top = 256
-    Width = 217
-    Height = 25
-    Caption = 'Add Delphi Default Directories'
-    TabOrder = 1
-    OnClick = btnAddDefaultPathClick
-    Glyph.Data = {
-      76010000424D7601000000000000760000002800000020000000100000000100
-      04000000000000010000120B0000120B00001000000000000000000000000000
-      800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-      FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00303333333333
-      333337F3333333333333303333333333333337F33FFFFF3FF3FF303300000300
-      300337FF77777F77377330000BBB0333333337777F337F33333330330BB00333
-      333337F373F773333333303330033333333337F3377333333333303333333333
-      333337F33FFFFF3FF3FF303300000300300337FF77777F77377330000BBB0333
-      333337777F337F33333330330BB00333333337F373F773333333303330033333
-      333337F3377333333333303333333333333337FFFF3FF3FFF333000003003000
-      333377777F77377733330BBB0333333333337F337F33333333330BB003333333
-      333373F773333333333330033333333333333773333333333333}
-    NumGlyphs = 2
-  end
-  object btnVerifyDirectories: TBitBtn
-    Left = 248
-    Top = 256
-    Width = 225
-    Height = 25
-    Caption = 'Verify Directories'
-    TabOrder = 2
-    OnClick = btnVerifyDirectoriesClick
   end
   object OpenDialog1: TOpenDialog
-    Left = 240
-    Top = 360
+    Left = 344
+    Top = 48
   end
 end

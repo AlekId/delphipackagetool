@@ -19,7 +19,8 @@ uses
   VersionFrm in 'VersionFrm.pas' {FrmVersion},
   uDPTCreateProjectGroup in 'uDPTCreateProjectGroup.pas',
   uDPTPathFilenameConvert in 'uDPTPathFilenameConvert.pas',
-  uDTPProjectData in 'uDTPProjectData.pas';
+  uDTPProjectData in 'uDTPProjectData.pas',
+  ProjectOptionsFrm in 'ProjectOptionsFrm.pas' {FrmProjectOptions};
 
 {$R *.res}
 
@@ -32,8 +33,7 @@ begin
   Application.Title := 'Delphi Package Tool';
   Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);
-
-// show startup dialog
+  // show startup dialog
   _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);
   if _showagain then begin
     ShowStartUpDlg(_showagain);
