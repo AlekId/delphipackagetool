@@ -72,7 +72,7 @@ uses
   MainDM,
   FileCtrl,
   Windows,
-  OptionsFrm;
+  ProjectOptionsFrm;
 
 {$R *.dfm}
 
@@ -277,20 +277,20 @@ procedure TFrmPathSelection.actAddPathExecute(Sender: TObject);
 resourcestring
 cAddedDirectoryToSearchPath='Added directory <%s> to the search path.';
 var
-  _FrmOptions: TFrmOptions;
+  _FrmProjectOptions: TFrmProjectOptions;
   _path: string;
 begin
   if lstFiles.ItemIndex<0 then exit;
-  _FrmOptions := TFrmOptions.create(nil);
+  _FrmProjectOptions := TFrmProjectOptions.create(nil);
   try
     _path := lowercase(ExtractFilePath(lstFiles.Items[lstFiles.ItemIndex]));
     _path := RelativePath(DMMain.BPGPath,_path,DMMain.CurrentDelphiVersion);
     if trim(_path)='' then exit;
-    if not _FrmOptions.AddPath(_path) then exit;
-    _FrmOptions.SaveSearchPathData;
+    if not _FrmProjectOptions.AddPath(_path) then exit;
+    _FrmProjectOptions.SaveSearchPathData;
     if not DMMain.ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cAddedDirectoryToSearchPath,[_path])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
   finally
-    _FrmOptions.free;
+    _FrmProjectOptions.free;
   end;
 end;
 

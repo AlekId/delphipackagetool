@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.2.0   ( 23.03.2013 )
+-MM: patch to clean up project and application settings.
+-MM: patch to support conditional defines.
+
 1.9.1.11   ( 12.03.2013 )
 -MM: don't save application settings when dpt is called as command line tool.
 -SH: don't save project settings when dpt is called as command line tool.
@@ -227,6 +231,8 @@ type
     lblDcuPath: TLabel;
     actSelectDcpPath: TAction;
     actCompileProject: TAction;
+    actShowProjectOptions: TAction;
+    ProjectOptions2: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -283,6 +289,7 @@ type
     procedure FormHide(Sender: TObject);
     procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
+    procedure actShowProjectOptionsExecute(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -292,7 +299,6 @@ type
     procedure OpenBPGFileInEditor;
     procedure SetCurrentPackage(const _ProjectName:string);
     procedure PrepareGrid;
-    procedure ResetGrid;
     procedure WriteLog(_msg: string;_params:array of const);
     procedure ApplicationSettingstoGUI;  // copy settings into GUI fields.
     procedure GUItoApplicationSettings;  // copy GUI fields into settings.
@@ -319,7 +325,6 @@ type
     procedure DoCurrentProjectCompileStateChanged(Sender:TObject;const _ProjectName:string;const _CompileState:string;const _CompileDateTime:string;const _ProjectVersion:string;const _ProjectNumber:integer;const _Description:string);
     procedure DoCurrentProjectChanged(Sender:TObject;const _ProjectName:string;const _ProjectNumber:integer);
     procedure DoWriteTrace(_level:byte;_msg:String;_params:Array of Const);
-    procedure DoPlatformChangeEvent(Sender:TObject;const _Platforms:string);
     procedure ClearLog;
     procedure AttachGUIEvents;
     procedure DetachGUIEvents;
@@ -337,6 +342,7 @@ implementation
 
 uses
   OptionsFrm,
+  ProjectOptionsFrm,
   uDPTMisc,
   uDPTStringGridExt,
   uDPTPathFilenameConvert,
@@ -419,7 +425,6 @@ begin
   NVBAppExecExternalCommand.Priority := ppNormal;
   NVBAppExecExternalCommand.CloseRunningProcess := False;
   DMMain.OnDelphiVersionChange:=DoDelphiVersionChangeEvent;
-  DMMain.OnPlatformChangeEvent:=DoPlatformChangeEvent;
   DMMain.OnBPGOpen:=DoProjectGroupOpen;
   DMMain.OnBPGClose:=DoProjectGroupClose;
   DMMain.OnApplicationStateChange:=DoApplicationStateChange;
@@ -470,7 +475,6 @@ begin
   DMMain.CloseBPG;
   DMMain.OnWriteLog:=nil;
   DMMain.OnDelphiVersionChange:=nil;
-  DMMain.OnPlatformChangeEvent:=nil;
   if not SysUtils.DirectoryExists(DMMain.BPGPath) then exit;
   _filename:=ChangeFileExt(DMMain.BPGFilename, '.log');
   try
@@ -565,22 +569,6 @@ end;
 procedure TFrmMain.stgFilesMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   StgFilesShowCellHint(X, Y);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: TFrmMain.ResetGrid
-  Author:    Sam
-  Date:      07-Sep-2003
-  Arguments: None
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-procedure TFrmMain.ResetGrid;
-var
-i:integer;
-begin
-  stgfiles.RowCount:=2;
-  for i:=0 to stgfiles.colcount-1 do stgfiles.Cells[i,1]:='';
 end;
 
 {-----------------------------------------------------------------------------
@@ -879,7 +867,6 @@ procedure TFrmMain.ApplicationSettingstoGUI;
 begin
   SetDelphiVersionCombobox(DMMain.ApplicationSettings.IntegerValue('Compiler/DelphiVersion', 1));
   edtPackageBPLDirectory.Text := DMMain.ApplicationSettings.PathValue('Application/PackageOutputPath', 4);
-  edtDCUPath.Text             := DMMain.ApplicationSettings.PathValue('Application/DCUOutputPath', 20);
   cbxSilentMode.checked       := DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5);
   cbxStopOnFailure.checked    := DMMain.ApplicationSettings.BoolValue('Application/StopOnFailure', 6);
   cbxStartDelphi.checked      := DMMain.ApplicationSettings.BoolValue('Application/StartDelphiOnClose', 7);
@@ -904,8 +891,7 @@ begin
   DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', 7, cbxStartDelphi.checked);
 {$ifdef withTrace}
   DMMain.ApplicationSettings.SetInteger('Application/Tracelevel',12,DMMain.NVBTraceFile.Level);
-{$endif}  
-  DMMain.ApplicationSettings.SetPath('Application/DCUOutputPath', 20,edtDcuPath.Text);
+{$endif}
   DMMain.ApplicationSettings.SetInteger('Application/Position/Left',23,left);
   DMMain.ApplicationSettings.SetInteger('Application/Position/Top',24,top);
   DMMain.ApplicationSettings.SetInteger('Application/Position/Width',25,width);
@@ -1051,6 +1037,28 @@ end;
 procedure TFrmMain.actShowProjectDirExecute(Sender: TObject);
 begin
   DMMain.ShowProjectDir;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: TFrmMain.actShowProjectOptionsExecute
+  Author:    muem
+  Date:
+  Arguments: Sender: TObject
+  Result:    None
+  Description: show the project options dialog.
+-----------------------------------------------------------------------------}
+procedure TFrmMain.actShowProjectOptionsExecute(Sender: TObject);
+var
+_FrmProjectOptions: TFrmProjectOptions;
+begin
+  _FrmProjectOptions := TFrmProjectOptions.create(nil);
+  try
+    _FrmProjectOptions.showmodal;
+    FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
+    FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
+  finally
+    _FrmProjectOptions.free;
+  end;
 end;
 
 {-----------------------------------------------------------------------------
@@ -1473,13 +1481,7 @@ begin
   SetDelphiVersionCombobox(_DelphiVersion);
   if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
   actShowDOFFile.Visible:=(_DelphiVersion<8);
-  if _DelphiVersion>=15 then begin                 // since Delphi XE are different platforms possible.
-    gbxPlatform.Visible:=(True);
-    SetPlatformCheckListBox('');
-  end
-  else begin
-    gbxPlatform.Visible:=(False);
-  end;
+  gbxPlatform.Visible:=(_DelphiVersion>=15);
   gbxConfig.Visible:=(_DelphiVersion>=12);
 end;
 
@@ -1493,11 +1495,9 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoProjectGroupClose(Sender: TObject);
 begin
-  edtPackageBPGFile.ItemIndex := 0;
-  edtPackageBPLDirectory.Text := '';
   edtDcpPath.Text := '';
   edtDcuPath.Text := '';
-  ResetGrid;
+  PrepareGUI(DMMain.BPGFilename);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1554,17 +1554,21 @@ var
 begin
   stgFiles.RowCount := 2;
   stgFiles.FixedRows := 1;
-  if DMMain.BPGProjectList.Count = 0 then exit;
-  for i := 1 to DMMain.BPGProjectList.Count do begin
-    stgFiles.cells[0,i] := inttostr(i);
-    stgFiles.cells[1,i] := DMMain.BPGProjectList.Strings[i-1];     // project-filename
-    stgFiles.cells[2,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).CompileState;
-    stgFiles.cells[3,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).CompileDate;
-    stgFiles.cells[4,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).IDEInstall;
-    stgFiles.cells[5,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).Version;
-    stgFiles.cells[6,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).Description;
+  if DMMain.BPGProjectList.Count = 0 then begin
+    for i:=0 to stgfiles.colcount-1 do stgfiles.Cells[i,1]:='';
+  end
+  else begin
+    for i := 1 to DMMain.BPGProjectList.Count do begin
+      stgFiles.cells[0,i] := inttostr(i);
+      stgFiles.cells[1,i] := DMMain.BPGProjectList.Strings[i-1];     // project-filename
+      stgFiles.cells[2,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).CompileState;
+      stgFiles.cells[3,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).CompileDate;
+      stgFiles.cells[4,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).IDEInstall;
+      stgFiles.cells[5,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).Version;
+      stgFiles.cells[6,i] := TProjectData(DMMain.BPGProjectList.Objects[i-1]).Description;
+    end;
+    stgFiles.RowCount := DMMain.BPGProjectList.Count+1;
   end;
-  stgFiles.RowCount := DMMain.BPGProjectList.Count+1;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1782,20 +1786,6 @@ begin
 end;
 
 {*-----------------------------------------------------------------------------
-  Procedure: DoPlatformChangeEvent
-  Author:    sam
-  Date:      02-Sep-2011
-  Arguments: Sender: TObject;const _Platforms: string
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-procedure TFrmMain.DoPlatformChangeEvent(Sender: TObject;const _Platforms: string);
-begin
-  SetPlatformCheckListBox(_Platforms);
-  if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(DMMain.CurrentDelphiVersion);
-end;
-
-{*-----------------------------------------------------------------------------
   Procedure: SetPlatformCheckListBox
   Author:    sam
   Date:      02-Sep-2011
@@ -1809,7 +1799,6 @@ var
   _itemIndex:Integer;
 begin
   DMMain.CurrentBPGPlatformList.CommaText := _Platforms;
-
   clbPlatform.Items.Assign(DMMain.BPGPlatformList);
 
   for _i := 0 to clbPlatform.Items.Count-1 do begin
@@ -1838,7 +1827,7 @@ begin
   for _i := 0 to clbConfig.Items.Count-1 do begin
     // check/uncheck check boxes
     _itemIndex:=DMMain.CurrentBPGConfigList.IndexOf(clbConfig.Items[_i]);
-    clbConfig.checked[_i] := (_itemIndex>=0);
+    clbConfig.Checked[_i] := (_itemIndex>=0);
   end;
 end;
 
@@ -1858,6 +1847,7 @@ begin
       DMMain.CurrentBPGConfigList.Add(clbConfig.Items[_i]);
     end;
   end;
+  GUItoProjectSettings;
 end;
 
 procedure TFrmMain.clbPlatformClickCheck(Sender: TObject);
@@ -1870,6 +1860,7 @@ begin
       DMMain.CurrentBPGPlatformList.Add(clbPlatform.Items[_i]);
     end;
   end;
+  GUItoProjectSettings;
 end;
 
 procedure TFrmMain.cbxSilentModeExit(Sender: TObject);
@@ -1943,6 +1934,11 @@ end;
 procedure TFrmMain.PrepareGUI(_BPGFilename: string);
 begin
   PrepareBPGEditBox(_BPGFilename);
+  actShowBPGEditor.Enabled:=(_BPGFilename<>'');
+  actShowProjectOptions.Enabled:=(_BPGFilename<>'');
+  actCloseProject.Enabled:=(_BPGFilename<>'');
+  ShowProjectGroup1.Enabled:=(_BPGFilename<>'');
+  actRecompileAll.Enabled:=(_BPGFilename<>'');
   ProjectSettingstoGUI;
   FillProjectGrid;
   DoDelphiVersionChangeEvent(nil,DMMain.CurrentDelphiVersion);

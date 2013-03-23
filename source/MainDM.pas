@@ -107,7 +107,6 @@ type
     FCurrentDelphiVersion: Integer;
     FApplicationIniFilename: string;
     FOnDelphiVersionChangeEvent: TOnDelphiVersionChangeEvent;
-    FOnPlatformChangeEvent: TOnPlatformChangeEvent;
     FOnApplicationStateEvent: TOnApplicationStateChangeEvent;
     FOnPackageInstalledEvent: TOnPackageInstallEvent;
     FOnPackageUnInstalledEvent: TOnPackageInstallEvent;
@@ -210,7 +209,6 @@ type
     property  OnPackageUnInstalledEvent:TOnPackageInstallEvent read FOnPackageUnInstalledEvent write FOnPackageUnInstalledEvent;
     property  OnCurrentProjectChanged:TOnCurrentProjectChanged read FOnCurrentProjectChanged write FOnCurrentProjectChanged;
     property  OnCurrentProjectCompileStateChanged:TOnCurrentProjectCompileStateChanged read FOnCurrentProjectCompileStateChanged write FOnCurrentProjectCompileStateChanged;
-    property  OnPlatformChangeEvent:TOnPlatformChangeEvent read FOnPlatformChangeEvent write FOnPlatformChangeEvent;
   end;
 
 var
@@ -589,20 +587,17 @@ begin
   ProjectSettings.GetStringValue('Application/Events/OnBeforeInstallAll',1,'','The name of the batch file which will be executed when user presses "Install All".', true,false,false);
   ProjectSettings.GetStringValue('Application/Events/OnAfterInstallAll',2,'','The name of the batch file which will be executed after all projects have been compiled successfully.', true,false,false);
   ProjectSettings.GetStringValue('Application/CompilerSwitches',3,'-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
-  ProjectSettings.GetBoolValue('Application/CreateInstallBatch',4,false,'If this setting is on then a Install Batch-file and the Registry-Files .reg will be created.',true,false,false);
   ProjectSettings.GetIntegerValue('Application/DelphiVersion',5,7,'The compiler Version used for this project.',true,false,false);
   ProjectSettings.GetPathValue('Application/PackageOutputPath', 6, 'bpl\$(DELPHIVERSION)\', 'Path to the Delphi Projects\BPL directory.', true,false,false);
-  ProjectSettings.GetPathValue('Application/DCPOutputPath', 17, cDefaultDCPPath , 'Output Path for the dcp-files.', true,false,false);
   ProjectSettings.GetPathValue('Application/DCUOutputPath', 7, 'dcu\$(DELPHIVERSION)\', 'Output Path for the dcu-files.', true,false,false);
-  ProjectSettings.GetBoolValue('Application/ChangeFiles', 8, false,'If set to <True>, then DelphiPackageTool is allowed to change the *.dof and *.cfg files.', true,false,false);
-  ProjectSettings.GetBoolValue('Application/ModifyEnvironmentPath', 9, true,'If set to <True>, then DelphiPackageTool tries to add the location of the bpl-files to the environment settings.', true,false,false);
   ProjectSettings.GetStringValue('Application/LibSuffix',10,cLIBNoneTag,'Defines the Lib-Suffix for the Package-Names.',true,false,false);
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath',11,'','Defines last used Backup Path.',true,false,false);
-  ProjectSettings.GetBoolValue('Application/AutoBackup', 12, true,'If set to <True>, then DelphiPackageTool creates a backup zip-file after succeessfull run of "Install All".', true,false,false);
-  ProjectSettings.GetBoolValue('Application/Trace',13,false,'If set to <True>, then Program internals are written into the trace-memo.',true,false,false);
   ProjectSettings.GetStringValue('Application/Platform',14,'','The platform used. e.g Win32,Win64.',true,false,false);
   ProjectSettings.GetStringValue('Application/Config',16,'','The configuration used. e.g debug,release.',true,false,false);
-  ProjectSettings.GetBoolValue('Application/BackupSourceOnly',15,true,'If set to <True>, then only source-files will be added to the backup. (e.g. no *.dcu files)',true,false,false);
+  ProjectSettings.GetPathValue('Application/DCPOutputPath', 17, cDefaultDCPPath , 'Output Path for the dcp-files.', true,false,false);
+  ProjectSettings.GetStringValue('Application/DebugCompilerSwitches',18,'','Compiler switches used for debug config, if there is no *.cfg or *.dproj',true,false,false);
+  ProjectSettings.GetStringValue('Application/DebugCompilerSwitches',19,'','Compiler switches used for release config, if there is no *.cfg or *.dproj',true,false,false);
+
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName]);
   CurrentDelphiVersion := ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   CurrentBPGPlatformList.CommaText := ProjectSettings.StringValue('Application/Platform',14);
@@ -645,6 +640,8 @@ begin
   ProjectSettings.Close;
   ProjectSettings.FileName := '';
   BPGFilename := '';
+  FBPGPlatformList.Clear;
+  FBPGConfigList.Clear;
   FCurrentProjectType := tp_unkown;
   FCurrentDelphiVersion := LatestIDEVersion;
   FCurrentProjectFilename := '';
@@ -982,9 +979,10 @@ procedure TDMMain.DataModuleDestroy(Sender: TObject);
 var
   i: Integer;
 begin
-  if ApplicationSettings.BoolValue('Application/StartDelphiOnClose',7) or
+  if (ApplicationSettings.BoolValue('Application/StartDelphiOnClose',7) and
+     (not assigned(CommandLineAction))) or
     ((FDelphiWasStartedOnApplicationStart) and
-    (not ApplicationSettings.BoolValue('Application/SilentMode',5))) then actStartUpDelphiexecute(nil);
+    (not ApplicationSettings.BoolValue('Application/SilentMode',5))) then actStartUpDelphiExecute(nil);
 
   if not assigned(CommandLineAction) then ApplicationSettings.SaveConfig;
   ApplicationSettings.Close;
@@ -1046,7 +1044,6 @@ begin
   ApplicationSettings.GetIntegerValue('Compiler/DelphiVersion', 1,LatestIDEVersion, 'Delphi Version', true,false,false);
   ApplicationSettings.GetFileValue('Compiler/DelphiCompiler', 2, '$(DELPHI)\Bin\DCC32.EXE', 'The Borland Delphi Compiler <DCC32.EXE>.', true,false,false);
   ApplicationSettings.GetFileValue('Application/ProjectGroupFile', 3, '', 'The name of Borland Package Group File', true,false,false);
-  ApplicationSettings.GetPathValue('Application/PackageOutputPath', 4,GetDelphiPackageDir(LatestIDEVersion), 'Path to the Delphi Projects\BPL directory.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/SilentMode', 5, False, 'If this settings is true, then no dialog boxes will be shown.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StopOnFailure', 6, false, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StartDelphiOnClose', 7, False, 'Start Delphi when this application terminates.', true,false,false);
@@ -1055,14 +1052,10 @@ begin
   ApplicationSettings.GetBoolValue('Application/ShowStartUpWarning', 10, True, 'If true then the startup information screen is shown.', true,false,false);
   ApplicationSettings.GetStringValue('Application/CompilerSwitches',11,'-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',12,3,'Select the trace level of the Log-file. 1-5.',true,false,false);
-  ApplicationSettings.GetStringValue('Application/Events/OnBeforeInstallAll',13,'','The file specified here will be executed when button <Install All> is pressed.',true,false,false);
-  ApplicationSettings.GetStringValue('Application/Events/OnAfterInstallAll',14,'','The file specified here will be executed when button <Install All> is pressed and all projects are compiled successfully.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath',15,'C:\','Specifies the last used search path.',true,false,false);
-  ApplicationSettings.GetEnumValue('Application/Language',16,'default,english,german,french',0,'Defines the Languages.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/UseSkins', 17, True, 'If true then the application will be skinned.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', 18, True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile',19,'','Last used project name.',true,false,false);
-  ApplicationSettings.GetPathValue('Application/DCUOutputPath', 20, '', 'Path to the DCU directory.', true,false,false);
   ApplicationSettings.GetPathValue('Application/LastLogOutputPath',21,'','Last used path to store the log file.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastZipOutputPath',22,'','Last used path to store the zip file.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Position/Left',23,0,'Stores the last left position of the Main-Form.',true,false,false);
@@ -1537,6 +1530,7 @@ var
   _CompilerSwitches: string;
   _Output: string;
   _SearchPath:string;
+  _Conditionals:string;
 begin
   if SameText(FPlatformToCompile, sWin32) then
     FDelphiCompilerFile := FDelphiRootDirectory + sWin32Compiler
@@ -1552,7 +1546,6 @@ begin
   if _CompilerSwitches = '' then _CompilerSwitches := ApplicationSettings.StringValue('Application/CompilerSwitches', 11);
   if FCurrentCompilerSwitches <> '' then begin
     _CompilerSwitches := _CompilerSwitches + ' ' + FCurrentCompilerSwitches;
-
   end;
   _SearchPath := '';
   if FDPTSearchPath  <> ''    then _SearchPath := GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
@@ -1568,6 +1561,24 @@ begin
     _CompilerSwitches := _CompilerSwitches + ' ' + '-O' + _SearchPath;
     _CompilerSwitches := _CompilerSwitches + ' ' + '-I' + _SearchPath;
     _CompilerSwitches := _CompilerSwitches + ' ' + '-R' + _SearchPath;
+  end;
+
+  if FCurrentDelphiVersion >= 12 then begin   // Delphi 2009
+    if ((lowercase(ExtractFileExt(FCurrentProjectFilename))='.dpk') or
+        (lowercase(ExtractFileExt(FCurrentProjectFilename))='.dpr')) then begin
+      if SameText(FConfigToCompile, sRelease) then begin
+        _Conditionals:=ProjectSettings.StringValue('Application/ReleaseCompilerSwitches', 19);
+        if _Conditionals <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + _Conditionals;
+      end
+      else if SameText (FConfigToCompile, sDebug) then begin
+        _Conditionals:=ProjectSettings.StringValue('Application/DebugCompilerSwitches', 18);
+      end
+      else _Conditionals:='';
+      if _Conditionals <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + _Conditionals;
+    end;
+  end;
+  if (FCurrentDelphiVersion >= 11) and (FCurrentNameSpaces = '')  then begin  // Delphi 2007
+    FCurrentNameSpaces := 'Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win';
   end;
 
   Trace(5, 'CompilePackage: Compiler switch --> %s.', [_CompilerSwitches]);
@@ -1792,8 +1803,10 @@ end;
 -----------------------------------------------------------------------------}
 function TDMMain.CompileCurrentPackage: Boolean;
 begin
-  if FCurrentDelphiVersion < 11 then begin
-    // pre Delphi 2007: use dcc32
+  if (FCurrentDelphiVersion < 11) or  // older than Delphi 2007
+     (lowercase(ExtractFileExt(FCurrentProjectFilename))='.dpk') or
+     (lowercase(ExtractFileExt(FCurrentProjectFilename))='.dpr') then begin
+    // pre Delphi 2007 or .dpk or .dpr in project group: use dcc32
     Result := CompileCurrentPackageWithDcc;
   end
   else begin
@@ -1958,7 +1971,12 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.SetBPGFilename(const Value: string);
 begin
-  FBPGFilename :=AbsoluteFilename(extractFilepath(application.ExeName),Value);
+  if Value <> '' then begin
+    FBPGFilename:=AbsoluteFilename(extractFilepath(application.ExeName),Value);
+  end
+  else begin
+    FBPGFilename:=Value;
+  end;
   FBPGPath     :=ExtractFilePath(FBPGFilename);
 end;
 
@@ -2560,10 +2578,14 @@ begin
   _TmpConfigList := TStringList.Create;
   try
     for i := 0 to FBPGProjectList.Count - 1 do begin
-      ReadSupportedConfigsOfProject(AbsoluteFilename(FBPGPath,FBPGProjectList[i]), _TmpConfigList);
-      ReadSupportedPlatformsOfProject(AbsoluteFilename(FBPGPath,FBPGProjectList[i]), _TmpPlatformList);
-      FBPGPlatformList.AddStrings(_TmpPlatformList);
-      FBPGConfigList.AddStrings(_TmpConfigList);
+      if FCurrentDelphiVersion > 12 then begin  // Delphi 2009
+        ReadSupportedConfigsOfProject(AbsoluteFilename(FBPGPath,FBPGProjectList[i]), _TmpConfigList);
+        FBPGConfigList.AddStrings(_TmpConfigList);
+      end;
+      if FCurrentDelphiVersion >= 16 then begin // Delphi XE2
+        ReadSupportedPlatformsOfProject(AbsoluteFilename(FBPGPath,FBPGProjectList[i]), _TmpPlatformList);
+        FBPGPlatformList.AddStrings(_TmpPlatformList);
+      end;
     end;
   finally
     _TmpConfigList.Free;

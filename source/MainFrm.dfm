@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
   Left = 0
   Top = 123
-  Width = 1366
-  Height = 617
+  Width = 1374
+  Height = 605
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -26,8 +26,8 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 366
-    Width = 1358
+    Top = 354
+    Width = 1366
     Height = 12
     Cursor = crVSplit
     Align = alBottom
@@ -35,8 +35,8 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 190
-    Width = 1358
-    Height = 176
+    Width = 1366
+    Height = 164
     Align = alClient
     ColCount = 7
     Ctl3D = False
@@ -62,7 +62,7 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 1358
+    Width = 1366
     Height = 190
     Align = alTop
     BevelOuter = bvNone
@@ -84,9 +84,9 @@ object FrmMain: TFrmMain
     object lblPackageGroupFile: TLabel
       Left = 240
       Top = 0
-      Width = 233
+      Width = 236
       Height = 13
-      Caption = 'ProjectGroup File <*.bpg/*.bdsgroup/*.groupproj>'
+      Caption = 'Project-Group File <*.bpg/*.bdsgroup/*.groupproj>'
     end
     object lblDcpPath: TLabel
       Left = 240
@@ -154,7 +154,7 @@ object FrmMain: TFrmMain
     object cbxDelphiVersions: TComboBox
       Left = 872
       Top = 16
-      Width = 177
+      Width = 201
       Height = 21
       Style = csDropDownList
       ItemHeight = 13
@@ -285,8 +285,8 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 378
-    Width = 1358
+    Top = 366
+    Width = 1366
     Height = 193
     ActivePage = tabTrace
     Align = alBottom
@@ -296,7 +296,7 @@ object FrmMain: TFrmMain
       object mmoLogFile: TMemo
         Left = 0
         Top = 0
-        Width = 1354
+        Width = 1342
         Height = 165
         Align = alClient
         Ctl3D = False
@@ -314,7 +314,7 @@ object FrmMain: TFrmMain
       object mmoTrace: TMemo
         Left = 0
         Top = 0
-        Width = 1350
+        Width = 1358
         Height = 165
         Align = alClient
         Ctl3D = False
@@ -327,7 +327,8 @@ object FrmMain: TFrmMain
     end
   end
   object ActionList1: TActionList
-    Left = 1120
+    Left = 1136
+    Top = 8
     object actGetPackageListFromRegistry: TAction
       Caption = 'actGetPackageListFromRegistry'
       Enabled = False
@@ -344,6 +345,10 @@ object FrmMain: TFrmMain
     object actShowOptions: TAction
       Caption = 'Options'
       OnExecute = actShowOptionsExecute
+    end
+    object actShowProjectOptions: TAction
+      Caption = 'Options'
+      OnExecute = actShowProjectOptionsExecute
     end
     object actInitializeApp: TAction
       Caption = 'actInitializeApp'
@@ -388,12 +393,12 @@ object FrmMain: TFrmMain
       OnExecute = actApplicationUpdateExecute
     end
     object actShowBPGEditor: TAction
-      Caption = 'Edit Project Group'
+      Caption = 'Edit'
       Hint = 'Edit an existing Package Group File. (.bpg)'
       OnExecute = actShowBPGEditorExecute
     end
     object actNewBPGFile: TAction
-      Caption = 'New Project Group'
+      Caption = 'New'
       Hint = 'Create a new Package Group File. (.bpg)'
       OnExecute = actNewBPGFileExecute
     end
@@ -410,7 +415,7 @@ object FrmMain: TFrmMain
       OnExecute = actRemoveProjectExecute
     end
     object actCloseProject: TAction
-      Caption = 'Close Project Group'
+      Caption = 'Close'
       Hint = 'Close the currently open BPG-File.'
       OnExecute = actCloseProjectExecute
     end
@@ -485,17 +490,19 @@ object FrmMain: TFrmMain
     Filter = 
       'Delphi Package Group|*.bpg|BDS Group|*.bdsgroup|Group Files|*.bp' +
       'g;*.bdsgroup'
-    Left = 1160
+    Left = 1184
+    Top = 8
   end
   object MainMenu1: TMainMenu
-    Left = 1072
+    Left = 1088
+    Top = 8
     object F1: TMenuItem
       Caption = 'File'
       object NewPackageGroup1: TMenuItem
         Action = actNewBPGFile
       end
       object mitOpenFile: TMenuItem
-        Caption = 'Load Project Group'
+        Caption = 'Load'
         Hint = 'Open a Project Group File (.bpg)'
         object mitRecentFiles: TMenuItem
           Action = actOpenProject
@@ -505,11 +512,14 @@ object FrmMain: TFrmMain
       object BPGEditor1: TMenuItem
         Action = actShowBPGEditor
       end
+      object ProjectOptions2: TMenuItem
+        Action = actShowProjectOptions
+      end
       object actCloseProject1: TMenuItem
         Action = actCloseProject
       end
       object ShowProjectGroup1: TMenuItem
-        Caption = 'Show Project Group'
+        Caption = 'Show'
         OnClick = ShowProjectGroup1Click
       end
       object ReInstallAllPackages1: TMenuItem

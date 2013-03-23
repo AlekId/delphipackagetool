@@ -5,6 +5,7 @@ del /s *.~*
 del /s *.*_old
 del /s *.*_new
 del /s *.map
+del /s *.dcu
 
 pause
 

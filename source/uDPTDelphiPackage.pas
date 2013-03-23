@@ -872,7 +872,7 @@ begin
   end else
   if (_version>11) and
      (_version<15) then begin // for delphi 2008 (aka bds 6.0) til D2010
-    if _version<7 then _sDelphiVersion:=inttostr(_version-6)+'.0\'
+    if _version<13 then _sDelphiVersion:=inttostr(_version-6)+'.0\'
                   else _sDelphiVersion:=inttostr(_version-7)+'.0\';
     RootKey:=cCodeGearBDSKey+'\'+_sDelphiVersion;
     result:=true;
@@ -2573,6 +2573,11 @@ begin
   _Configs.Clear;
   _fileext:=LowerCase(ExtractFileExt(_filename));
   trace(5,'ReadSupportedConfigsOfProject: filename <%s>.',[_filename]);
+  if (_fileext='.dpk') or
+     (_fileext='.dpr') then begin
+    _Configs.Add(sDebug);
+    _Configs.Add(sRelease);
+  end;
   if _fileext='.dproj' then begin
     // get supported configs
     Result := ReadNodesText(_filename,'//ItemGroup/BuildConfiguration[@Include != "Base"]/@Include',_Configs, _msg);
@@ -2597,6 +2602,10 @@ begin
   _Platforms.Clear;
   _fileext:=LowerCase(ExtractFileExt(_filename));
   trace(5,'ReadSupportedPlatformsOfProject: filename <%s>.',[_filename]);
+  if (_fileext='.dpk') or
+     (_fileext='.dpr') then begin
+    _Platforms.Add(sWin32);
+  end;
   if _fileext='.dproj' then begin
     // get supported platforms
     Result := ReadNodesText(_filename,'//Platforms/Platform[. = "True"]/@value',_Platforms, _msg);
@@ -2671,7 +2680,7 @@ begin
      (_fileext = '.dpr') then begin
     result := ReadCFGSettings(ChangefileExt(_filename, '.cfg'), _Conditions, _SearchPath, _ProjectOutputPath, _BPLOutputPath, _DCUOutputPath);
     _Platform := sWin32;
-    _Config := sNoConfig;
+    if _Config = '' then _Config := sNoConfig;
     _CompilerSwitches := '';
     _DCPOutputPath := _BPLOutputPath;
   end
@@ -2684,7 +2693,7 @@ begin
   else if _fileext = '.bdsproj' then begin
     result := ReadBDSProjSettings(_filename, _ProjectName ,_Conditions, _SearchPath, _ProjectOutputPath, _BPLOutputPath, _DCUOutputPath);
     _Platform := sWin32;
-    _Config := sNoConfig;
+    if _Config = '' then _Config := sNoConfig;
     _CompilerSwitches := '';
     _DCPOutputPath := _BPLOutputPath;
   end;
