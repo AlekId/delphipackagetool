@@ -29,8 +29,6 @@ object FrmProjectOptions: TFrmProjectOptions
     Height = 509
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 707
-    ExplicitHeight = 608
     object lblSearchPath: TLabel
       Left = 8
       Top = 8
@@ -193,8 +191,6 @@ object FrmProjectOptions: TFrmProjectOptions
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 608
-    ExplicitWidth = 707
     object btnOk: TBitBtn
       Left = 512
       Top = 8

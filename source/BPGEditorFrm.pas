@@ -69,7 +69,6 @@ function ShowBPGEditor(const _ProjectGroupFilename: string):string;
 implementation
 
 uses FileCtrl,
-     MainFrm,
      uDPTDefinitions,
      uDPTDelphiPackage,
      uDPTCreateProjectGroup,
