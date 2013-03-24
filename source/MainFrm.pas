@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.2.1   ( 24.03.2013 )
+-SH: explicittop and explicitwidth make trouble when compiling with D7.
+
 1.9.2.0   ( 23.03.2013 )
 -MM: patch to clean up project and application settings.
 -MM: patch to support conditional defines.

@@ -111,7 +111,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=2
-Build=0
+Build=1
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.2.0
+FileVersion=1.9.2.1
 InternalName=
 LegalCopyright=Samuel Herzog
 LegalTrademarks=
@@ -131,7 +131,8 @@ ProductName=
 ProductVersion=1.0.0.0
 Comments=
 [Excluded Packages]
-c:\program files\borland\delphi7\Bin\dclindy70.bpl=Internet Direct (Indy) for D7 Property and Component Editors
+C:\Programme\Borland\Delphi7\Bin\dclsmp70.bpl=Borland Beispielkomponenten
+c:\programme\borland\delphi7\projects\bpl\qcsystemcomponents.bpl=Components used for the QCSystem
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source
