@@ -288,7 +288,7 @@ object FrmMain: TFrmMain
     Top = 366
     Width = 1366
     Height = 193
-    ActivePage = tabTrace
+    ActivePage = tabInfo
     Align = alBottom
     TabOrder = 3
     object tabInfo: TTabSheet
@@ -296,7 +296,7 @@ object FrmMain: TFrmMain
       object mmoLogFile: TMemo
         Left = 0
         Top = 0
-        Width = 1342
+        Width = 1358
         Height = 165
         Align = alClient
         Ctl3D = False

@@ -4,6 +4,10 @@
  Purpose:
  History:
 
+1.9.2.2   ( 01.05.2013 )
+-SH:  delete memo-log when button "Install All" is clicked.
+-SH:  if backup "source-only" is set, then do not backup .dll,.tlb,.ocx files.
+
 1.9.2.1   ( 24.03.2013 )
 -SH: explicittop and explicitwidth make trouble when compiling with D7.
 
@@ -1709,6 +1713,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actRecompileAllExecute(Sender: TObject);
 begin
+  mmoLogFile.Clear;
   if not DMMain.ReCompileAndInstallAll then exit;
   DMMain.AutoSaveBackup(mmoLogFile.lines);
 end;
