@@ -698,9 +698,6 @@ begin
     _ExtensionsOfInterest.add('.res');
     _ExtensionsOfInterest.add('.dpr');
     _ExtensionsOfInterest.add('.bpg');
-    _ExtensionsOfInterest.add('.tlb');
-    _ExtensionsOfInterest.add('.ocx');
-    _ExtensionsOfInterest.add('.dll');
     _ExtensionsOfInterest.add('.txt');
     _ExtensionsOfInterest.add('.ini');
     _ExtensionsOfInterest.add('.cfg');
@@ -714,6 +711,9 @@ begin
       _ExtensionsOfInterest.add('.bcc_obj');
       _ExtensionsOfInterest.add('.obj');
       _ExtensionsOfInterest.add('.zobj');
+      _ExtensionsOfInterest.add('.tlb');
+      _ExtensionsOfInterest.add('.ocx');
+      _ExtensionsOfInterest.add('.dll');
     end;
     _ExtensionsOfInterest.add('.rc');
     _ExtensionsOfInterest.add('.ico');
