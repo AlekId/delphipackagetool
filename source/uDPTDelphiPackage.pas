@@ -677,16 +677,24 @@ function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _Compiler
 var
 i,k,l:integer;
 _ExtensionsOfInterest:TStringList;
+_TempFilesList:THashedStringList;
+_FoldersToScan:THashedStringList;
 _line:string;
 _ext:string;
 _filename:string;
+_filepath:string;
 _pos:integer;
-_files:THashedStringList;
 _workPath:string;
 begin
   result:=THashedStringList.create;
-  _files:=THashedStringList.create;
+  result.Sorted:=true;
+  _TempFilesList:=THashedStringList.create;
+  _TempFilesList.Sorted:=true;
   _ExtensionsOfInterest:=TStringList.create;
+  _ExtensionsOfInterest.Sorted:=true;
+  _FoldersToScan:=THashedStringList.create;
+  _FoldersToScan.Sorted:=true;
+
   Screen.cursor:=crHourGlass;
   try
     _ExtensionsOfInterest.add('.pas');
@@ -736,15 +744,20 @@ begin
       if result.indexof(_filename)=-1 then begin         // only add the file to the list, if it is not already in the list.
         result.add(_filename);
         trace(5,'Added file <%s> to backup list.',[_filename]);
+        _filepath:=lowercase(extractfilepath(_filename));
+        if _FoldersToScan.IndexOf(_filepath)=-1 then _FoldersToScan.Add(_filepath);
       end;
+    end;
+
+    for i:=0 to _FoldersToScan.count-1 do begin
+      _TempFilesList.Clear;
+      _workPath:=_FoldersToScan[i];
       for k:=0 to _ExtensionsOfInterest.count-1 do begin  // now check all other fileextensions
-        _files.Clear;
-        _workPath:=extractFilePath(_filename);
         trace(5,'Searching for files in path <%s> for files <%s>.',[_workPath,'*'+_ExtensionsOfInterest[k]]);
-        AllFilesOfPath(_workPath,'*'+_ExtensionsOfInterest[k],_files);
+        AllFilesOfPath(_workPath,'*'+_ExtensionsOfInterest[k],_TempFilesList);
         Application.ProcessMessages;
-        for l:=0 to _files.count-1 do begin
-          _filename:=_workPath+_files[l];
+        for l:=0 to _TempFilesList.count-1 do begin
+          _filename:=_workPath+_TempFilesList[l];
           if result.indexof(_filename)<>-1 then continue;
           result.add(_filename);
           trace(5,'Added file <%s> to backup list.',[_filename]);
@@ -753,7 +766,8 @@ begin
     end;
   finally
     _ExtensionsOfInterest.free;
-    _files.free;
+    _TempFilesList.free;
+    _FoldersToScan.free;
     Screen.cursor:=crDefault;
   end;
 end;
