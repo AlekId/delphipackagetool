@@ -2434,7 +2434,7 @@ begin
     TProjectData(FBPGProjectList.Objects[i]).BPLOutputPath  := FCurrentBPLOutputPath;
     TProjectData(FBPGProjectList.Objects[i]).DCPOutputPath  := FCurrentDCPOutputPath;
     TProjectData(FBPGProjectList.Objects[i]).DCUOutputPath  := FCurrentDCUOutputPath;
-    TProjectData(FBPGProjectList.Objects[i]).SearchPath     := FCurrentSearchPath;
+    TProjectData(FBPGProjectList.Objects[i]).ProjectSearchPath := FCurrentSearchPath;
     TProjectData(FBPGProjectList.Objects[i]).Description    := FCurrentPackageDescription;
     TProjectData(FBPGProjectList.Objects[i]).DPTSearchPath  := DPTSearchPath;
   end;

@@ -23,7 +23,7 @@ type
     BPLOutputPath: string;
     DCPOutputPath: string;
     DCUOutputPath: string;
-    SearchPath: string;
+    ProjectSearchPath: string;
     DPTSearchPath: string;
     CompileDate:string;
     CompileState:string;

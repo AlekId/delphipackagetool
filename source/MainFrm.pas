@@ -856,8 +856,7 @@ begin
   if _ItemIndex>-1 then begin
     cbxDelphiVersions.ItemIndex:=_ItemIndex;
     cbxDelphiVersions.Hint:='IDE: '+VersionNoToIDEName(_DelphiVersion)+#10+#13+
-                            'CompilerVersion: '+DelphiVersions[_DelphiVersion].CompilerVersionStr+#10+#13+
-                            'Compiler: '+DMMain.Compiler;
+                            'CompilerVersion: '+DelphiVersions[_DelphiVersion].CompilerVersionStr;
   end
   else begin
     if cbxDelphiVersions.Items.Count>0 then begin
@@ -1667,7 +1666,7 @@ begin
                            'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath+#10#13+
                            'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath+#10#13+
                            'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath+#10#13+
-                           'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).SearchPath+#10#13+
+                           'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectSearchPath+#10#13+
                            'DPT Search Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath;
         end;
         2: begin
