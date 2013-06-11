@@ -100,7 +100,7 @@ Conditionals=NoCryptSupport;NoZipSupport;
 DebugSourceDirs=C:\Projects\Packages\Downloads\ExcMagic\source
 UsePackages=0
 [Parameters]
-RunParams=
+RunParams=-s "c:\temp"
 HostApplication=
 Launcher=
 UseLauncher=0
@@ -111,7 +111,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=2
-Build=4
+Build=5
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.2.4
+FileVersion=1.9.2.5
 InternalName=
 LegalCopyright=Samuel Herzog
 LegalTrademarks=
@@ -132,6 +132,19 @@ ProductVersion=1.0.0.0
 Comments=
 [Excluded Packages]
 C:\Programme\Borland\Delphi7\Bin\dclsmp70.bpl=Borland Beispielkomponenten
+c:\projects\packages\downloads\bold\output\d7\bpl\bold.bpl=Bold 5.0 for Delphi
+c:\projects\packages\downloads\bold\output\d7\bpl\boldvclgui.bpl=Bold 5.0 for Delphi (VCL GUI)
+c:\projects\packages\downloads\bold\output\d7\bpl\bolduml.bpl=Bold 5.0 for Delphi (Model editor)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldutility.bpl=Bold 5.0 for Delphi (Utils)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldmmlink.bpl=Bold 5.0 for Delphi (ModelMaker Link)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldolle.bpl=Bold 5.0 for Delphi (Object Lending Library Extension)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldxmilink.bpl=Bold 5.0 for Delphi (XMI Link)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldib.bpl=Bold 5.0 for Delphi (IBX Support)
+c:\projects\packages\downloads\bold\output\d7\bpl\bolddbexpress.bpl=Bold 5.0 for Delphi (DBExpress Support)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldcom.bpl=Bold 5.0 for Delphi (COM Support)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldcomgui.bpl=Bold 5.0 for Delphi (COM GUI controls)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldbde.bpl=Bold 5.0 for Delphi (BDE Support)
+c:\projects\packages\downloads\bold\output\d7\bpl\boldado.bpl=Bold 5.0 for Delphi (ADO Support)
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source

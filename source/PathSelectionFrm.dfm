@@ -1,11 +1,11 @@
 object FrmPathSelection: TFrmPathSelection
   Left = 170
   Top = 132
+  Width = 879
+  Height = 481
   Caption = 'Path selection'
-  ClientHeight = 454
-  ClientWidth = 871
   Color = clBtnFace
-  Constraints.MinHeight = 492
+  Constraints.MinHeight = 481
   Constraints.MinWidth = 652
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -35,9 +35,8 @@ object FrmPathSelection: TFrmPathSelection
       Width = 90
       Height = 26
       Anchors = [akTop, akRight]
-      Kind = bkOK
-      NumGlyphs = 2
       TabOrder = 0
+      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 777
@@ -47,6 +46,9 @@ object FrmPathSelection: TFrmPathSelection
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = 'Cancel'
+      ModalResult = 2
+      TabOrder = 1
+      OnClick = btnCancelClick
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -64,10 +66,7 @@ object FrmPathSelection: TFrmPathSelection
         38F338F300003333333333333919333333388333338FFF830000333333333333
         3333333333333333333888330000333333333333333333333333333333333333
         0000}
-      ModalResult = 2
       NumGlyphs = 2
-      TabOrder = 1
-      OnClick = btnCancelClick
     end
     object btnAbort: TBitBtn
       Left = 216
@@ -75,6 +74,8 @@ object FrmPathSelection: TFrmPathSelection
       Width = 113
       Height = 25
       Caption = 'Abort Search'
+      TabOrder = 2
+      OnClick = btnAbortClick
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         1800000000000003000000000000000000000000000000000000FFFFFFFFFFFF
@@ -102,8 +103,6 @@ object FrmPathSelection: TFrmPathSelection
         00002000007F0000FF0000FF0000FF0000FF0000FF0000FF0000FF00007F0000
         20FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00004000007F0000BF00
         00BF0000BF00007F000040FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-      TabOrder = 2
-      OnClick = btnAbortClick
     end
     object btnFind: TBitBtn
       Left = 16
@@ -111,6 +110,8 @@ object FrmPathSelection: TFrmPathSelection
       Width = 193
       Height = 25
       Caption = 'Find'
+      TabOrder = 3
+      OnClick = btnFindClick
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         1800000000000003000000000000000000000000000000000000FFFFFFFFFFFF
@@ -138,8 +139,6 @@ object FrmPathSelection: TFrmPathSelection
         000000000000000000FFFFFFFFFFFFFFFFFF000000000000000000FFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF20202020202020202020202020
         2020202020202020FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-      TabOrder = 3
-      OnClick = btnFindClick
     end
     object btnAddPath: TBitBtn
       Left = 336
@@ -148,6 +147,9 @@ object FrmPathSelection: TFrmPathSelection
       Height = 25
       Action = actAddPath
       Caption = 'Add Path to Project'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 4
       Glyph.Data = {
         E2020000424DE202000000000000520100002800000014000000140000000100
         08000000000090010000C21E0000C21E0000470000000000000008E44D0008E4
@@ -173,9 +175,6 @@ object FrmPathSelection: TFrmPathSelection
         041D3F4646464646464646464646464637130E0F10183F464646464646464646
         464646463D373838383942464646464646464646464646464646464646464646
         464646464646}
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 4
     end
   end
   object pnlTop: TPanel
@@ -235,6 +234,7 @@ object FrmPathSelection: TFrmPathSelection
       Top = 24
       Width = 754
       Height = 21
+      ItemHeight = 13
       TabOrder = 2
       OnExit = cbxSearchLocationExit
     end

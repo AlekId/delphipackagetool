@@ -1643,7 +1643,7 @@ begin
     if _delphiExeFilename='' then _list.Delete(i)
     else begin
       if fileexists(_delphiExeFilename) then begin
-        trace(3,'Found Compiler <%s> for Version <%s>. <%s>. ',[_delphiExeFilename,_list.Strings[i],VersionNoToIDEName(_version)]);
+        trace(3,'Found IDE <%s> for Version <%s>. <%s>. ',[_delphiExeFilename,_list.Strings[i],VersionNoToIDEName(_version)]);
         inc(i);
       end
       else begin

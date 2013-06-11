@@ -101,6 +101,7 @@ type
     FBPGConfigList: TStringList;              // list with configs supported by all projects in FBPGProjectList
     FInstalledDelphiVersionList: TStringList; // list of installed delphi versions on the computer.
     FZipFilename: string;
+    FCommandLineSilent:boolean;               // is set to true if the dpt is started from command line with parameter -s (Silent)
     FOnWriteLog: TOnWriteLogEvent;
     FOnBPGOpen: TNotifyEvent;
     FOnBPGClose: TNotifyEvent;
@@ -184,6 +185,7 @@ type
     function  SearchPath:string;
     procedure LoadBPG(_filename: string);
     procedure SetLastUsedBPGFile(_BPGfilename: string);
+    function  IsSilentMode:boolean;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectFilename: string  read FCurrentProjectFilename;
     property  CurrentBPLOutputPath:string read FCurrentBPLOutputPath;
@@ -293,7 +295,7 @@ begin
     exit;
   end;
   _DiffToolEXEName:=ApplicationSettings.StringValue('Application/DiffTool',29);
-  if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
+  if not IsSilentMode then begin
     if _DiffToolEXEName='' then begin
       Application.MessageBox(pChar(cSetupDiffTool),pchar(cInformation),MB_ICONWARNING or MB_OK);
       exit;
@@ -427,7 +429,7 @@ begin
   end;
   FCurrentBPLOutputPath := IncludeTrailingPathDelimiter(FCurrentBPLOutputPath);
 
-  if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
+  if not IsSilentMode then begin
     if (FCurrentBPLOutputPath <> '') and (not DirectoryExists(FCurrentBPLOutputPath)) then begin
       if Application.MessageBox(pchar(Format(cCouldNotFindBPLOutputPath, [FCurrentBPLOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then begin
         ShowFile(FCurrentConfigFilename, 0);
@@ -448,7 +450,7 @@ begin
   end;
   FCurrentDCPOutputPath := IncludeTrailingPathDelimiter(FCurrentDCPOutputPath);
 
-  if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
+  if not IsSilentMode then begin
     if (FCurrentDCPOutputPath <> '') and (not DirectoryExists(FCurrentDCPOutputPath)) then begin
       if Application.MessageBox(pchar(Format(cCouldNotFindDCPOutputPath, [FCurrentDCPOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then begin
         ShowFile(ChangeFileExt(FCurrentProjectFilename, '.cfg'), 0);
@@ -470,7 +472,7 @@ begin
   end;
   FCurrentDCUOutputPath := IncludeTrailingPathDelimiter(FCurrentDCUOutputPath);
 
-  if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then begin
+  if not IsSilentMode then begin
     if (FCurrentDCUOutputPath <> '') and (not DirectoryExists(FCurrentDCUOutputPath)) then begin
       if Application.MessageBox(pchar(Format(cCouldNotFindDCUOutputPath, [FCurrentDCUOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then begin
         ShowFile(ChangeFileExt(FCurrentProjectFilename, '.cfg'), 0);
@@ -708,11 +710,6 @@ begin
   FApplicationIniFilename := changefileext(application.ExeName, '.ini');
   FConfigToCompile := '';
   FPlatformToCompile := '';
-  if not fileexists(FApplicationIniFilename) then begin  // on the first start, ask if the filetypes shall be registered.
-    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)           = IdYes then RegisterFileType('bpg'      ,Application.ExeName,'DelphiPackageTool File-Type BPG');
-    if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName,'DelphiPackageTool File-Type BDSGroup');
-    if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName,'DelphiPackageTool File-Type GROUPPROJ');
-  end;
 // prepare trace file
 {$ifdef withTrace}
   NVBTraceFile := TNVBTraceFile.Create(Self);
@@ -766,68 +763,69 @@ begin
   FZipFilename := extractfilepath(application.ExeName)+'zipdll.dll';
   GetInstalledIDEVersions(FInstalledDelphiVersionList);
   InitializeAppSettings; // load application settings.
+  FDelphiWasStartedOnApplicationStart := isDelphiStarted(FCurrentDelphiVersion);
   if ParamCount = 1 then begin
     _tmp := lowercase(trim(Paramstr(1)));
     trace(3,'Parameter is <%s>.',[_tmp]);
-    if Pos('-cleanupbpldir', _tmp) = 1 then begin
-      CommandLineAction := actCleanUpProjectBPLDir; // command to be executed.
-    end else
-    if Pos('-cleanupall', _tmp) = 1 then begin
-      CommandLineAction := actCleanUpAll; // command to be executed.
-    end
-    else begin
-      _filename := lowercase(_tmp);
-      BPGFilename := _filename;
-    end;
-  end
-  else begin
-    for i := 1 to ParamCount do begin
-      _tmp := lowercase(Paramstr(i));
-      trace(2,'Parameter <%d> is <%s>.',[i,_tmp]);
-      if Pos('-p', _tmp) = 1 then begin // project file (either bpg,dpk,dpr)
-        Delete(_tmp, 1, 2); //e.g. -p"C:\Projects\Packages\Owncomponents.bpl"
-        if pos('"',_tmp)=1 then delete(_tmp,1,1); // remove the leading char <">.
-        if pos('"',_tmp)>0 then _tmp:=copy(_tmp,1,pos('"',_tmp)); //copy until the occurence of the char <">.
-        _filename := lowercase(_tmp);
-        _filename := AbsoluteFilename(extractFilepath(application.ExeName),_filename);
-        if not fileexists(_filename) then begin
-          trace(1,'Warning: The file <%s> does not exists.Please check your parameters and settings.',[_filename]);
-          exit;
-        end;
-        OpenBPG(_filename);
-      end;
-      if Pos('-rebuild', _tmp) = 1 then begin // command to be executed.
-        if (Pos('.bpg', _filename) > 0) or
-           (Pos('.bdsgroup',_filename)>0) or
-           (Pos('.groupproj',_filename)>0) then CommandLineAction := actRecompileAllPackages;
-        if (Pos('.dpk', _filename) > 0) or
-           (Pos('.dpr', _filename) > 0) or
-           (Pos('.dproj', _filename) > 0)then begin
-          InitCurrentProject(_filename);
-          LoadCurrentProject;
-          CommandLineAction := actReCompile;
-        end;
-      end;
-
-      if Pos('-install', _tmp) = 1 then begin // command to be executed.
-        if (Pos('.dpk', _filename) > 0) or
-           (Pos('.dproj', _filename) > 0) then CommandLineAction := actInstallPackage;
-      end;
-
-      if Pos('-uninstall', _tmp) = 1 then begin // command to be executed.
-        if (Pos('.dpk', _filename) > 0) or
-           (Pos('.dproj', _filename) > 0) then CommandLineAction := actUninstallPackage;
-      end;
-
-      if Pos('-o', _tmp) = 1 then begin // project file (either bpg,dpk,dpr)
-        Delete(_tmp, 1, 2); //e.g. -OC:\Projects\Packages\Owncomponents.ini
-        FApplicationIniFilename := AbsoluteFilename(extractFilepath(Application.exename),_tmp);
-        InitializeAppSettings; // load application settings.
-        CommandLineAction := actRecompileAllPackages;
-      end;
-    end;
+    if Pos('-cleanupbpldir', _tmp) = 1 then CommandLineAction := actCleanUpProjectBPLDir else // command to be executed.
+    if Pos('-cleanupall', _tmp) = 1    then CommandLineAction := actCleanUpAll // command to be executed.
+                                       else BPGFilename := lowercase(_tmp);
+    exit;
   end;
-  FDelphiWasStartedOnApplicationStart := isDelphiStarted(FCurrentDelphiVersion);
+  for i := 1 to ParamCount do begin
+    _tmp := lowercase(Paramstr(i));
+    trace(2,'Parameter <%d> is <%s>.',[i,_tmp]);
+    if Pos('-p', _tmp) = 1 then begin // project file (either bpg,dpk,dpr)
+      Delete(_tmp, 1, 2); //e.g. -p"C:\Projects\Packages\Owncomponents.bpl"
+      if pos('"',_tmp)=1 then delete(_tmp,1,1); // remove the leading char <">.
+      if pos('"',_tmp)>0 then _tmp:=copy(_tmp,1,pos('"',_tmp)); //copy until the occurence of the char <">.
+      _filename := lowercase(_tmp);
+      _filename := AbsoluteFilename(extractFilepath(application.ExeName),_filename);
+      if not fileexists(_filename) then begin
+        trace(1,'Warning: The file <%s> does not exists.Please check your parameters and settings.',[_filename]);
+        exit;
+      end;
+      OpenBPG(_filename);
+    end;
+    if Pos('-rebuild', _tmp) = 1 then begin // command to be executed.
+      if (Pos('.bpg', _filename) > 0) or
+         (Pos('.bdsgroup',_filename)>0) or
+         (Pos('.groupproj',_filename)>0) then CommandLineAction := actRecompileAllPackages;
+      if (Pos('.dpk', _filename) > 0) or
+         (Pos('.dpr', _filename) > 0) or
+         (Pos('.dproj', _filename) > 0)then begin
+        InitCurrentProject(_filename);
+        LoadCurrentProject;
+        CommandLineAction := actReCompile;
+      end;
+    end;
+
+    if Pos('-install', _tmp) = 1 then begin // command to be executed.
+      if (Pos('.dpk', _filename) > 0) or
+         (Pos('.dproj', _filename) > 0) then CommandLineAction := actInstallPackage;
+    end;
+
+    if Pos('-uninstall', _tmp) = 1 then begin // command to be executed.
+      if (Pos('.dpk', _filename) > 0) or
+         (Pos('.dproj', _filename) > 0) then CommandLineAction := actUninstallPackage;
+    end;
+
+    if Pos('-o', _tmp) = 1 then begin // project ini-file
+      Delete(_tmp, 1, 2); //e.g. -OC:\Projects\Packages\Owncomponents.ini
+      FApplicationIniFilename := AbsoluteFilename(extractFilepath(Application.exename),_tmp);
+      InitializeAppSettings; // load application settings.
+      CommandLineAction := actRecompileAllPackages;
+    end;
+
+    if _tmp='-silent' then FCommandLineSilent:=true;
+  end;
+
+  if (not fileexists(FApplicationIniFilename)) and
+     (not IsSilentMode) then begin  // on the first start, ask if the filetypes shall be registered.
+    if MessageBox(0,pchar(cRegisterBPG),PChar(cConfirm), MB_ICONQUESTION or MB_YESNO)           = IdYes then RegisterFileType('bpg'      ,Application.ExeName,'DelphiPackageTool File-Type BPG');
+    if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName,'DelphiPackageTool File-Type BDSGroup');
+    if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName,'DelphiPackageTool File-Type GROUPPROJ');
+  end;
 end;
 
 {-----------------------------------------------------------------------------
@@ -919,7 +917,7 @@ begin
       finally
         _BatchZipFile.free;
       end;
-      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+      if not IsSilentMode then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
       _BatchZipFile:=TStringList.create;
       try
         _BatchZipFile.LoadFromFile(_batchFilename);
@@ -939,7 +937,7 @@ begin
       NVBAppExec1.ExeName:=_batchFilename;
       NVBAppExec1.Execute;
 {$endif}
-      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
+      if not IsSilentMode then begin
         if Application.MessageBox(pchar(cOpenBackupFolder),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then ShowFolder(_backupPath);
       end;
     finally
@@ -982,7 +980,7 @@ begin
   if (ApplicationSettings.BoolValue('Application/StartDelphiOnClose',7) and
      (not assigned(CommandLineAction))) or
     ((FDelphiWasStartedOnApplicationStart) and
-    (not ApplicationSettings.BoolValue('Application/SilentMode',5))) then actStartUpDelphiExecute(nil);
+    (not IsSilentMode)) then actStartUpDelphiExecute(nil);
 
   if not assigned(CommandLineAction) then ApplicationSettings.SaveConfig;
   ApplicationSettings.Close;
@@ -998,8 +996,8 @@ begin
   FBPGConfigList.Free;
   FBPGPlatformList.Free;
   for i := FBPGProjectList.Count-1 downto 0 do begin
-    if Assigned(FBPGProjectList.Objects[i]) then
-      FBPGProjectList.Objects[i].Free;
+    if not Assigned(FBPGProjectList.Objects[i]) then continue;
+    FBPGProjectList.Objects[i].Free;
   end;
   FBPGProjectList.Free;
 end;
@@ -1177,8 +1175,7 @@ begin
     _filename := SaveBatchFile;
     if _filename <> '' then begin
       WriteLog('Saved batch file <%s>.', [_filename]);
-      if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then
-        ShowFolder(ExtractFilePath(_filename));
+      if not IsSilentMode then ShowFolder(ExtractFilePath(_filename));
     end;
   finally
     ApplicationState := tas_open;
@@ -1188,8 +1185,7 @@ begin
     _end := ((gettickcount - _start) div 1000);
     WriteLog('It took <%d> seconds to compile all projects.', [_end]);
     CheckDelphiRunning;
-    if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then
-      Application.MessageBox(pChar(cRebuiltAllProjects), pChar(cInformation), MB_ICONINFORMATION or MB_OK);
+    if not IsSilentMode then Application.MessageBox(pChar(cRebuiltAllProjects), pChar(cInformation), MB_ICONINFORMATION or MB_OK);
     _batchFilename := ProjectSettings.StringValue('Application/Events/OnAfterInstallAll', 2);
 
     // take the project specific settings
@@ -1216,8 +1212,7 @@ begin
     WriteLog('It took <%d> seconds to compile the projects.', [_end]);
     WriteLog('Compiled <%d> Projects of Total <%d> Projects.', [_CompiledProjects, FBPGProjectList.count]);
     WriteLog('Some projects could not be rebuilt. See the Log file and add the path in the Options Dialog if needed.', []);
-    if not ApplicationSettings.BoolValue('Application/SilentMode', 5) then
-      Application.MessageBox(pChar(cSomeProjectsCouldNotBeRebuilt), pChar(cError), MB_ICONERROR or MB_OK);
+    if not IsSilentMode then Application.MessageBox(pChar(cSomeProjectsCouldNotBeRebuilt), pChar(cError), MB_ICONERROR or MB_OK);
     ExitCode := 1;
   end;
 end;
@@ -1257,7 +1252,7 @@ resourcestring
   cPleaseCloseDelphiFirst='Please close Delphi before running this application.';
 begin
   if not isDelphiStarted(FCurrentDelphiVersion) then exit;
-  if ApplicationSettings.BoolValue('Application/SilentMode',5) then   // if silent mode then just close it.
+  if IsSilentMode then   // if silent mode then just close it.
     ShutDownDelphi(FCurrentDelphiVersion, false)
   else
   begin
@@ -1295,7 +1290,7 @@ begin
   if FCurrentProjectType<>tp_bpl then exit;
   _bplFilename:=FCurrentBPLFilename;
   _dcpFilename:=FCurrentDCPOutputPath+ChangeFileExt(ExtractFilename(_bplFilename),'.dcp');
-  if not ApplicationSettings.BoolValue('Application/SilentMode',5) then begin
+  if not IsSilentMode then begin
     if MessageBox(0,pchar(format(cDeleteBPL_and_DCP_Files,[_bplFilename,_dcpFilename])),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  <> IdYes then exit;
   end;
   if uDPTDelphiPackage.DeleteFile(_bplFilename) then WriteLog('Deleted file <%s>.',[_bplFilename]);
@@ -1607,14 +1602,14 @@ begin
   else begin
     TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed!');
     TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed');
-    if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) and
+    if (not IsSilentMode) and
        (ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18)) then SearchFileCompilerOutput(_Output);
   end;
   Screen.Cursor := crDefault;
   WriteLog(_Output,[]);
   if ((Pos('fatal', LowerCase(_Output)) > 0) or
      ((Pos(pchar(cWarning), LowerCase(_Output)) > 0))) then begin
-    if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) then begin
+    if not IsSilentMode then begin
       if Length(_Output) > 2000 then _Output := Copy(_Output, Length(_Output) - 2000, 2000);
       Application.MessageBox(pchar(_Output), pchar(cInformation), MB_ICONINFORMATION or MB_OK);
     end;
@@ -1777,14 +1772,14 @@ begin
   else begin
     TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed!');
     TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed');
-    if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) and
+    if (not IsSilentMode) and
        (ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18)) then SearchFileCompilerOutput(_Output);
   end;
   Screen.Cursor := crDefault;
   WriteLog(_Output,[]);
   if ((Pos('fatal', LowerCase(_Output)) > 0) or
      ((Pos(pchar(cWarning), LowerCase(_Output)) > 0))) then begin
-    if (not ApplicationSettings.BoolValue('Application/SilentMode', 5)) then begin
+    if not IsSilentMode then begin
       if Length(_Output) > 2000 then _Output := Copy(_Output, Length(_Output) - 2000, 2000);
       Application.MessageBox(pchar(_Output), pchar(cInformation), MB_ICONINFORMATION or MB_OK);
     end;
@@ -2138,7 +2133,7 @@ begin
                                          FCurrentBPLOutputPath,
                                          FCurrentDCUOutputPath,
                                          FCurrentDCPOutputPath,
-                                         ApplicationSettings.BoolValue('Application/SilentMode', 5),
+                                         IsSilentMode,
                                          FCurrentProjectType,
                                          FCurrentDelphiVersion);
   ConfirmChanges(_ChangedFiles, False, True);
@@ -2148,7 +2143,7 @@ begin
     _ChangedFiles := WritePackageFile(FCurrentDelphiVersion,
                                       FCurrentProjectFilename,
                                       FCurrentPackageSuffix,
-                                      ApplicationSettings.BoolValue('Application/SilentMode', 5)); // then prepare a new file.
+                                      IsSilentMode); // then prepare a new file.
     ConfirmChanges(_ChangedFiles, False);
   end;
 end;
@@ -2182,17 +2177,17 @@ begin
        fileexists(_OldFilename) then begin
       if _revert then _msg:=cDPTFoundOldVersionOfFile
                  else _msg:=cDPTSuggestsSomeChanges;
-      if not ApplicationSettings.BoolValue('Application/SilentMode',5) then
+      if not IsSilentMode then
         if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
           if _Revert then CompareFiles(_NewFilename,_OldFilename)
                      else CompareFiles(_OldFilename,_NewFilename);
         end;
 
-      if (ApplicationSettings.BoolValue('Application/SilentMode',5)) or
+      if IsSilentMode or
          ( not _ShowQuestions) or
-         ((not ApplicationSettings.BoolValue('Application/SilentMode',5) and
+         ((not IsSilentMode and
            _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
-        if not RemoveReadOnlyFlag(_OldFilename,ApplicationSettings.BoolValue('Application/SilentMode',5)) then exit;
+        if not RemoveReadOnlyFlag(_OldFilename,IsSilentMode) then exit;
         if not CopyFile(pchar(_NewFilename),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
                                                                        else WriteLog('Changed the file ''%s''',[_OldFilename]);
       end;
@@ -2548,7 +2543,7 @@ begin
     _filename:=_filenames[i];
     if ShowVersionDialog then begin
       if not GetProjectVersionOfFile(_filename,_Major,_Minor,_Release,_Build) then begin
-        if ApplicationSettings.BoolValue('Application/SilentMode',5) then exit;
+        if IsSilentMode then exit;
         Application.MessageBox(pChar(format(cNoVersionInfo,[_filename])),pchar(cInformation),MB_ICONWARNING or MB_OK);
         exit;
       end;
@@ -2716,5 +2711,10 @@ begin
   ApplicationSettings.SetString('Application/FileHistory/Item1',51,_BPGfilename);
 end;
 
+
+function TDMMain.IsSilentMode: boolean;
+begin
+  result:=(ApplicationSettings.BoolValue('Application/SilentMode', 5) or FCommandLineSilent);
+end;
 
 end.
