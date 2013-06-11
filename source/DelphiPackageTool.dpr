@@ -33,12 +33,15 @@ begin
   Application.Title := 'Delphi Package Tool';
   Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);
-  // show startup dialog
-  _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);
-  if _showagain then begin
-    ShowStartUpDlg(_showagain);
-    DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
-  end;
+
+  if not DMMain.IsSilentMode then begin
+    // show startup dialog
+    _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);
+    if _showagain then begin
+      ShowStartUpDlg(_showagain);
+      DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
+    end;
+  end;  
 
 // load the bpg file
   if DMMain.BPGFilename<>'' then DMMain.LoadBPG(DMMain.BPGFilename)

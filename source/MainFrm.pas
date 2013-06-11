@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.2.5   ( 11.06.2013 )
+-SH: added command-line parameter "-silent".
+
 1.9.2.4   ( 20.05.2013 )
 -SH: added Definitions of XE4.
 

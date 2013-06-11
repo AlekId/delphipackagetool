@@ -288,7 +288,7 @@ begin
     if trim(_path)='' then exit;
     if not _FrmProjectOptions.AddPath(_path) then exit;
     _FrmProjectOptions.SaveSearchPathData;
-    if not DMMain.ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cAddedDirectoryToSearchPath,[_path])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+    if not DMMain.IsSilentMode then Application.MessageBox(pchar(format(cAddedDirectoryToSearchPath,[_path])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
   finally
     _FrmProjectOptions.free;
   end;

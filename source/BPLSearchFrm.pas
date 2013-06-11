@@ -217,7 +217,7 @@ begin
     lstFiles.Selected[i-1]:=false;
     lstFiles.Items.Delete(i-1);
     dec(i);
-    if not DMMain.ApplicationSettings.BoolValue('Application/SilentMode',5) then Application.MessageBox(pchar(format(cDeletedFile,[_filename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+    if not DMMain.IsSilentMode then Application.MessageBox(pchar(format(cDeletedFile,[_filename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
   end;
 end;
 
