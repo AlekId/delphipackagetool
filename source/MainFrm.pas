@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.2.6   ( 05.08.2013 )
+-SH: don't load last project when starting app and silent mode is set.
+
 1.9.2.5   ( 11.06.2013 )
 -SH: added command-line parameter "-silent".
 
