@@ -1966,13 +1966,9 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.SetBPGFilename(const Value: string);
 begin
-  if Value <> '' then begin
-    FBPGFilename:=AbsoluteFilename(extractFilepath(application.ExeName),Value);
-  end
-  else begin
-    FBPGFilename:=Value;
-  end;
-  FBPGPath     :=ExtractFilePath(FBPGFilename);
+  if Value <> '' then FBPGFilename:=AbsoluteFilename(extractFilepath(application.ExeName),Value)
+                 else FBPGFilename:=Value;
+  FBPGPath:=ExtractFilePath(FBPGFilename);
 end;
 
 function TDMMain.RemoveProjectFromProjectGroup:boolean;
