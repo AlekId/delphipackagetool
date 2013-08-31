@@ -1075,6 +1075,8 @@ _fileList:TStrings;
 _PackageKey:string;
 _filename:string;
 _NoOfDeletedKeys:integer;
+_NoOfBPLFilesFound:integer;
+_NoOfDCPFilesFound:integer;
 begin
   result:=false;
   _BPLPath:=IncludeTrailingPathDelimiter(_BPLPath);
@@ -1085,7 +1087,8 @@ begin
   _fileList:=TStringList.create;
   try
     AllFilesOfPath(_BPLPath,'*.bpl',_fileList,true);
-    for i:=0 to _filelist.count-1 do begin
+    _NoOfBPLFilesFound:=_filelist.count;
+    for i:=0 to _NoOfBPLFilesFound-1 do begin
       _filename:=_filelist[i];
       RemoveValueFromRegistry(HKEY_CURRENT_USER ,_PackageKey+'Known Packages',_BPLPath+_filename);
       RemoveValueFromRegistry(HKEY_LOCAL_MACHINE,_PackageKey+'Known Packages',_BPLPath+_filename);
@@ -1099,6 +1102,7 @@ begin
     end;
     _fileList.clear;
     AllFilesOfPath(_BPLPath,'*.dcp',_fileList,true);
+    _NoOfDCPFilesFound:=_filelist.count;
     for i:=0 to _filelist.count-1 do begin
       _filename:=_filelist[i];
       if _deletefiles then begin
@@ -1107,6 +1111,8 @@ begin
         if uDPTDelphiPackage.DeleteFile(_BPLPath+_filename) then result:=true;
       end;
     end;
+    if (_NoOfDCPFilesFound=0) and
+       (_NoOfBPLFilesFound=0) then result:=true;  // nothing to delete.
   finally
     _fileList.free;
   end;

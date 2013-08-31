@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.2.7   ( 28.08.2013 )
+-SH: don't show gui if command line parameter "-cleanupbpldir" is used.
+
 1.9.2.6   ( 05.08.2013 )
 -SH: don't load last project when starting app and silent mode is set.
 
@@ -856,6 +859,7 @@ var
 _sDelphiVersion:string;
 _ItemIndex:integer;
 begin
+  if _DelphiVersion=0 then exit;
   cbxDelphiVersions.OnChange:=nil;
   _sDelphiVersion := VersionNoToIDEName(_DelphiVersion,tdn_long);
   _itemIndex:=cbxDelphiVersions.Items.IndexOf(_sDelphiVersion);
