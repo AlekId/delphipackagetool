@@ -865,6 +865,7 @@ cNo7zipFound='Could not find 7-zip. You must install 7-zip v9.25 or higher to us
 var
 i:integer;
 _line:string;
+_filename:string;
 _BatchZipFile:TStrings;
 _FileList:TStringList;
 _BackupFileList:string;
@@ -890,6 +891,20 @@ begin
 {$endif}
     writeLog('Searching for files to backup. Please wait...',[]);
     _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines,ProjectSettings.BoolValue('Application/BackupSourceOnly',15));
+    for i:=0 to FBPGProjectList.count-1 do begin
+      _filename:=lowercase(trim(FBPGProjectList[i]));
+      _filename:=AbsoluteFilename(FBPGPath,_filename);
+      if _FileList.IndexOf(_filename)=-1 then begin
+        if fileexists(_filename) then _FileList.add(_filename);
+        _filename:=changefileext(_filename,'.res');
+        if fileexists(_filename) then _FileList.add(_filename);
+        _filename:=changefileext(_filename,'.cfg');
+        if fileexists(_filename) then _FileList.add(_filename);
+        _filename:=changefileext(_filename,'.dof');
+        if fileexists(_filename) then _FileList.add(_filename);
+      end;
+    end;
+
     try
       writeLog('Found <%d> files. Creating zip-file...',[_FileList.Count]);
       if _FileList.Count=0 then exit;
