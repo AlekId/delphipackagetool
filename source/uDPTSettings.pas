@@ -185,6 +185,9 @@ function IntegerToFontStyles(_Value: Integer): TFontStyles;
 implementation
 
 uses
+{$if CompilerVersion >= 24.0 }
+  UITypes,
+{$ifend}
 {$ifdef NoCryptSupport}
   uDPTMisc;
 {$else}

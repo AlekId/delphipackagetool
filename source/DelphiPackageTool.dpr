@@ -20,7 +20,8 @@ uses
   uDPTCreateProjectGroup in 'uDPTCreateProjectGroup.pas',
   uDPTPathFilenameConvert in 'uDPTPathFilenameConvert.pas',
   uDTPProjectData in 'uDTPProjectData.pas',
-  ProjectOptionsFrm in 'ProjectOptionsFrm.pas' {FrmProjectOptions};
+  ProjectOptionsFrm in 'ProjectOptionsFrm.pas' {FrmProjectOptions},
+  uDPTDblList in 'uDPTDblList.pas';
 
 {$R *.res}
 
@@ -33,7 +34,6 @@ begin
   Application.Title := 'Delphi Package Tool';
   Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);
-
   if not DMMain.IsSilentMode then begin
     // show startup dialog
     _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);

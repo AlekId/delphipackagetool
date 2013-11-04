@@ -74,11 +74,15 @@ var
 
 implementation
 
-uses Graphics,
-     Forms,
-     Dialogs,
-     ShellAPI,
-     shlObj;
+uses
+  Graphics,
+  Forms,
+  Dialogs,
+  ShellAPI,
+{$if CompilerVersion >= 24.0 }
+  UITypes,
+{$ifend}
+  shlObj;
 
 {-----------------------------------------------------------------------------
   Procedure: FindLine

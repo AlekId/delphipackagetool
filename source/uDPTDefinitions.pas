@@ -293,8 +293,8 @@ const
     (
       Name: cRSName;              //18
       VersionStr: 'XE4';
-      IDEVersion: 10;
-      IDEVersionStr: '10.0';
+      IDEVersion: 11;
+      IDEVersionStr: '11.0';
       CoreIdeVersion: '180';
       ShortName: 'XE4';
       LongName: 'Embarcadero RAD Studio XE4';
@@ -304,8 +304,8 @@ const
     (
       Name: cRSName;              //19
       VersionStr: 'XE5';
-      IDEVersion: 11;
-      IDEVersionStr: '11.0';
+      IDEVersion: 12;
+      IDEVersionStr: '12.0';
       CoreIdeVersion: '190';
       ShortName: 'XE5';
       LongName: 'Embarcadero RAD Studio XE5';
