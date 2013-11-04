@@ -4,8 +4,11 @@
  Purpose:
  History:
 
+1.9.2.9   ( 04.11.2013 )
+-another patch from M.Mueller. For XE5 and some fixes.
+
 1.9.2.8   ( 17.09.2013 )
--SH: improvement for source-backup. Added all files from project-group. 
+-SH: improvement for source-backup. Added all files from project-group.
 
 1.9.2.7   ( 28.08.2013 )
 -SH: don't show gui if command line parameter "-cleanupbpldir" is used.

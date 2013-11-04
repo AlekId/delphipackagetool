@@ -1,3 +1,6 @@
+1.9.2.9   ( 04.11.2013 )
+-another patch from M.Mueller. For XE5 and some fixes.
+
 1.9.2.8   ( 17.09.2013 )
 -SH: improvement for source-backup. Added all files from project-group. 
 

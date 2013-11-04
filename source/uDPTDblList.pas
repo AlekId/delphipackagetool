@@ -110,6 +110,9 @@ implementation
 
 uses
   Dialogs,
+{$if CompilerVersion >= 24.0 }
+  UITypes,
+{$ifend}
   Types;
 
 {procedure Register;
