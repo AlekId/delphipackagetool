@@ -4,7 +4,11 @@
  Purpose:
  History:
 
-1.9.2.9   ( 04.11.2013 )
+1.9.2.10   ( 04.12.2013 )
+-SH:-fix for recent file list.
+-SH: fix to load last used project group file.
+
+ 1.9.2.9   ( 04.11.2013 )
 -another patch from M.Mueller. For XE5 and some fixes.
 
 1.9.2.8   ( 17.09.2013 )
@@ -1301,7 +1305,6 @@ begin
   end;
 // empty the file combobox.
   edtPackageBPGFile.Clear;
-  edtPackageBPGFile.Items.add('');
 // reload the new items.
   for i:=1 to 10 do begin // load recent used file history
     _filename:=DMMain.ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i]),50+i);
@@ -1314,7 +1317,6 @@ begin
     edtPackageBPGFile.Items.Add(_filename);
   end;
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: mitRecentFilesClick
