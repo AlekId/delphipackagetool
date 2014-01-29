@@ -559,7 +559,7 @@ function TDMMain.GetLibSuffix(_ProjectType:TProjectType;_libsuffix:string): stri
 begin
   result:=_libsuffix;
   if _ProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
-  if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then exit;  // if changing of files is not allowed, then we can not change the suffix.
+  if not ProjectSettings.BoolValue('Application/ChangeFiles', 13) then exit;  // if changing of files is not allowed, then we can not change the suffix.
   if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FCurrentDelphiVersion].ShortName
   else if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBNoneTag) then result:=''
   else result:=ProjectSettings.StringValue('Application/LibSuffix',10);
@@ -890,7 +890,7 @@ begin
     ProjectSettings.SetPath('Application/LastUsedBackupPath',11,extractFilePath(_BackupZip.Filename));
 {$endif}
     writeLog('Searching for files to backup. Please wait...',[]);
-    _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines,ProjectSettings.BoolValue('Application/BackupSourceOnly',15));
+    _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines,ApplicationSettings.BoolValue('Application/BackupSourceOnly',30));
     for i:=0 to FBPGProjectList.count-1 do begin
       _filename:=lowercase(trim(FBPGProjectList[i]));
       _filename:=AbsoluteFilename(FBPGPath,_filename);
@@ -1057,6 +1057,7 @@ begin
   ApplicationSettings.GetIntegerValue('Compiler/DelphiVersion', 1,LatestIDEVersion, 'Delphi Version', true,false,false);
   ApplicationSettings.GetFileValue('Compiler/DelphiCompiler', 2, '$(DELPHI)\Bin\DCC32.EXE', 'The Borland Delphi Compiler <DCC32.EXE>.', true,false,false);
   ApplicationSettings.GetFileValue('Application/ProjectGroupFile', 3, '', 'The name of Borland Package Group File', true,false,false);
+  ApplicationSettings.GetBoolValue('Application/CreateInstallBatch',4,false,'If enabled, then a compile&install batch file will be created.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/SilentMode', 5, False, 'If this settings is true, then no dialog boxes will be shown.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StopOnFailure', 6, false, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StartDelphiOnClose', 7, False, 'Start Delphi when this application terminates.', true,false,false);
@@ -1065,10 +1066,14 @@ begin
   ApplicationSettings.GetBoolValue('Application/ShowStartUpWarning', 10, True, 'If true then the startup information screen is shown.', true,false,false);
   ApplicationSettings.GetStringValue('Application/CompilerSwitches',11,'-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',12,3,'Select the trace level of the Log-file. 1-5.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/ChangeFiles', 13,false,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/ModifyEnvironmentPath',14,false,'If set to true, the DelphiPackageTool will change the computers environment path.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath',15,'C:\','Specifies the last used search path.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/AutoBackup', 16,false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/UseSkins', 17, True, 'If true then the application will be skinned.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', 18, True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile',19,'','Last used project name.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/Trace',20,false,'The application will trace all steps.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastLogOutputPath',21,'','Last used path to store the log file.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastZipOutputPath',22,'','Last used path to store the zip file.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Position/Left',23,0,'Stores the last left position of the Main-Form.',true,false,false);
@@ -1078,6 +1083,8 @@ begin
   ApplicationSettings.GetStringValue('Application/LastUsedExtnsion',27,'.bpg','Stores the last used file-type in the file-open dialog.',true,false,false);
   ApplicationSettings.GetStringValue('Application/SourceCodeEditorParams',28,'%FILENAME%','Define the Source code Editor command Line Parameters.',true,false,false);
   ApplicationSettings.GetFileValue('Application/DiffTool', 29, 'MyFavoriteDiffTool.exe', 'Define here your favorite Diff-Tool.', true,false,false);
+  ApplicationSettings.GetBoolValue('Application/BackupSourceOnly',30,false,'Only sourcefiles will be taken into the zip-file.',true,false,false);
+
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/FileHistory/Item%d',[i]),50+i,'',format('Recently used File <%d>.',[i]), true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/SearchPathHistory/Item%d',[i]),100+i,'',format('Recently used File <%d>.',[i]), true,false,false);
   ApplicationSettings.Open;
@@ -1364,12 +1371,12 @@ begin
   WriteLog('Installed Package <%s>.',[FCurrentProjectFilename]);
   TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).IDEInstall:=_message;
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FCurrentProjectFilename,_message,FCurrentProjectNo);
-  if not ProjectSettings.BoolValue('Application/ModifyEnvironmentPath', 9) then exit;
+  if not ApplicationSettings.BoolValue('Application/ModifyEnvironmentPath', 14) then exit;
   if IsPathInEnvironmentPath(FCurrentProjectOutputPath) then exit;
   if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FCurrentProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then begin
     if not AddGlobalEnvironmentPath(FCurrentProjectOutputPath) then Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FCurrentProjectOutputPath])),pchar(cInformation),MB_OK);
   end
-  else ProjectSettings.SetBoolean('Application/ModifyEnvironmentPath', 9,false);
+  else ApplicationSettings.SetBoolean('Application/ModifyEnvironmentPath', 14,false);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2094,7 +2101,7 @@ var
 _filename:string;
 _path:string;
 begin
-  if not ProjectSettings.BoolValue('Application/AutoBackup', 12) then exit;
+  if not ApplicationSettings.BoolValue('Application/AutoBackup', 16) then exit;
   _filename:=changefileExt(ExtractFilenameOnly(BPGFilename)+'_'+BuildTimeStamp(now),'.zip');
   if ProjectSettings.PathValue('Application/LastUsedBackupPath',11)='' then _path:=extractfilepath(BPGFilename)+'backup\'
                                                                        else _path:=ProjectSettings.PathValue('Application/LastUsedBackupPath',11);
@@ -2132,7 +2139,7 @@ var
   _ChangedFiles:string;
 begin
   if not _ForceWrite then begin
-    if not ProjectSettings.BoolValue('Application/ChangeFiles', 8) then Exit;    // if DPT is allowed to change the files
+    if not ProjectSettings.BoolValue('Application/ChangeFiles', 13) then Exit;    // if DPT is allowed to change the files
   end;
 
 // try to update cfg/dproj/bdsproj files.

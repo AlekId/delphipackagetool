@@ -240,13 +240,13 @@ begin
   DMMain.ApplicationSettings.SetString('Application/SourceCodeEditorParams',28,edtSourceEditorParams.Text);
   DMMain.ApplicationSettings.SetBoolean('Application/AutomaticSearchFiles', 18,cbxAutomaticShowAddPathDialog.Checked);
   DMMain.ApplicationSettings.SetFile('Application/DiffTool', 29,edtDiffTool.Text);
-  DMMain.ProjectSettings.SetString('Application/CompilerSwitches',3,edtCompilerSwitches.Text);
-  DMMain.ProjectSettings.SetBoolean('Application/CreateInstallBatch',4,cbxCreateBatchFile.Checked);
-  DMMain.ProjectSettings.SetBoolean('Application/ChangeFiles', 8,cbxChangeFiles.Checked);
-  DMMain.ProjectSettings.SetBoolean('Application/ModifyEnvironmentPath', 9,cbxModifyEnvironment.Checked);
-  DMMain.ProjectSettings.SetBoolean('Application/AutoBackup', 12,cbxAutoBackup.checked);
-  DMMain.ProjectSettings.SetBoolean('Application/Trace',13,cbxTrace.checked);
-  DMMain.ProjectSettings.SetBoolean('Application/BackupSourceOnly',15,cbxBackupSourceOnly.Checked);
+  DMMain.ApplicationSettings.SetString('Application/CompilerSwitches',11,edtCompilerSwitches.Text);
+  DMMain.ApplicationSettings.SetBoolean('Application/CreateInstallBatch',4,cbxCreateBatchFile.Checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/ChangeFiles', 13,cbxChangeFiles.Checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/ModifyEnvironmentPath', 14,cbxModifyEnvironment.Checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/AutoBackup', 16,cbxAutoBackup.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/Trace',20,cbxTrace.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/BackupSourceOnly',30,cbxBackupSourceOnly.Checked);
 end;
 
 {-----------------------------------------------------------------------------
@@ -258,22 +258,18 @@ end;
   Description:  prepare the GUI.
 -----------------------------------------------------------------------------}
 procedure TFrmOptions.SettingsToGUI;
-var
-_compilerSwitches:string;
 begin
   edtCodeEditor.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditor',9);
-  edtSourceEditorParams.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditorParams',28);  
-  _compilerSwitches:=DMMain.ProjectSettings.StringValue('Application/CompilerSwitches',3);
-  if _compilerSwitches='' then DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches',11);
-  edtCompilerSwitches.Text:=_compilerSwitches;
-  edtDiffTool.Text:=     DMMain.ApplicationSettings.FileValue('Application/DiffTool', 29);
+  edtSourceEditorParams.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditorParams',28);
+  edtCompilerSwitches.Text:=DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches',11);
+  edtDiffTool.Text:=DMMain.ApplicationSettings.FileValue('Application/DiffTool', 29);
   cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18);
-  cbxCreateBatchFile.Checked:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
-  cbxChangeFiles.Checked:=DMMain.ProjectSettings.BoolValue('Application/ChangeFiles', 8);
-  cbxModifyEnvironment.Checked:=DMMain.ProjectSettings.BoolValue('Application/ModifyEnvironmentPath', 9);
-  cbxAutoBackup.checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup', 12);
-  cbxTrace.checked:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
-  cbxBackupSourceOnly.Checked:=DMMain.ProjectSettings.BoolValue('Application/BackupSourceOnly',15);
+  cbxCreateBatchFile.Checked:=DMMain.ApplicationSettings.BoolValue('Application/CreateInstallBatch',4);
+  cbxChangeFiles.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ChangeFiles', 13);
+  cbxModifyEnvironment.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ModifyEnvironmentPath', 14);
+  cbxAutoBackup.checked:=DMMain.ApplicationSettings.BoolValue('Application/AutoBackup', 16);
+  cbxTrace.checked:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
+  cbxBackupSourceOnly.Checked:=DMMain.ApplicationSettings.BoolValue('Application/BackupSourceOnly',30);
 end;
 
 {-----------------------------------------------------------------------------
