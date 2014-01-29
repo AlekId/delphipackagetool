@@ -44,6 +44,7 @@ begin
   end;  
 
 // load the bpg file
+  ActivateApplication;
   if DMMain.BPGFilename<>'' then DMMain.LoadBPG(DMMain.BPGFilename)
   else begin
 //    if not DMMain.IsSilentMode then begin
