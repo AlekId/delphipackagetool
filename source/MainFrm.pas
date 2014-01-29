@@ -4,6 +4,9 @@
  Purpose:
  History:
 
+1.9.2.12   ( 29.01.2014 )
+-SH: clean-up of settings.
+
 1.9.2.11   ( 05.12.2013 )
 -SH: active app. In some cases the message boxes were displayed in the background.
 
@@ -452,7 +455,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
-  FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
+  FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
   NVBAppExecExternalCommand.Wait := True;
@@ -485,7 +488,7 @@ begin
   try
     _FrmOptions.showmodal;
     FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
-    FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
+    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
   finally
     _FrmOptions.free;
   end;
@@ -1090,7 +1093,7 @@ begin
   try
     _FrmProjectOptions.showmodal;
     FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
-    FFullTrace:=DMMain.ProjectSettings.BoolValue('Application/Trace',13);
+    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
   finally
     _FrmProjectOptions.free;
   end;
