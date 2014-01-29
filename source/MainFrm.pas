@@ -4,8 +4,11 @@
  Purpose:
  History:
 
+1.9.2.11   ( 05.12.2013 )
+-SH: active app. In some cases the message boxes were displayed in the background.
+
 1.9.2.10   ( 04.12.2013 )
--SH:-fix for recent file list.
+-SH: fix for recent file list.
 -SH: fix to load last used project group file.
 
  1.9.2.9   ( 04.11.2013 )

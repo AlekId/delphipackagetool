@@ -67,6 +67,7 @@ procedure ShowFolder(strFolder: string);
 function Get7zAppName:string; // returns full filename&path to the 7z.exe file.
 function HKEYToStr(const _Key: HKEY): string;
 function FindLine(var content:TStrings;_Tag:string;var removedText:string):integer;
+procedure ActivateApplication; // the application get's the focus.
 
 var
   FWriteMsg:TNVBTraceProcedure;
@@ -83,6 +84,19 @@ uses
   UITypes,
 {$ifend}
   shlObj;
+
+procedure ActivateApplication;
+var
+  ActiveThreadId, CurrentThreadId: DWORD;
+begin
+  if GetForegroundWindow = Application.Handle then exit;
+  ActiveThreadId := GetWindowThreadProcessId(GetForegroundWindow,nil);
+  CurrentThreadId := GetCurrentThreadId;
+  AttachThreadInput(CurrentThreadId, ActiveThreadId, True);
+  SetForegroundWindow(Application.Handle);
+  AttachThreadInput(CurrentThreadId, ActiveThreadId, False);
+  BringWindowToTop(Application.Handle);
+end;
 
 {-----------------------------------------------------------------------------
   Procedure: FindLine
