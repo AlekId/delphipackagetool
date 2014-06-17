@@ -1667,27 +1667,6 @@ begin
   result:=(_list.count>0);
 end;
 
-//*****************************************************
-// Method:  GetField
-// Programmer: S.Herzog
-// Description: get a field from a string <_s> seperated by chars <_ch>.
-// Last changes: 23.04.02
-//*****************************************************
-function GetField(_ch:char;var _s:string):string;
-var
-_pos:integer;
-begin
-  Result:='';
-  _pos:=Pos(_ch,_s);
-  if _pos=0 then begin
-    Result:=_s;
-    _s:='';
-    exit;
-  end;
-  Result:=Copy(_s,1,_pos-1);
-  Delete(_s,1,_pos);
-end;
-
 {-----------------------------------------------------------------------------
   function: GetDelphiRootDir
   Author:    Not available
