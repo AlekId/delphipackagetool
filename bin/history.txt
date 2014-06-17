@@ -1,3 +1,6 @@
+1.9.2.13   ( 11.05.2014 )
+-SH: added XE6. ( not tested yet because I do not have it)
+
 1.9.2.12   ( 29.01.2014 )
 -SH: clean-up of settings.
 
