@@ -465,13 +465,12 @@ end;
 -----------------------------------------------------------------------------}
 function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 begin
-  result:=false;
-  NoOfRemovedKeys:=0;
-  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then exit;
-  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then exit;
-  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then exit;
-  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then exit;
   result:=true;
+  NoOfRemovedKeys:=0;
+  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then result:=false;
+  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then result:=false;
+  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then result:=false;
+  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then result:=false;
 end;
 
 {-----------------------------------------------------------------------------
@@ -1011,9 +1010,7 @@ begin
         inc(NoOfRemovedKeys);
       end;
     except
-      on e:exception do begin
-        trace(1,'Problem in CleanupByRegistry: Could not remove value <%s> from registry key <%s,%s>.<%s>.',[_packageName,HKEYToStr(_RootKey),_DelphiRootDirKey,e.Message]);
-      end;
+      on e:exception do trace(1,'Problem in CleanupByRegistry: Could not remove value <%s> from registry key <%s,%s>.<%s>.',[_packageName,HKEYToStr(_RootKey),_DelphiRootDirKey,e.Message]);
     end;
   finally
     _Reg.CloseKey;
