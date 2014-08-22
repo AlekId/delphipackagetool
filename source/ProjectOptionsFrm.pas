@@ -461,10 +461,8 @@ begin
   edtCompilerSwitches.Text:=_compilerSwitches;
   edtLibSuffix.Text:=DMMain.ProjectSettings.StringValue('Application/LibSuffix',10);
   _batchfilename:=DMMain.ProjectSettings.StringValue('Application/Events/OnBeforeInstallAll',1);
-  if _batchfilename='' then _batchfilename:=DMMain.ApplicationSettings.StringValue('Application/Events/OnBeforeInstallAll',13);
   edtBeforeInstallAll.Text:=_batchfilename;
   _batchfilename:=DMMain.ProjectSettings.StringValue('Application/Events/OnAfterInstallAll',2);
-  if _batchfilename='' then _batchfilename:=DMMain.ApplicationSettings.StringValue('Application/Events/OnAfterInstallAll',14);
   edtAfterInstallAll.Text :=_batchfilename;
   edtDebugCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/DebugCompilerSwitches',18);
   edtReleaseCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/ReleaseCompilerSwitches',19);
