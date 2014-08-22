@@ -15,7 +15,7 @@ uses
 {$ifndef NoZipSupport}
   Zip,
 {$endif}
-  ActnList;
+  ActnList, System.Actions;
 
 type
 
@@ -694,6 +694,18 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 procedure TDMMain.DataModuleCreate(Sender: TObject);
+const
+  // Commandline parameters
+  cCleanupBplDir = '-cleanupbpldir';
+  cCleanupAll    = '-cleanupall';
+  cProject       = '-p';
+  cRebuild       = '-rebuild';
+  cConfig        = '-n';
+  cPlatform      = '-a';
+  cInstall       = '-install';
+  cUninstall     = '-uninstall';
+  cProjIniFile   = '-o';
+  cSilent        = '-silent';
 resourcestring
   cRegisterBPG = 'Do you want to register file type (*.bpg) with the Delphi Package Tool ?';
   cRegisterBDSGroup = 'Do you want to register file type (*.bdsgroup) with the Delphi Package Tool ?';
@@ -701,8 +713,12 @@ resourcestring
 var
   _tmp: string;
   _filename: string;
+  _Config: string;
+  _Platform: string;
   i: integer;
 begin
+  _Config := '';
+  _Platform := '';
   ApplicationState := tas_init;
   FCurrentDelphiVersion := LatestIDEVersion;
   FCurrentBPLOutputPath := GetDelphiPackageDir(FCurrentDelphiVersion);
@@ -767,27 +783,26 @@ begin
   if ParamCount = 1 then begin
     _tmp := lowercase(trim(Paramstr(1)));
     trace(3,'Parameter is <%s>.',[_tmp]);
-    if Pos('-cleanupbpldir', _tmp) = 1 then CommandLineAction := actCleanUpProjectBPLDir else // command to be executed.
-    if Pos('-cleanupall', _tmp) = 1    then CommandLineAction := actCleanUpAll // command to be executed.
-                                       else BPGFilename := lowercase(_tmp);
+    if Pos(cCleanupBplDir, _tmp) = 1 then CommandLineAction := actCleanUpProjectBPLDir else // command to be executed.
+    if Pos(cCleanupAll, _tmp) = 1    then CommandLineAction := actCleanUpAll // command to be executed.
+    else begin
+      BPGFilename := lowercase(_tmp);
+      OpenBPG(BPGFilename);
+    end;
     exit;
   end;
   for i := 1 to ParamCount do begin
     _tmp := lowercase(Paramstr(i));
     trace(2,'Parameter <%d> is <%s>.',[i,_tmp]);
-    if Pos('-p', _tmp) = 1 then begin // project file (either bpg,dpk,dpr)
-      Delete(_tmp, 1, 2); //e.g. -p"C:\Projects\Packages\Owncomponents.bpl"
+    if Pos(cProject, _tmp) = 1 then begin // project file (either bpg,dpk,dpr)
+      Delete(_tmp, 1, Length(cProject)); //e.g. -p"C:\Projects\Packages\Owncomponents.bpl"
       if pos('"',_tmp)=1 then delete(_tmp,1,1); // remove the leading char <">.
       if pos('"',_tmp)>0 then _tmp:=copy(_tmp,1,pos('"',_tmp)); //copy until the occurence of the char <">.
       _filename := lowercase(_tmp);
       _filename := AbsoluteFilename(extractFilepath(application.ExeName),_filename);
-      if not fileexists(_filename) then begin
-        trace(1,'Warning: The file <%s> does not exists.Please check your parameters and settings.',[_filename]);
-        exit;
-      end;
-      OpenBPG(_filename);
+      if not OpenBPG(_filename) then exit;
     end;
-    if Pos('-rebuild', _tmp) = 1 then begin // command to be executed.
+    if Pos(cRebuild, _tmp) = 1 then begin // command to be executed.
       if (Pos('.bpg', _filename) > 0) or
          (Pos('.bdsgroup',_filename)>0) or
          (Pos('.groupproj',_filename)>0) then CommandLineAction := actRecompileAllPackages;
@@ -800,25 +815,40 @@ begin
       end;
     end;
 
-    if Pos('-install', _tmp) = 1 then begin // command to be executed.
+    if Pos(cConfig, _tmp) = 1 then begin // configuration to build (e.g. debug,release)
+      Delete(_tmp, 1, Length(cConfig)); //e.g. -nRelease
+      _Config := _tmp;
+    end;
+
+    if Pos(cPlatform, _tmp) = 1 then begin // platform to build (e.g. Win32,Win64)
+      Delete(_tmp, 1, Length(cPlatform)); //e.g. -aWin32
+      _Platform := _tmp;
+    end;
+
+    if Pos(cInstall, _tmp) = 1 then begin // command to be executed.
       if (Pos('.dpk', _filename) > 0) or
          (Pos('.dproj', _filename) > 0) then CommandLineAction := actInstallPackage;
     end;
 
-    if Pos('-uninstall', _tmp) = 1 then begin // command to be executed.
+    if Pos(cUninstall, _tmp) = 1 then begin // command to be executed.
       if (Pos('.dpk', _filename) > 0) or
          (Pos('.dproj', _filename) > 0) then CommandLineAction := actUninstallPackage;
     end;
 
-    if Pos('-o', _tmp) = 1 then begin // project ini-file
-      Delete(_tmp, 1, 2); //e.g. -OC:\Projects\Packages\Owncomponents.ini
+    if Pos(cProjIniFile, _tmp) = 1 then begin // project ini-file
+      Delete(_tmp, 1, Length(cProjIniFile)); //e.g. -OC:\Projects\Packages\Owncomponents.ini
       FApplicationIniFilename := AbsoluteFilename(extractFilepath(Application.exename),_tmp);
       InitializeAppSettings; // load application settings.
       CommandLineAction := actRecompileAllPackages;
     end;
 
-    if _tmp='-silent' then FCommandLineSilent:=true;
+    if _tmp = cSilent then FCommandLineSilent := True;
   end;
+
+  if _Config <> '' then
+    CurrentBPGConfigList.CommaText := _Config;
+  if _Platform <> '' then
+    CurrentBPGPlatformList.CommaText := _Platform;
 
   if (not fileexists(FApplicationIniFilename)) and
      (not IsSilentMode) then begin  // on the first start, ask if the filetypes shall be registered.
@@ -1170,20 +1200,11 @@ begin
   FAbortCompileFailure:=false;
   _batchFilename := ProjectSettings.StringValue('Application/Events/OnBeforeInstallAll', 1);
   // take the project specific settings
-  if _batchFilename = '' then begin
-    // this code is here for backawards compatibility with older version of the package tool.
-    _batchFilename := ApplicationSettings.StringValue('Application/Events/OnBeforeInstallAll', 13);
-    // if no project specific setting is available then take the application settings.
-    ProjectSettings.SetString('Application/Events/OnBeforeInstallAll', 1,
-      _batchFilename);
-    ApplicationSettings.SetString('Application/Events/OnBeforeInstallAll', 13, '')
-  end;
   if _batchFilename <> '' then begin
     _batchFilename := AbsoluteFilename(FBPGPath, _batchFilename);
     NVBAppExecExternalCommand.ExePath := ExtractFilePath(_batchFilename);
     NVBAppExecExternalCommand.ExeName := extractFileName(_batchFilename);
-    if NVBAppExecExternalCommand.Execute then
-      trace(2, 'Executed batch file <%s>.', [_batchFilename]);
+    if NVBAppExecExternalCommand.Execute then trace(2, 'Executed batch file <%s>.', [_batchFilename]);
   end;
   _start := gettickcount;
   DeleteLog;
@@ -1191,9 +1212,7 @@ begin
   InitBatchFile(FBPGPath + changeFileExt(extractFileName(FBPGFilename), '.bat'));
   ApplicationState := tas_working;
   try
-
     _CompiledProjects := CompileAndInstallProjects(FBPGProjectList);
-
     _filename := SaveBatchFile;
     if _filename <> '' then begin
       WriteLog('Saved batch file <%s>.', [_filename]);
@@ -1208,17 +1227,8 @@ begin
     WriteLog('It took <%d> seconds to compile all projects.', [_end]);
     CheckDelphiRunning;
     if not IsSilentMode then Application.MessageBox(pChar(cRebuiltAllProjects), pChar(cInformation), MB_ICONINFORMATION or MB_OK);
-    _batchFilename := ProjectSettings.StringValue('Application/Events/OnAfterInstallAll', 2);
-
     // take the project specific settings
-    if _batchFilename = '' then begin
-      // this code is here for backawards compatibility with older version of the package tool.
-      _batchFilename := ApplicationSettings.StringValue('Application/Events/OnAfterInstallAll', 14);
-      // if no project specific setting is available then take the application settings.
-      ProjectSettings.SetString('Application/Events/OnAfterInstallAll', 2, _batchFilename);
-      ApplicationSettings.SetString('Application/Events/OnAfterInstallAll', 14, _batchFilename);
-    end;
-
+    _batchFilename := ProjectSettings.StringValue('Application/Events/OnAfterInstallAll', 2);
     if _batchFilename <> '' then begin
       _batchFilename := AbsoluteFilename(FBPGPath, _batchFilename);
       NVBAppExecExternalCommand.ExePath := ExtractFilePath(_batchFilename);
@@ -2525,7 +2535,7 @@ end;
 -----------------------------------------------------------------------------}
 function TDMMain.GetCurrentPackageVersion: string;
 begin
-  result:=GetPackageVersion(FCurrentProjectFilename,FCurrentProjectOutputPath,FCurrentPackageSuffix,FCurrentProjectType)
+  result:=GetPackageVersion(FCurrentProjectFilename,ReplaceTag(FCurrentProjectOutputPath),FCurrentPackageSuffix,FCurrentProjectType)
 end;
 
 {-----------------------------------------------------------------------------
