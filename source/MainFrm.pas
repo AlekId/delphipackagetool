@@ -4,6 +4,13 @@
  Purpose:
  History:
 
+1.9.2.14   ( 22.08.2014 )
+-SH: removed OnBeforeInstallAll and OnAfterInstallAll from Application.Settings. They are now in Project.Settings.
+-MM: patch to support selection of compile-types e.g. debug/release from command line. e.g. -nRelease, e.g. -aWin32
+
+1.9.2.13   ( 11.05.2014 )
+-SH: added XE6. ( not tested yet because I do not have it)
+
 1.9.2.12   ( 29.01.2014 )
 -SH: clean-up of settings.
 

@@ -15,7 +15,7 @@ uses
 {$ifndef NoZipSupport}
   Zip,
 {$endif}
-  ActnList, System.Actions;
+  ActnList;
 
 type
 
@@ -698,13 +698,13 @@ const
   // Commandline parameters
   cCleanupBplDir = '-cleanupbpldir';
   cCleanupAll    = '-cleanupall';
-  cProject       = '-p';
+  cProject       = '-p';           //e.g. -p"C:\Projects\MyComponents\BuildAllProjects&PackagesD7.bpg" -Rebuild
   cRebuild       = '-rebuild';
-  cConfig        = '-n';
-  cPlatform      = '-a';
+  cConfig        = '-n';           //e.g. -nRelease
+  cPlatform      = '-a';           //e.g. -aWin32
   cInstall       = '-install';
   cUninstall     = '-uninstall';
-  cProjIniFile   = '-o';
+  cProjIniFile   = '-o';           //e.g. –o”myComponents.ini” –rebuild
   cSilent        = '-silent';
 resourcestring
   cRegisterBPG = 'Do you want to register file type (*.bpg) with the Delphi Package Tool ?';
@@ -785,10 +785,7 @@ begin
     trace(3,'Parameter is <%s>.',[_tmp]);
     if Pos(cCleanupBplDir, _tmp) = 1 then CommandLineAction := actCleanUpProjectBPLDir else // command to be executed.
     if Pos(cCleanupAll, _tmp) = 1    then CommandLineAction := actCleanUpAll // command to be executed.
-    else begin
-      BPGFilename := lowercase(_tmp);
-      OpenBPG(BPGFilename);
-    end;
+                                     else BPGFilename := lowercase(_tmp);
     exit;
   end;
   for i := 1 to ParamCount do begin
