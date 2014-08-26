@@ -116,11 +116,19 @@ begin
     exit;
   end;
 
+  if Pos('\',_path)=1 then begin      // its a drive relative path, leave here.
+    if _path<>'' then begin
+      _path:=IncludeTrailingPathDelimiter(_path);
+    end;
+    result:=ExtractFileDrive(_basepath)+_path;
+    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+    exit;
+  end;
+
   if (pos('..\',_path)=0) and
      (pos('.\',_path)=0) then begin    // its not a relative path, leave here.
     if _path<>'' then begin
       _path:=IncludeTrailingPathDelimiter(_path);
-      if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
     end;
     result:=IncludeTrailingPathDelimiter(_basepath)+_path;
     trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
