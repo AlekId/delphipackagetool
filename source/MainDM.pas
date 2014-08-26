@@ -610,7 +610,7 @@ begin
   then ProjectSettings.SetPath('Application/DCPOutputPath', 17,ProjectSettings.PathValue('Application/PackageOutputPath', 6));
 
   ReadPackageListfromFile(FBPGFilename, FBPGProjectList);
-  FDPTSearchPath := GetGlobalSearchPath(False);
+  FDPTSearchPath := GetGlobalSearchPath(True);
   GetAllPlatformsAndConfigsOfBPG;
   SetLastUsedBPGFile(BPGFilename);
   ApplicationState := tas_open;
