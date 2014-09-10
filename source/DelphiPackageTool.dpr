@@ -13,7 +13,6 @@ uses
   uDPTDefinitions in 'uDPTDefinitions.pas',
   AboutFrm in 'AboutFrm.pas' {frmAbout},
   uDPTJclFuncs in 'uDPTJclFuncs.pas',
-  uDPTDelphiPackage in 'uDPTDelphiPackage.pas',
   uDPTSettings in 'uDPTSettings.pas',
   uDPTMisc in 'uDPTMisc.pas',
   VersionFrm in 'VersionFrm.pas' {FrmVersion},
@@ -21,7 +20,8 @@ uses
   uDPTPathFilenameConvert in 'uDPTPathFilenameConvert.pas',
   uDTPProjectData in 'uDTPProjectData.pas',
   ProjectOptionsFrm in 'ProjectOptionsFrm.pas' {FrmProjectOptions},
-  uDPTDblList in 'uDPTDblList.pas';
+  uDPTDblList in 'uDPTDblList.pas',
+  uDPTDelphiPackage in 'uDPTDelphiPackage.pas';
 
 {$R *.res}
 
