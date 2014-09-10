@@ -886,11 +886,12 @@ begin
   if (_version>11) and
      (_version<15) then begin // for delphi 2008 (aka bds 6.0) til D2010
     if _version<13 then _sDelphiVersion:=inttostr(_version-6)+'.0\'
-                  else _sDelphiVersion:=inttostr(_version-7)+'.0\';
+                   else _sDelphiVersion:=inttostr(_version-7)+'.0\';
     RootKey:=cCodeGearBDSKey+'\'+_sDelphiVersion;
     result:=true;
   end
   else begin  // for Delphi 2011 (aka XE) and later.
+ //   if _version>19 then _sDelphiVersion:=inttostr(_version-6)+'.0\'  // they skiped 13
     _sDelphiVersion:=inttostr(_version-7)+'.0\';
     RootKey:=cEmbarcaderoBDSKey+_sDelphiVersion;
     result:=true;
