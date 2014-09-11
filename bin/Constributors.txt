@@ -7,7 +7,7 @@ Thanks to:
 ***********
 - Andreas Heim
 - Markus Müller
-- JCL/JVCL Team (portions for package handling)
+- JCL/JVCL Team (portions for package handling) http://jvcl.delphi-jedi.org/
 - Jason Penny  (SetVersion.exe) http://www.jasontpenny.com/
 - Colin Wilson (SetVersion.exe contains some code from C.Wilson) http://www.wilsonc.demon.co.uk/delphi.htm
 - Patrick Brisacier and Jean-Fabien Connault for Component TAPPExec.

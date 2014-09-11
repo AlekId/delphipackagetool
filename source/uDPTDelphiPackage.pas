@@ -994,7 +994,7 @@ begin
   try
     _Reg.RootKey := _ROOTKEY;
     if not _Reg.OpenKey(_DelphiRootDirKey,false) then begin
-      trace(1,'CleanupByRegistry: The Key <%s,%s> was not found in the registry or no access rights.',[HKEYToStr(_RootKey),_DelphiRootDirKey]);
+      trace(1,'CleanupByRegistry: The Key <%s/%s> was not found in the registry or no access rights.',[HKEYToStr(_RootKey),_DelphiRootDirKey]);
       exit;
     end;
     _Reg.GetValueNames(_ValueNames);
@@ -1006,7 +1006,7 @@ begin
           trace(3,'Problem in CleanupByRegistry: Could not remove value <%s> from key <%s,%s> from registry for delphi <%d>.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey,_DelphiVersion]);
           result:=false;
           continue;
-        end ;
+        end;
         trace(3,'Removed value <%s> from registry key <%s,%s> because the referenced file <%s> does not exist.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey,_packageName]);
         inc(NoOfRemovedKeys);
       end;

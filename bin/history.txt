@@ -1,3 +1,6 @@
+1.9.2.16   ( 10.09.2014 )
+-SH: changes to correctly detect versions XE6 and XE7.
+
 1.9.2.15   ( 26.08.2014 )
 -MM: patch to support search-path's starting with '\'.
 
