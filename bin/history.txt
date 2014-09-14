@@ -1,3 +1,6 @@
+1.9.2.17   ( 14.09.2014 )
+-SH: fixed possible problem when using strtofloat and decimalseparator does not meet the country-settings.
+
 1.9.2.16   ( 10.09.2014 )
 -SH: changes to correctly detect versions XE6 and XE7.
 

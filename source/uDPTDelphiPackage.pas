@@ -1642,7 +1642,8 @@ begin
   end;
   i:=0;
   while i<_list.count do begin     // found n entries in the registry. Now check if referenced compiler file is really available.
-    _version:=trunc(strtofloat(_list.Strings[i]));
+    StringToFloat(_list.Strings[i],_fVersion);
+    _version:=trunc(_fVersion);
     _delphiExeFilename:=GetDelphiApplication(_version);
     if _delphiExeFilename='' then _list.Delete(i)
     else begin
@@ -1658,7 +1659,8 @@ begin
   end;
   i:=0;
   while i<_list.count do begin
-    _version:=trunc(strtofloat(_list.Strings[i]));
+    StringToFloat(_list.Strings[i],_fVersion);
+    _version:=trunc(_fVersion);
     _list[i]:=VersionNoToIDEName(_version,tdn_long);
     inc(i);
   end;
