@@ -328,7 +328,7 @@ const
       VersionStr: 'XE6';
       IDEVersion: 14;
       IDEVersionStr: '14.0';
-      CoreIdeVersion: '200';
+      CoreIdeVersion: '210';
       ShortName: 'XE6';
       LongName: 'Embarcadero RAD Studio XE6';
       CompilerVersion:27;
@@ -339,7 +339,7 @@ const
       VersionStr: 'XE7';
       IDEVersion: 15;
       IDEVersionStr: '15.0';
-      CoreIdeVersion: '210';
+      CoreIdeVersion: '220';
       ShortName: 'XE7';
       LongName: 'Embarcadero RAD Studio XE7';
       CompilerVersion:28;
