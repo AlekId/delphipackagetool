@@ -2,7 +2,7 @@
  Unit Name: MainFrm
  Author:    Samuel Herzog
  Purpose:   Main-Form of the delphipackagetool
- History:   please see file .bin\history.txt
+ History:   please see file .bin\readme.txt
 -----------------------------------------------------------------------------}
 
 unit MainFrm;
@@ -665,7 +665,7 @@ begin
   NVBAppExecExternalCommand.ExeName:='NVBUpdater.exe';
   NVBAppExecExternalCommand.ExePath:='';
   NVBAppExecExternalCommand.Wait:=false;
-  NVBAppExecExternalCommand.ExeParams:=format('"-d" -h"www.novabit.ch" -p"/downloads/delphipackagetool/update/" -f"%s;%s;%s" -l"%s"',[_applicationName,'history.txt','setversion.exe',_currentVersion]);
+  NVBAppExecExternalCommand.ExeParams:=format('"-d" -h"www.novabit.ch" -p"/downloads/delphipackagetool/update/" -f"%s;%s;%s" -l"%s"',[_applicationName,'readme.txt','setversion.exe',_currentVersion]);
   _path1:='..\NVBUpdater\';
   _path2:=extractFilePath(Application.ExeName);
   _path3:=GetSystemPath(spProgFiles)+'Novabit Software\NVBUpdater\';

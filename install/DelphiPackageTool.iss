@@ -8,7 +8,7 @@ AppName=Delphi Package Tool
 AppVerName=Delphi Package Tool {#MyAppVer}
 DefaultDirName={pf}\Delphi Package Tool
 DefaultGroupName=Delphi Package Tool
-InfoBeforeFile=..\Bin\History.txt
+InfoBeforeFile=..\Bin\readme.txt
 InfoAfterFile=
 Compression=lzma
 SolidCompression=yes
@@ -23,7 +23,6 @@ Source: ..\Bin\SetVersion.exe; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\ReadMe.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\Constributors.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\TheDelphiPackageTool.pdf; DestDir: {app}; Flags: ignoreversion
-Source: ..\Bin\History.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\Bin\Lies_mich.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\doc\create_new_project.swf; DestDir: {app}\doc\video; Flags: ignoreversion
 Source: ..\doc\open_in_IDE.swf; DestDir: {app}\doc\video; Flags: ignoreversion
