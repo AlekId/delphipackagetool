@@ -31,7 +31,7 @@ implementation
 
 const
   cReadmeFile = 'Readme.txt';
-  cHistoryFile = 'History.txt';
+  cHistoryFile = 'Readme.txt';
 
 procedure ShowStartUpDlg(var _shownexttimeagain: boolean);
 var
