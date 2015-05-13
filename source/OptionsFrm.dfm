@@ -17,7 +17,6 @@ object FrmOptions: TFrmOptions
   Position = poMainFormCenter
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
@@ -158,22 +157,6 @@ object FrmOptions: TFrmOptions
       TabOrder = 2
       Text = '%FILENAME%'
     end
-    object cbxAutoBackup: TCheckBox
-      Left = 272
-      Top = 184
-      Width = 185
-      Height = 17
-      Hint = 
-        'After a successfully "Install All", create a backup zip-file of ' +
-        'the sources.'
-      Caption = 'Create Backup zip-file'
-      Checked = True
-      ParentShowHint = False
-      ShowHint = True
-      State = cbChecked
-      TabOrder = 8
-      OnExit = cbxAutoBackupExit
-    end
     object edtDiffTool: TEdit
       Left = 8
       Top = 120
@@ -193,7 +176,7 @@ object FrmOptions: TFrmOptions
       Caption = 'Trace'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 9
+      TabOrder = 8
     end
     object cbxBackupSourceOnly: TCheckBox
       Left = 272
@@ -206,8 +189,7 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 10
-      OnExit = cbxAutoBackupExit
+      TabOrder = 9
     end
   end
   object pnlBottom: TPanel
@@ -223,7 +205,6 @@ object FrmOptions: TFrmOptions
       Width = 90
       Height = 25
       TabOrder = 0
-      OnClick = btnOkClick
       Kind = bkOK
     end
     object btnCancel: TBitBtn
