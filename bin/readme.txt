@@ -71,6 +71,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.18   ( 13.05.2015 )
+-SH: moved setting "AutoBackup" from Application-Settings to Project-Settings.
+-SH: small change for reading registry.
+
 
 1.9.2.17   ( 14.09.2014 )
 -SH: fixed possible problem when using strtofloat and decimalseparator does not meet the country-settings.
