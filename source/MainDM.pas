@@ -599,6 +599,7 @@ begin
   ProjectSettings.GetPathValue('Application/DCPOutputPath', 17, cDefaultDCPPath , 'Output Path for the dcp-files.', true,false,false);
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches',18,'','Compiler switches used for debug config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches',19,'','Compiler switches used for release config, if there is no *.cfg or *.dproj',true,false,false);
+  ProjectSettings.GetBoolValue('Application/AutoBackup',20,false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
 
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName]);
   CurrentDelphiVersion := ProjectSettings.IntegerValue('Application/DelphiVersion',5);
@@ -1096,7 +1097,6 @@ begin
   ApplicationSettings.GetBoolValue('Application/ChangeFiles', 13,false,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/ModifyEnvironmentPath',14,false,'If set to true, the DelphiPackageTool will change the computers environment path.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath',15,'C:\','Specifies the last used search path.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/AutoBackup', 16,false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/UseSkins', 17, True, 'If true then the application will be skinned.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', 18, True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile',19,'','Last used project name.',true,false,false);
@@ -2108,7 +2108,7 @@ var
 _filename:string;
 _path:string;
 begin
-  if not ApplicationSettings.BoolValue('Application/AutoBackup', 16) then exit;
+  if not ProjectSettings.BoolValue('Application/AutoBackup', 20) then exit;
   _filename:=changefileExt(ExtractFilenameOnly(BPGFilename)+'_'+BuildTimeStamp(now),'.zip');
   if ProjectSettings.PathValue('Application/LastUsedBackupPath',11)='' then _path:=extractfilepath(BPGFilename)+'backup\'
                                                                        else _path:=ProjectSettings.PathValue('Application/LastUsedBackupPath',11);

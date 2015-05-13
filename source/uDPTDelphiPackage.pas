@@ -916,7 +916,7 @@ _Key:string;
   _Reg:TRegistry;
   begin
     result:=false;
-    _Reg := TRegistry.Create;
+    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
     try
       _Reg.RootKey := _RootKey;
       if not _Reg.OpenKeyReadOnly(_Key) then begin
@@ -989,7 +989,7 @@ begin
     exit;
   end;
   _DelphiRootDirKey:=_DelphiRootDirKey+_DelphiSubKey;
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   _ValueNames:=TStringList.create;
   try
     _Reg.RootKey := _ROOTKEY;
@@ -1035,7 +1035,7 @@ var
 begin
   result:=false;
   _PackageName:=lowercase(_PackageName);
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
@@ -1144,7 +1144,7 @@ begin
     exit;
   end;
 
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   _ValueNames:=TStringList.create;
   try
     _Reg.RootKey := _ROOTKEY;
@@ -1523,7 +1523,7 @@ _DelphiRootDirKey:string;
   _Reg: TRegistry;
   begin
     result:='';
-    _Reg := TRegistry.Create;
+    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
     try
       _Reg.RootKey := _RootKey;
       if not _Reg.OpenKeyReadOnly(_Key) then begin
@@ -1570,7 +1570,7 @@ i:integer;
   var
   _reg: TRegistry;
   begin
-    _reg := TRegistry.Create;
+    _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
     try
       try
         _reg.RootKey := _RootKey;
@@ -1686,7 +1686,7 @@ var
 _Reg: TRegistry;
 begin
   result:='';
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKeyReadOnly(_DelphiRootDirKey) then begin
@@ -1737,7 +1737,7 @@ _DelphiPackagePath:string;
   var
   _Reg: TRegistry;
   begin
-    _Reg := TRegistry.Create;
+    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
     try
       _Reg.RootKey := _RootKey;
       _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
@@ -1792,7 +1792,7 @@ var
 _Reg: TRegistry;
 begin
   result:=false;
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_DelphiPackageDirKey,false) then begin
@@ -3135,7 +3135,7 @@ var
 begin
   Result:=false;
   _PackageName:=lowercase(_PackageName);
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin

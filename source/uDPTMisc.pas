@@ -22,6 +22,9 @@ const
   cNoVersion='No Version';
   cSetVersionApplicationName='SetVersion.exe';
 
+  KEY_WOW64_64KEY = $0100;
+  KEY_WOW64_32KEY = $0200;
+
 {$H+}
 type
 
@@ -157,7 +160,7 @@ var
 _Reg: TRegistry;
 begin
   result:='';
-  _Reg := TRegistry.Create;
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     _Reg.RootKey := HKEY_CLASSES_ROOT;
     if _Reg.OpenKeyReadOnly('\Applications\7z.exe\shell\open\command') then begin
@@ -347,7 +350,7 @@ begin
   if Pos('.',_ExtName)=1 then delete(_extname,1,1);
   _BaseKeyName:= _ExtName + 'file';
   _RegistryFileName:=ExtractFilenameOnly(_AppName)+'.'+_extname;
-  _reg := TRegistry.Create;
+  _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     try
       _reg.RootKey:=HKEY_CLASSES_ROOT;
@@ -390,7 +393,7 @@ begin
   if Pos('.',_ExtName)=1 then delete(_extname,1,1);
   _BaseKeyName:= _ExtName + 'file';
   _RegistryFileName:=ExtractFilenameOnly(_AppName)+'.'+_extname;
-  _reg := TRegistry.Create;
+  _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     try
       _reg.RootKey:=HKEY_CLASSES_ROOT;
@@ -471,7 +474,7 @@ var
 begin
   result:='';
   CSIDL := -1;
-  Reg := TRegistry.Create;
+  Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     case SystemPath of
       spDesktop:   CSIDL := CSIDL_DESKTOP;
