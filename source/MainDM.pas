@@ -148,7 +148,8 @@ type
     function  ReplaceTag(_filename: string): string;
     procedure DeleteBPLAndDCPFiles;
     procedure UninstallCurrentPackage;
-    procedure InstallCurrentPackage;    
+    procedure InstallCurrentPackage;
+    procedure InitDefaultProjectSettings;
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -237,6 +238,7 @@ uses
 
 const
 cModifiedFileExtentions='.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;';
+cDefaultDCPPath='dcp\$(DELPHIVERSION)\';
 
 {-----------------------------------------------------------------------------
   Procedure: ReadCurrentProjectType
@@ -312,7 +314,6 @@ begin
   if not NVBAppExec1.Execute then exit;
   result:=true;
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: ShowFile
@@ -511,10 +512,10 @@ end;
 -----------------------------------------------------------------------------}
 function TDMMain.GetGlobalSearchPath(const _absolutePaths:boolean=true): string;
 var
-  _SearchPath: TStrings;
-  _currentPath: string;
-  i: integer;
-  _filename:string;
+i: integer;
+_SearchPath: TStrings;
+_currentPath: string;
+_filename:string;
 begin
   Result := '';
   _filename:=changeFileExt(FBPGFilename,'.txt');
@@ -525,22 +526,18 @@ begin
   _SearchPath := TStringList.create;
   try
     _SearchPath.LoadfromFile(_filename);
-    for i := 0 to _SearchPath.count - 1 do
-    begin
+    for i := 0 to _SearchPath.count - 1 do begin
       _currentPath := trim(_SearchPath[i]);
       if LastPos(_currentPath, ';') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if LastPos(_currentPath, '\') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if _absolutePaths then begin
         _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion);
-        if (_currentPath<>'') then begin
-          Result := Result + _currentPath + ';';
-          trace(5,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
-          if not DirectoryExists(_currentPath) then begin
-            trace(3, 'Possible problem in GetGlobalSearchPath: Could not find path <%s>.', [_currentPath]);
-          end;
-        end;
+        if _currentPath='' then continue;
+        result := Result + _currentPath + ';';
+        trace(5,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
+        if not DirectoryExists(_currentPath) then trace(3, 'Possible problem in GetGlobalSearchPath: Could not find path <%s>.', [_currentPath]);
       end
-      else if _currentPath<>'' then Result := Result + _currentPath + ';';
+      else if _currentPath<>'' then result := result + _currentPath + ';';
     end;
   finally
     _SearchPath.free;
@@ -565,27 +562,16 @@ begin
   else result:=ProjectSettings.StringValue('Application/LibSuffix',10);
 end;
 
-
 {*-----------------------------------------------------------------------------
-  Procedure: OpenBPG
+  Procedure: InitDefaultProjectSettings
   Author:    sam
-  Date:      02-Feb-2008
-  Arguments: const _Filename: string
+  Date:      16-Mai-2015
+  Arguments: None
   Result:    None
-  Description: open the package group file.
+  Description: init project settings.
 -----------------------------------------------------------------------------}
-function TDMMain.OpenBPG(const _Filename: string): Boolean;
-const
-cDefaultDCPPath='dcp\$(DELPHIVERSION)\';
+procedure TDMMain.InitDefaultProjectSettings;
 begin
-  Result := False;
-  if not FileExists(_Filename) then begin
-    WriteLog('The file <%s> does not exist. Please check parameters.', [_Filename]);
-    Trace(1, 'Problem in OpenBPG: The file <%s> does not exist.', [_Filename]);
-    Exit;
-  end;
-  BPGFilename := _Filename;
-  ProjectSettings.Filename := ChangeFileExt(FBPGFilename, '.ini');
   ProjectSettings.GetStringValue('Application/Events/OnBeforeInstallAll',1,'','The name of the batch file which will be executed when user presses "Install All".', true,false,false);
   ProjectSettings.GetStringValue('Application/Events/OnAfterInstallAll',2,'','The name of the batch file which will be executed after all projects have been compiled successfully.', true,false,false);
   ProjectSettings.GetStringValue('Application/CompilerSwitches',3,'-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
@@ -600,7 +586,27 @@ begin
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches',18,'','Compiler switches used for debug config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches',19,'','Compiler switches used for release config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup',20,false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
+end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: OpenBPG
+  Author:    sam
+  Date:      02-Feb-2008
+  Arguments: const _Filename: string
+  Result:    None
+  Description: open the package group file.
+-----------------------------------------------------------------------------}
+function TDMMain.OpenBPG(const _Filename: string): Boolean;
+begin
+  Result := False;
+  if not FileExists(_Filename) then begin
+    WriteLog('The file <%s> does not exist. Please check parameters.', [_Filename]);
+    Trace(1, 'Problem in OpenBPG: The file <%s> does not exist.', [_Filename]);
+    Exit;
+  end;
+  BPGFilename := _Filename;
+  ProjectSettings.Filename := ChangeFileExt(FBPGFilename, '.ini');
+  InitDefaultProjectSettings;
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName]);
   CurrentDelphiVersion := ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   CurrentBPGPlatformList.CommaText := ProjectSettings.StringValue('Application/Platform',14);
@@ -1078,7 +1084,6 @@ begin
   ApplicationSettings := TNVBSettings.Create(Self);
   ApplicationSettings.Name := 'ApplicationSettings';
   ApplicationSettings.AutoSave := False;
-  ApplicationSettings.FileName := 'Settings.ini';
   ApplicationSettings.OnError := ApplicationSettingsError;
   ApplicationSettings.CryptIt := False;
   ApplicationSettings.FileName := FApplicationIniFilename;
@@ -2031,6 +2036,14 @@ begin
   Result := _filename;
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: PrepareEXEParams
+  Author:    sam
+  Date:
+  Arguments: _filename: string; _lineNo: integer;_SourceCodeEditorParams: string
+  Result:    string
+  Description:
+-----------------------------------------------------------------------------}
 function TDMMain.PrepareEXEParams(_filename: string; _lineNo: integer;_SourceCodeEditorParams: string): string;
 begin
   result:='';

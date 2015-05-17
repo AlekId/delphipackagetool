@@ -105,7 +105,7 @@ const
   cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';
   cProjectGroupFilter='*.bpg;*.groupproj;*.bdsgroup';
 
-  DelphiVersions: array [1..22] of TDelphiVersionInfo = (
+  DelphiVersions: array [1..23] of TDelphiVersionInfo = (
     (
       Name: cDelphiName;           //1
       VersionStr: '1.0';
@@ -262,7 +262,7 @@ const
       VersionStr: 'XE';
       IDEVersion: 8;
       IDEVersionStr: '8.0';
-      CoreIdeVersion: '150';
+      CoreIdeVersion: '???';
       ShortName: 'XE';
       LongName: 'Embarcadero RAD Studio XE';
       CompilerVersion:22;
@@ -273,7 +273,7 @@ const
       VersionStr: 'XE2';
       IDEVersion: 9;
       IDEVersionStr: '9.0';
-      CoreIdeVersion: '160';
+      CoreIdeVersion: '???';
       ShortName: 'XE2';
       LongName: 'Embarcadero RAD Studio XE2';
       CompilerVersion:23;
@@ -284,7 +284,7 @@ const
       VersionStr: 'XE3';
       IDEVersion: 10;
       IDEVersionStr: '10.0';
-      CoreIdeVersion: '170';
+      CoreIdeVersion: '???';
       ShortName: 'XE3';
       LongName: 'Embarcadero RAD Studio XE3';
       CompilerVersion:24;
@@ -295,7 +295,7 @@ const
       VersionStr: 'XE4';
       IDEVersion: 11;
       IDEVersionStr: '11.0';
-      CoreIdeVersion: '180';
+      CoreIdeVersion: '???';
       ShortName: 'XE4';
       LongName: 'Embarcadero RAD Studio XE4';
       CompilerVersion:25;
@@ -306,7 +306,7 @@ const
       VersionStr: 'XE5';
       IDEVersion: 12;
       IDEVersionStr: '12.0';
-      CoreIdeVersion: '190';
+      CoreIdeVersion: '???';
       ShortName: 'XE5';
       LongName: 'Embarcadero RAD Studio XE5';
       CompilerVersion:26;
@@ -322,7 +322,7 @@ const
       LongName: 'AppMethod';
       CompilerVersion:26.5;
       CompilerVersionStr:'VER265';
-      Supported: True),
+      Supported: False),
     (
       Name: cRSName;              //21
       VersionStr: 'XE6';
@@ -339,11 +339,22 @@ const
       VersionStr: 'XE7';
       IDEVersion: 15;
       IDEVersionStr: '15.0';
-      CoreIdeVersion: '220';
+      CoreIdeVersion: '???';
       ShortName: 'XE7';
       LongName: 'Embarcadero RAD Studio XE7';
       CompilerVersion:28;
       CompilerVersionStr:'VER280';
+      Supported: True),
+   (
+      Name: cRSName;              //23
+      VersionStr: 'XE8';
+      IDEVersion: 16;
+      IDEVersionStr: '16.0';
+      CoreIdeVersion: '???';
+      ShortName: 'XE7';
+      LongName: 'Embarcadero RAD Studio XE8';
+      CompilerVersion:29;
+      CompilerVersionStr:'VER290';
       Supported: True)
   );
 

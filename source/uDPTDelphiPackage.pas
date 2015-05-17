@@ -989,7 +989,7 @@ begin
     exit;
   end;
   _DelphiRootDirKey:=_DelphiRootDirKey+_DelphiSubKey;
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   _ValueNames:=TStringList.create;
   try
     _Reg.RootKey := _ROOTKEY;
