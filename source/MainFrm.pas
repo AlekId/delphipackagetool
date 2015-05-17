@@ -784,7 +784,7 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: DMMain.ApplicationSettingstoGUI
+  Procedure: ApplicationSettingstoGUI
   Author:    sam
   Date:      02-Feb-2005
   Arguments: None
