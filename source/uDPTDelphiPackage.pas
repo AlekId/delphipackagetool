@@ -3135,7 +3135,7 @@ var
 begin
   Result:=false;
   _PackageName:=lowercase(_PackageName);
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
