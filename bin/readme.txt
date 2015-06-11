@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.20   ( 11.06.2015 )
+-SH: fix: when switching between different delphi versions, the displayed hint on a package/project was not updated.
+
 1.9.2.19   ( 19.05.2015 )
 -SH: fixed regression in method "AddPackageToRegistry".
 

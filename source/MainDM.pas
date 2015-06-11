@@ -1066,6 +1066,7 @@ begin
   trace(3,'Set the Compiler Root Directory to <%s>.',[FDelphiRootDirectory]);
   ReadLibraryPath(FCurrentDelphiVersion,FDelphiLibraryPath);
   AdaptSearchPath;
+  InitProjectDataForHint;
   FireDelphiVersionChanged;
 end;
 
