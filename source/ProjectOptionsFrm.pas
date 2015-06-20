@@ -77,7 +77,7 @@ type
     procedure GUIToSettings;
     procedure SettingsToGUI;
     function LoadSearchPathData:boolean;
-    function VerifyDirectories(const _delphiVersion:integer): boolean;
+    function VerifyDirectories(const _delphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string): boolean;
   public
     function SaveSearchPathData:boolean;
     function AddPath(_path:string):boolean;
@@ -155,7 +155,7 @@ begin
     insert(5,DMMain.CurrentBPLOutputPath+';');
     mmoSearchPath.Lines.Assign(FSearchPaths);
   end;
-  VerifyDirectories(DMMain.CurrentDelphiVersion);
+  VerifyDirectories(DMMain.CurrentDelphiVersion,DMMain.PlatformToCompile, DMMain.ConfigToCompile);
   VerifySettings;
 end;
 
@@ -167,7 +167,7 @@ end;
   Result:    boolean
   Description: check if the directories really exist.
 -----------------------------------------------------------------------------}
-function TFrmProjectOptions.VerifyDirectories(const _DelphiVersion:integer): boolean;
+function TFrmProjectOptions.VerifyDirectories(const _DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string): boolean;
 resourcestring
 cDirectoryDoesNotExist='The directory <%s> does not exits. Remove this entry ?';
 var
@@ -205,13 +205,13 @@ begin
     end;
     i:=0;
     while i<=count do begin
-      _path := ReplaceTag(trim(mmoSearchPath.Lines[i]),_delphiVersion);
+      _path := ReplaceTag(trim(mmoSearchPath.Lines[i]),_delphiVersion,_CurrentPlatform, _CurrentConfig);
       if _path = '' then begin
         inc(i);
         continue;
       end;
       _path:=RemoveTrailingSemikolon(_Path);
-      _path:=AbsolutePath(DMMain.BPGPath,_path,_DelphiVersion);
+      _path:=AbsolutePath(DMMain.BPGPath,_path,_DelphiVersion,DMMain.PlatformToCompile, DMMain.ConfigToCompile);
       if not SysUtils.DirectoryExists(_path) then begin
         if Application.MessageBox(pchar(format(cDirectoryDoesNotExist, [_Path])),pchar(cWarning),MB_ICONWARNING or MB_YESNO)=IDYes then begin
           mmoSearchPath.Lines.delete(i);
@@ -234,7 +234,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmProjectOptions.btnVerifyDirectoriesClick(Sender: TObject);
 begin
-  if not VerifyDirectories(DMMain.CurrentDelphiVersion) then exit;
+  if not VerifyDirectories(DMMain.CurrentDelphiVersion,DMMain.PlatformToCompile, DMMain.ConfigToCompile) then exit;
   ShowMessage('Path settings seems to be ok.');
 end;
 

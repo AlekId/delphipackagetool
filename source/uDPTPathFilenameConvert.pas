@@ -10,11 +10,11 @@ unit uDPTPathFilenameConvert;
 interface
 
 function AbsoluteFilename(_realpath,_filename: string): string;
-function AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string; // converts the path <_path> into an absolute pathname.
+function AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // converts the path <_path> into an absolute pathname.
 function RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:integer):string; // converts the filename <_filename> into a relative filename.
 function RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string; // converts the path <_path> into a realtive pathname.
-function RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer):string; // converts a list of paths to relative paths.
-function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
+function RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // converts a list of paths to relative paths.
+function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
 
 implementation
 
@@ -102,12 +102,12 @@ end;
   Result:    string
   Description: converts the path <_path> into an absolute pathname.
 -----------------------------------------------------------------------------}
-function  AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer):string;
+function  AbsolutePath(_basepath,_path:string;const _DelphiVersion:integer;const _CurrentPlatform,_CurrentConfig: string):string;
 var
 _pos:integer;
 _len:integer;
 begin
-  _path:=ReplaceTag(_path,_DelphiVersion);
+  _path:=ReplaceTag(_path,_DelphiVersion,_CurrentPlatform,_CurrentConfig);
 
   if (pos('\\',_path)=1) or               // looks like the filename contains already a absolute path.
      (pos(':\',_path)>0) then begin
@@ -178,7 +178,7 @@ end;
   Description: convert all entries in the path-list <_path> into a path-list with absolut path-names.
   e.g. $(Delphi)\bin;$(ProgramFiles)\test;..\..\library; will be converted into absolute path names.
 -----------------------------------------------------------------------------}
-function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer):string;
+function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string):string;
 var
 i:integer;
 _item:string;
@@ -189,7 +189,7 @@ begin
   try
     while _path<>'' do begin
       _item:=GetField(';',_path);
-      _item:=lowercase(AbsolutePath(_basePath,_item,_DelphiVersion));
+      _item:=lowercase(AbsolutePath(_basePath,_item,_DelphiVersion,_CurrentPlatform, _CurrentConfig));
       if _list.IndexOf(_item)=-1 then _list.Add(_item);
     end;
     for i:=0 to _list.Count-1 do result:=result+_list[i]+';';
@@ -222,7 +222,7 @@ end;
                Inexistent Paths will be removed.
                Doubled items will be removed.
 -----------------------------------------------------------------------------}
-function  RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer):string; // converts a list of paths to relative paths.
+function  RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // converts a list of paths to relative paths.
 var
 _path:string;
 _absolutepath:string;
@@ -230,7 +230,7 @@ begin
   _paths:=lowercase(_paths);
   _path:=Getfield(';',_paths);
   while _path<>'' do begin
-    _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion);
+    _absolutepath:=AbsolutePath(_basepath,_path,_DelphiVersion,_CurrentPlatform, _CurrentConfig);
     if DirectoryExists(_absolutepath) then begin
       _path:=RelativePath(_basepath,_path,_DelphiVersion);
       if _path<>'' then result:=result+_path+';';
