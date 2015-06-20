@@ -197,6 +197,9 @@ type
     property  BPGProjectList:TStringList read FBPGProjectList;
     property  BPGPlatformList: TStringList read FBPGPlatformList;
     property  BPGConfigList: TStringList read FBPGConfigList;
+    property  ConfigToCompile: string read FConfigToCompile;
+    property  PlatformToCompile: string read FPlatformToCompile;                // information read from the registery.
+
     property  CurrentBPGPlatformList: TStringList read FCurrentBPGPlatformList; // selected platforms for the current project group
     property  CurrentBPGConfigList: TStringList read FCurrentBPGConfigList;     // selected configs for the current project group
     property  ZipFilename:string read FZipFilename;
@@ -422,11 +425,11 @@ begin
   // setup the bpl output-path
   if ProjectSettings.PathValue('Application/PackageOutputPath', 6) <> '' then begin
     // then take it from the dpt
-    FCurrentBPLOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/PackageOutputPath', 6), FCurrentDelphiVersion);
+    FCurrentBPLOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/PackageOutputPath', 6), FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end
   else begin
     // otherwise take the path from the cfg-file.
-    FCurrentBPLOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentBPLOutputPath, FCurrentDelphiVersion);
+    FCurrentBPLOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentBPLOutputPath, FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end;
   FCurrentBPLOutputPath := IncludeTrailingPathDelimiter(FCurrentBPLOutputPath);
 
@@ -443,11 +446,11 @@ begin
   // setup the dcp output-path
   if ProjectSettings.PathValue('Application/DCPOutputPath', 17) <> '' then begin
     // then take it from the dpt
-    FCurrentDCPOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/DCPOutputPath', 17), FCurrentDelphiVersion);
+    FCurrentDCPOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/DCPOutputPath', 17), FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end
   else begin
     // otherwise take the path from the cfg-file.
-    FCurrentDCPOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCPOutputPath, FCurrentDelphiVersion);
+    FCurrentDCPOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCPOutputPath, FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end;
   FCurrentDCPOutputPath := IncludeTrailingPathDelimiter(FCurrentDCPOutputPath);
 
@@ -465,11 +468,11 @@ begin
   // setup the dcu output-path
   if ProjectSettings.PathValue('Application/DCUOutputPath', 7) <> '' then begin
     // then take it from the dpt
-    FCurrentDCUOutputPath := AbsolutePath(FBPGPath,ProjectSettings.PathValue('Application/DCUOutputPath', 7), FCurrentDelphiVersion);
+    FCurrentDCUOutputPath := AbsolutePath(FBPGPath,ProjectSettings.PathValue('Application/DCUOutputPath', 7), FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end
   else begin
     // otherwise take the path from the cfg-file.
-    FCurrentDCUOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCUOutputPath, FCurrentDelphiVersion);
+    FCurrentDCUOutputPath := AbsolutePath(ExtractFilePath(FCurrentProjectFilename), FCurrentDCUOutputPath, FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end;
   FCurrentDCUOutputPath := IncludeTrailingPathDelimiter(FCurrentDCUOutputPath);
 
@@ -531,7 +534,7 @@ begin
       if LastPos(_currentPath, ';') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if LastPos(_currentPath, '\') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if _absolutePaths then begin
-        _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion);
+        _currentPath:=AbsolutePath(FBPGPath,_currentPath,FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
         if _currentPath='' then continue;
         result := Result + _currentPath + ';';
         trace(5,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
@@ -728,7 +731,7 @@ begin
   _Platform := '';
   ApplicationState := tas_init;
   FCurrentDelphiVersion := LatestIDEVersion;
-  FCurrentBPLOutputPath := GetDelphiPackageDir(FCurrentDelphiVersion);
+  FCurrentBPLOutputPath := GetDelphiPackageDir(FCurrentDelphiVersion,FPlatformToCompile);
   FCurrentDCUOutputPath := '';
   FApplicationIniFilename := changefileext(application.ExeName, '.ini');
   FConfigToCompile := '';
@@ -1152,7 +1155,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpProjectBPLDirExecute(Sender: TObject);
 begin
-  if CleanUpPackagesByPath(FCurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,true) then
+  if CleanUpPackagesByPath(FCurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,true, FPlatformToCompile, FConfigToCompile) then
     ExitCode := 0
   else
     ExitCode := 1;
@@ -1168,10 +1171,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpAllExecute(Sender: TObject);
 begin
-  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true);
-  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true);
-  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true);
-  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1317,19 +1320,32 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.DeleteBPLAndDCPFiles;
 resourcestring
-  cDeleteBPL_and_DCP_Files='Do you want to delete the file <%s> and <%s>?';
+  cDelete_Files='Do you want to delete the file <%s>?';
 var
   _bplFilename:string;
   _dcpFilename:string;
+  _shallDelete:boolean;
 begin
   if FCurrentProjectType<>tp_bpl then exit;
   _bplFilename:=FCurrentBPLFilename;
   _dcpFilename:=FCurrentDCPOutputPath+ChangeFileExt(ExtractFilename(_bplFilename),'.dcp');
-  if not IsSilentMode then begin
-    if MessageBox(0,pchar(format(cDeleteBPL_and_DCP_Files,[_bplFilename,_dcpFilename])),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  <> IdYes then exit;
+
+  _shallDelete := FileExists(_bplFilename);
+  if _shallDelete then begin
+    if not IsSilentMode then begin
+      _shallDelete:=(MessageBox(0,pchar(format(cDelete_Files,[_bplFilename])),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO) = IdYes);
+    end;
+    if _shallDelete and uDPTDelphiPackage.DeleteFile(_bplFilename) then
+      WriteLog('Deleted file <%s>.',[_bplFilename]);
   end;
-  if uDPTDelphiPackage.DeleteFile(_bplFilename) then WriteLog('Deleted file <%s>.',[_bplFilename]);
-  if uDPTDelphiPackage.DeleteFile(_dcpFilename) then WriteLog('Deleted file <%s>.',[_dcpFilename]);
+  _shallDelete := FileExists(_dcpFilename);
+  if _shallDelete then begin
+    if not IsSilentMode then begin
+      _shallDelete:=(MessageBox(0,pchar(format(cDelete_Files,[_dcpFilename])),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO) = IdYes);
+    end;
+    if _shallDelete and uDPTDelphiPackage.DeleteFile(_dcpFilename) then
+      WriteLog('Deleted file <%s>.',[_dcpFilename]);
+  end;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1443,14 +1459,14 @@ begin
   case _RemoveType of
     tpr_3rdparty:  begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesNotInBIN),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
-                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
-                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
-                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
                    end;
     tpr_projectsbpl:begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesInBPL),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByPath(CurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,_DeleteBplAndDCPFiles);
+                      CleanUpPackagesByPath(CurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
                     end;
   end;
 end;
@@ -1580,7 +1596,7 @@ begin
   _SearchPath := '';
   if FDPTSearchPath  <> ''    then _SearchPath := GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
   if FCurrentSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
-    _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename), FCurrentSearchPath, FCurrentDelphiVersion);
+    _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename), FCurrentSearchPath, FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
   end;
   if FCurrentConditions <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + FCurrentConditions + ' ';
   if _SearchPath <> '' then begin
@@ -1746,7 +1762,7 @@ begin
   if _SearchPath <> '' then begin
     // global search path is defined. It will override project specific search paths, so add project specific search path
     if FCurrentSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
-      _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename), FCurrentSearchPath, FCurrentDelphiVersion);
+      _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FCurrentProjectFilename), FCurrentSearchPath, FCurrentDelphiVersion, FPlatformToCompile, FConfigToCompile);
     end;
     _SearchPath := RemoveDoublePathEntries(_SearchPath);
     _SearchPath := ReplaceTag(_SearchPath);
@@ -2028,13 +2044,8 @@ end;
 ----------------------------------------------------------------------------}
 function TDMMain.ReplaceTag(_filename: string): string;
 begin
-  _filename := StringReplace(_filename, cPlatformTag, FPlatformToCompile, [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cConfigTag, FConfigToCompile, [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := uDPTDelphiPackage.ReplaceTag(_filename, FCurrentDelphiVersion);
-
-  Result := _filename;
+  result := uDPTDelphiPackage.ReplaceTag(_filename, FCurrentDelphiVersion,
+    FPlatformToCompile, FConfigToCompile);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2174,7 +2185,9 @@ begin
                                          FCurrentDCPOutputPath,
                                          IsSilentMode,
                                          FCurrentProjectType,
-                                         FCurrentDelphiVersion);
+                                         FCurrentDelphiVersion,
+                                         FPlatformToCompile,
+                                         FConfigToCompile);
   ConfirmChanges(_ChangedFiles, False, True);
 
 // try to update dpk/dproj files.

@@ -4,7 +4,8 @@ Autor of this Application:
 Samuel Herzog
 
 Thanks to:
-***********
+*************
+- Christoph Schneider http://www.schneider-infosys.ch
 - Andreas Heim
 - Markus Müller
 - JCL/JVCL Team (portions for package handling) http://jvcl.delphi-jedi.org/

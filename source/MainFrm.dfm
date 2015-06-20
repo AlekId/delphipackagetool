@@ -1,8 +1,8 @@
 object FrmMain: TFrmMain
   Left = 0
   Top = 43
-  Width = 1366
-  Height = 605
+  Width = 1374
+  Height = 593
   Caption = 'Package Group Rebuilder/Installer'
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -26,8 +26,8 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 354
-    Width = 1358
+    Top = 342
+    Width = 1366
     Height = 12
     Cursor = crVSplit
     Align = alBottom
@@ -35,8 +35,8 @@ object FrmMain: TFrmMain
   object stgFiles: TStringGrid
     Left = 0
     Top = 190
-    Width = 1358
-    Height = 164
+    Width = 1366
+    Height = 152
     Align = alClient
     ColCount = 7
     Ctl3D = False
@@ -62,7 +62,7 @@ object FrmMain: TFrmMain
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 1358
+    Width = 1366
     Height = 190
     Align = alTop
     BevelOuter = bvNone
@@ -285,8 +285,8 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 366
-    Width = 1358
+    Top = 354
+    Width = 1366
     Height = 193
     ActivePage = tabInfo
     Align = alBottom
@@ -296,7 +296,7 @@ object FrmMain: TFrmMain
       object mmoLogFile: TMemo
         Left = 0
         Top = 0
-        Width = 1350
+        Width = 1358
         Height = 165
         Align = alClient
         Ctl3D = False

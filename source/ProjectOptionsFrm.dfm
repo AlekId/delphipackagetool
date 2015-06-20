@@ -108,8 +108,6 @@ object FrmProjectOptions: TFrmProjectOptions
       Width = 233
       Height = 25
       Caption = 'Add Path'
-      TabOrder = 6
-      OnClick = btnAddPathClick
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -124,6 +122,8 @@ object FrmProjectOptions: TFrmProjectOptions
         333377777F77377733330BBB0333333333337F337F33333333330BB003333333
         333373F773333333333330033333333333333773333333333333}
       NumGlyphs = 2
+      TabOrder = 6
+      OnClick = btnAddPathClick
     end
     object edtBeforeInstallAll: TEdit
       Left = 8
@@ -212,9 +212,10 @@ object FrmProjectOptions: TFrmProjectOptions
       Top = 8
       Width = 90
       Height = 25
+      Kind = bkOK
+      NumGlyphs = 2
       TabOrder = 0
       OnClick = btnOkClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 608
@@ -223,8 +224,6 @@ object FrmProjectOptions: TFrmProjectOptions
       Height = 25
       Cancel = True
       Caption = 'Cancel'
-      ModalResult = 2
-      TabOrder = 1
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -242,7 +241,9 @@ object FrmProjectOptions: TFrmProjectOptions
         38F338F300003333333333333919333333388333338FFF830000333333333333
         3333333333333333333888330000333333333333333333333333333333333333
         0000}
+      ModalResult = 2
       NumGlyphs = 2
+      TabOrder = 1
     end
   end
   object mmoSearchPath: TMemo
@@ -259,8 +260,6 @@ object FrmProjectOptions: TFrmProjectOptions
     Width = 217
     Height = 25
     Caption = 'Add Delphi Default Directories'
-    TabOrder = 3
-    OnClick = btnAddDefaultPathClick
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -275,6 +274,8 @@ object FrmProjectOptions: TFrmProjectOptions
       333377777F77377733330BBB0333333333337F337F33333333330BB003333333
       333373F773333333333330033333333333333773333333333333}
     NumGlyphs = 2
+    TabOrder = 3
+    OnClick = btnAddDefaultPathClick
   end
   object btnVerifyDirectories: TBitBtn
     Left = 248

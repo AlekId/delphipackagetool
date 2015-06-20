@@ -92,9 +92,9 @@ const
   cPlatformTag='$(PLATFORM)';
   cConfigTag='$(CONFIG)';
   cRADStudioDirName='RAD Studio';
+  cEmbaStudioDirName='Embarcadero\Studio';
   cDelphiName = 'Delphi';
   cBCBName    = 'C++Builder';
-  cCSharpName = 'C#Builder';
   cBDSName    = 'Borland Developer Studio';
   cRSName     = 'RAD Studio';
 
@@ -255,7 +255,7 @@ const
       ShortName: 'D2010';
       LongName: 'Embarcadero RAD Studio 2010';
       CompilerVersion:21;
-      CompilerVersionStr:'Ver210';
+      CompilerVersionStr:'VER210';
       Supported: True),
     (
       Name: cRSName;              //15
@@ -351,7 +351,7 @@ const
       IDEVersion: 16;
       IDEVersionStr: '16.0';
       CoreIdeVersion: '???';
-      ShortName: 'XE7';
+      ShortName: 'XE8';
       LongName: 'Embarcadero RAD Studio XE8';
       CompilerVersion:29;
       CompilerVersionStr:'VER290';

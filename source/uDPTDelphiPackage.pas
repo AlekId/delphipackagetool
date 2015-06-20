@@ -20,12 +20,12 @@ uses
   Registry,
   uDPTDefinitions;
 
-function  GetDelphiPackageDir(const _DelphiVersion:integer):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
-function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
+function  GetDelphiPackageDir(const _DelphiVersion:integer;const _PlatformToCompile: string):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
+function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean;const _PlatformToCompile: string):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
 function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; var msg: string): Boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName, _PackageDirectory, _PackageLibSuffix: string; _DelphiVersion: Integer): Boolean;  // remove package from regeistry.
 function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType; var Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
-function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
+function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
 function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
@@ -38,22 +38,22 @@ function  ReadSupportedConfigsOfProject(const _filename: string; var _Configs: T
 function  ReadSupportedPlatformsOfProject(const _filename: string; var _Platforms: TStringList): Boolean;
 function  ReadAllPlatformsOfProject(const _filename: string; var _Platforms: TStringList): Boolean;
 function  ReadConfigurationSettings(const _filename:string;var _Config:string;var _Platform:string;var _CompilerSwitches: string;var _Conditions:string;var _SearchPath:string;var _ProjectOutputPath:string;var _BPLOutputPath:string;var _DCUOutputPath:string;var _DCPOutputPath:string;var _NameSpaces:string):boolean;
-function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer):string; // get informations from the cfg-file.
+function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string):string; // get informations from the cfg-file.
 function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns delphi root directory e.g. C:\Program files\Borland\Delphi7
 function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and bds versions.
 procedure InitBatchFile(const _filename:string); // reset batch file
 function  SaveBatchFile:string; // save the batch file.
 function  GetPackageVersion(const _PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):string;
-function  ReplaceTag(_filename:string;_DelphiVersion:integer):string;
+function  ReplaceTag(_filename:string;_DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string):string;
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType; // find out if the source file contains a application or library or package.
 function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;const _libsuffix:string=''):string; // input is a source code filename, output is the name of the compiled target.
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
 function  VersionNoToIDEName(const _version:integer;const _NameType:TDelphiNameType=tdn_long):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
 function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0 into 6 or bds 4.0 into 10.
-function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
-function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
-function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
+function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
+function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
+function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
@@ -227,12 +227,12 @@ function ReadBDSCommonDir(const _DelphiVersion:integer):string;
 begin
   Result := '';
   if _DelphiVersion > 11 then begin
-    //RAD Studio 2009, 2010
-    Result := GetSystemPath(spCommonDocs) + cRADStudioDirName + PathDelim + DelphiVersions[_DelphiVersion].IDEVersionStr;
+    if _DelphiVersion < 15  then
+      Result := GetSystemPath(spCommonDocs) + cRADStudioDirName + PathDelim + DelphiVersions[_DelphiVersion].IDEVersionStr //RAD Studio 2009, 2010
+    else
+      Result := GetSystemPath(spCommonDocs) + cEmbaStudioDirName + PathDelim + DelphiVersions[_DelphiVersion].IDEVersionStr
   end
-  else begin
-    Result := GetEnvironmentVariable(Copy(cBDSCommonDirTag, 3, length(cBDSCommonDirTag)-3));
-  end;
+  else Result := GetEnvironmentVariable(Copy(cBDSCommonDirTag, 3, length(cBDSCommonDirTag)-3));
   trace(5,'ReadBDSCommonDir: BDSCOMMONDIR is set to <%s>.',[result]);
 end;
 
@@ -252,14 +252,15 @@ begin
   if _DelphiVersion <= 7 then exit;  // delphi 1-7 do nothing, because bdsprojectdir was introduced later.
 
   //Delphi 8 .. RAD Studio 2010
-  LocStr := LoadResStrings(GetDelphiRootDir(_DelphiVersion) + 'Bin\coreide' + DelphiVersions[_DelphiVersion].CoreIdeVersion + '.',['Borland Studio Projects', 'RAD Studio', 'Projects']);
+  LocStr := LoadResStrings(GetDelphiRootDir(_DelphiVersion) + 'Bin\coreide' + DelphiVersions[_DelphiVersion].CoreIdeVersion + '.',['Borland Studio Projects', 'RAD Studio', 'Projects', 'Embarcadero', 'Studio']);
 
   if DelphiVersions[_DelphiVersion].IDEVersion < 5 then begin
     Result := LocStr[0];
   end
-  else begin
+  else if DelphiVersions[_DelphiVersion].IDEVersion < 15 then begin
     Result := LocStr[1] + PathDelim + LocStr[2];
-  end;
+  end else
+    Result := LocStr[3] + PathDelim + LocStr[4] + PathDelim + LocStr[2];
 
   Result := IncludeTrailingPathDelimiter(GetSystemPath(spPersonal)) + Result;
   trace(5,'ReadBDSProjectsDir: BDSPROJECTSDIR is set to <%s>.',[result]);
@@ -463,14 +464,14 @@ end;
   Result:    boolean
   Description: this method returns true if an invalid key from the registry gets deleted.
 -----------------------------------------------------------------------------}
-function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
+function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 begin
   result:=true;
   NoOfRemovedKeys:=0;
-  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then result:=false;
-  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys) then result:=false;
-  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then result:=false;
-  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Disabled Packages',_DelphiVersion,NoOfRemovedKeys) then result:=false;
+  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys,_CurrentPlatform,_CurrentConfig) then result:=false;
+  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Known Packages'   ,_DelphiVersion,NoOfRemovedKeys,_CurrentPlatform,_CurrentConfig) then result:=false;
+  if not CleanupByRegistry(HKEY_CURRENT_USER, 'Disabled Packages',_DelphiVersion,NoOfRemovedKeys,_CurrentPlatform,_CurrentConfig) then result:=false;
+  if not CleanupByRegistry(HKEY_LOCAL_MACHINE,'Disabled Packages',_DelphiVersion,NoOfRemovedKeys,_CurrentPlatform,_CurrentConfig) then result:=false;
 end;
 
 {-----------------------------------------------------------------------------
@@ -817,7 +818,7 @@ begin
   end;
 
 // make all paths relative
-  _searchPath       :=RelativePaths(ExtractFilePath(_dofFilename),_searchPath,_DelphiVersion);
+  _searchPath       :=RelativePaths(ExtractFilePath(_dofFilename),_searchPath,_DelphiVersion,'$PLATFOPRM is not support','$CONFIG is not support');
   _ProjectOutputPath:=RelativePath(ExtractFilePath(_dofFilename),_ProjectOutputPath,_DelphiVersion);
   _BPLOutputPath    :=RelativePath(ExtractFilePath(_dofFilename),_BPLOutputPath,_DelphiVersion);
   _DCUOutputPath    :=RelativePath(ExtractFilePath(_dofFilename),_DCUOutputPath,_DelphiVersion);
@@ -916,7 +917,7 @@ _Key:string;
   _Reg:TRegistry;
   begin
     result:=false;
-    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
     try
       _Reg.RootKey := _RootKey;
       if not _Reg.OpenKeyReadOnly(_Key) then begin
@@ -975,7 +976,7 @@ end;
                file really exists. if not then delete the registry entry.
                This method returns true if an invalid key get's deleted from the registry.
 -----------------------------------------------------------------------------}
-function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer):boolean; // find registry-entries without the packages
+function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
 var
 i:integer;
 _DelphiRootDirKey:string;
@@ -983,13 +984,15 @@ _Reg: TRegistry;
 _ValueNames:TStrings;
 _packageName:string;
 begin
+//ShowMessage('Feature not supported for XE8');
+//exit;
   result:=true;
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in CleanupByRegistry: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
   _DelphiRootDirKey:=_DelphiRootDirKey+_DelphiSubKey;
-  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   _ValueNames:=TStringList.create;
   try
     _Reg.RootKey := _ROOTKEY;
@@ -1000,7 +1003,7 @@ begin
     _Reg.GetValueNames(_ValueNames);
     try
       for i:=0 to _ValueNames.count-1 do begin
-        _packageName:=lowercase(ReplaceTag(_ValueNames[i],_DelphiVersion));
+        _packageName:=lowercase(ReplaceTag(_ValueNames[i],_DelphiVersion,_CurrentPlatform,_CurrentConfig));
         if fileexists(_packageName) then continue;
         if not _Reg.DeleteValue(_ValueNames[i]) then begin
           trace(3,'Problem in CleanupByRegistry: Could not remove value <%s> from key <%s,%s> from registry for delphi <%d>.',[_ValueNames[i],HKEYToStr(_RootKey),_DelphiRootDirKey,_DelphiVersion]);
@@ -1035,7 +1038,7 @@ var
 begin
   result:=false;
   _PackageName:=lowercase(_PackageName);
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
@@ -1066,7 +1069,7 @@ end;
   Result:    boolean
   Description: find all files .dcp/.bpl files in the folder <_Path> and delete them. remove the registry entries also.
 -----------------------------------------------------------------------------}
-function CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
+function CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 var
 i:integer;
 _fileList:TStrings;
@@ -1114,7 +1117,7 @@ begin
   finally
     _fileList.free;
   end;
-  VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys);
+  VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys,_CurrentPlatform,_CurrentConfig);
 end;
 
 
@@ -1130,7 +1133,7 @@ end;
   the packages located in the path <_DelphiBINPath>.
   if <_deletefiles> is set to true, then the corresponding dcp and bpl files will be deleted.
 -----------------------------------------------------------------------------}
-function CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean):boolean; //
+function CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; //
 var
 i:integer;
 _DelphiRootDirKey:string;
@@ -1144,7 +1147,7 @@ begin
     exit;
   end;
 
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
   _ValueNames:=TStringList.create;
   try
     _Reg.RootKey := _ROOTKEY;
@@ -1157,7 +1160,7 @@ begin
     try
       for i:=0 to _ValueNames.count-1 do begin
         _packageName:=_ValueNames[i];
-        _packageName:=ReplaceTag(_packageName,_DelphiVersion);
+        _packageName:=ReplaceTag(_packageName,_DelphiVersion, _CurrentPlatform,_CurrentConfig);
         if pos(lowercase(_DelphiBINPath),lowercase(_packageName))<>0 then continue;
         if not _Reg.DeleteValue(_packageName) then begin
           trace(3,'Problem in CleanUpPackagesByRegistry: Could not delete package <%s> for delphi <%d>.',[_packageName,_DelphiVersion]);
@@ -1387,9 +1390,7 @@ end;
                replaces  the Tag <$(BDSCOMMONDIR)> with the real bds common path.
                replaces  the Tag <$(BDSPROJECTSDIR)> with the real bds projects path.
 ----------------------------------------------------------------------------}
-function ReplaceTag(_filename: string; _DelphiVersion: Integer): string;
-var
-  _pos: Integer;
+function ReplaceTag(_filename: string; _DelphiVersion: Integer;const _CurrentPlatform, _CurrentConfig: string): string;
 begin
   _filename := StringReplace(_filename, cDelphiVersionTag, DelphiVersions[_DelphiVersion].ShortName, [rfReplaceAll, rfIgnoreCase]);
 
@@ -1405,12 +1406,12 @@ begin
 
   _filename := StringReplace(_filename, cBDSProjectsDirTag, ExcludeTrailingPathDelimiter(ReadBDSProjectsDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _pos := Pos(LowerCase(cBDSUserDirTag), _filename);
-  if _pos > 0 then begin
-    Delete(_filename, 1, _pos + length(cBDSUserDirTag));
-    Result := IncludeTrailingPathDelimiter(ReadBDSUserDir(_DelphiVersion)) + _filename;
-    Exit;
-  end;
+  _filename := StringReplace(_filename, cPlatformTag, _CurrentPlatform, [rfReplaceAll, rfIgnoreCase]);
+
+  _filename := StringReplace(_filename, cConfigTag, _CurrentConfig, [rfReplaceAll, rfIgnoreCase]);
+
+  if pos(UpperCase(cBDSUserDirTag), UpperCase(_fileName)) > 0 then
+    _filename := StringReplace(_filename, cBDSUserDirTag, ReadBDSUserDir(_DelphiVersion), [rfReplaceAll, rfIgnoreCase]);
 
   Result := _filename;
 end;
@@ -1523,7 +1524,7 @@ _DelphiRootDirKey:string;
   _Reg: TRegistry;
   begin
     result:='';
-    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
     try
       _Reg.RootKey := _RootKey;
       if not _Reg.OpenKeyReadOnly(_Key) then begin
@@ -1570,7 +1571,7 @@ i:integer;
   var
   _reg: TRegistry;
   begin
-    _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+    _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
     try
       try
         _reg.RootKey := _RootKey;
@@ -1686,7 +1687,7 @@ var
 _Reg: TRegistry;
 begin
   result:='';
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKeyReadOnly(_DelphiRootDirKey) then begin
@@ -1720,6 +1721,20 @@ begin
   if result='' then result:=_GetDelphiRootDir(HKEY_CURRENT_USER);
 end;
 
+function DelphiPackageDirKey(_DelphiVersion:integer; const _PlatformToCompile: string): string;
+var
+  _DelphiRootDirKey:string;
+begin
+  result:='';
+  if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
+    trace(3,'Problem in GetDelphiPackageDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
+    exit;
+  end;
+  result:=_DelphiRootDirKey+'Library' + PathDelim;
+  if _DelphiVersion>=15 then
+    result:=result + _PlatformToCompile + PathDelim;
+end;
+
 {*-----------------------------------------------------------------------------
   Procedure: GetDelphiPackageDir
   Author:    sam
@@ -1728,19 +1743,18 @@ end;
   Result:    string
   Description: get the bpl-folder from the registry.
 -----------------------------------------------------------------------------}
-function GetDelphiPackageDir(const _DelphiVersion:integer):string;
+function GetDelphiPackageDir(const _DelphiVersion:integer; const _PlatformToCompile: string):string;
 var
-_DelphiRootDirKey:string;
-_DelphiPackageDirKey:string;
 _DelphiPackagePath:string;
   function _GetDelphiPackageDir(_RootKey:HKEY):string;
   var
   _Reg: TRegistry;
+  _DelphiPackageDirKey: string;
   begin
-    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+    _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
     try
       _Reg.RootKey := _RootKey;
-      _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
+      _DelphiPackageDirKey:=DelphiPackageDirKey(_DelphiVersion, _PlatformToCompile);
       if not _Reg.OpenKeyReadOnly(_DelphiPackageDirKey) then begin
          trace(5,'Problem in _GetDelphiPackageDir: The Key <%s> was not found in the registry.',[_DelphiPackageDirKey]);
         exit;
@@ -1763,11 +1777,6 @@ _DelphiPackagePath:string;
   end;
 
 begin
-  result:='';
-  if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
-    trace(3,'Problem in GetDelphiPackageDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
-    exit;
-  end;
   result:=_GetDelphiPackageDir(HKEY_LOCAL_MACHINE);
   if result='' then result:=_GetDelphiPackageDir(HKEY_CURRENT_USER);
 end;
@@ -1780,21 +1789,22 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean):boolean;
+function SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean;const _PlatformToCompile: string):boolean;
 resourcestring
 cAskToChangePackageOutputPath='Do you want to change the Delphi''s Package Output Path in the registry to <%s>?';
 var
 _DelphiRootDirKey:string;
-_DelphiPackageDirKey:string;
 
 function _SetDelphiPackageDir(_RootKey:HKEY):boolean;
 var
 _Reg: TRegistry;
+_DelphiPackageDirKey: string;
 begin
   result:=false;
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
   try
     _Reg.RootKey := _RootKey;
+    _DelphiPackageDirKey := DelphiPackageDirKey(_DelphiVersion, _PlatformToCompile);
     if not _Reg.OpenKey(_DelphiPackageDirKey,false) then begin
       trace(1,'Problem in _SetDelphiPackageDir: The Key <%s,%s> was not found in the registry.',[HKEYToStr(_RootKey),_DelphiPackageDirKey]);
       exit;
@@ -1806,7 +1816,8 @@ begin
        trace(3,'Successfully set <Package DCP Output> to <%s>',[_PackageDir]);
       result:=true;
     except
-      on e:exception do trace(1,'Warning in _SetDelphiPackageDir: Could not write the delphi package directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
+      on e:exception do trace(1,'Warning in _SetDelphiPackageDir: Could not write the delphi package directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',
+        [DelphiVersions[_DelphiVersion].LongName,e.message]);
     end;
     _Reg.CloseKey;
   finally
@@ -1816,7 +1827,7 @@ end;
 
 begin
   result:=false;
-  if GetDelphiPackageDir(_DelphiVersion)=_PackageDir then begin
+  if SameText(GetDelphiPackageDir(_DelphiVersion,_PlatformToCompile), IncludeTrailingPathDelimiter(_PackageDir)) then begin
     result:=true;
     exit; // is already set to this value
   end;
@@ -1825,7 +1836,6 @@ begin
     trace(3,'Problem in SetDelphiPackageDir: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
     exit;
   end;
-  _DelphiPackageDirKey:=_DelphiRootDirKey+'Library\';
   if not _Silent then begin
     if Application.MessageBox(pchar(format(cAskToChangePackageOutputPath,[_PackageDir])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
   end;
@@ -2827,7 +2837,7 @@ begin
     exit;
   end;
 // make all paths relative
-  _searchPath       :=RelativePaths(ExtractFilePath(_cfgFilename),_searchPath,_DelphiVersion);
+  _searchPath       :=RelativePaths(ExtractFilePath(_cfgFilename),_searchPath,_DelphiVersion,'$PLATFOPRM is not support','$CONFIG is not support');
 
   _ProjectOutputPath:=AddTag(_ProjectOutputPath,_DelphiVersion);
   _BPLOutputPath    :=AddTag(_BPLOutputPath,_DelphiVersion);
@@ -2881,7 +2891,10 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .bdsproj-file.
 -----------------------------------------------------------------------------}
-function  WriteBDSProjSettings(const _bpgPath:string; _bdsprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):string;
+function  WriteBDSProjSettings(const _bpgPath:string; _bdsprojFilename:String;
+  _Conditions:string;_SearchPath:String;_ProjectOutputPath:string;
+  _BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;
+  const _DelphiVersion:integer):string;
 var
 _BDSProjFile:TStrings;
 _index:integer;
@@ -2912,7 +2925,7 @@ begin
   end;
 
 // make all paths relative
-  _searchPath       :=RelativePaths(ExtractFilePath(_bdsprojFilename),_searchPath,_DelphiVersion);
+  _searchPath       :=RelativePaths(ExtractFilePath(_bdsprojFilename),_searchPath,_DelphiVersion,'$PLATFOPRM is not support','$CONFIG is not support');
   _ProjectOutputPath:=RelativePath(ExtractFilePath(_bdsprojFilename),_ProjectOutputPath,_DelphiVersion,false);
   _BPLOutputPath    :=RelativePath(ExtractFilePath(_bdsprojFilename),_BPLOutputPath,_DelphiVersion,false);
   _DCUOutputPath    :=RelativePath(ExtractFilePath(_bdsprojFilename),_DCUOutputPath,_DelphiVersion,false);
@@ -2993,7 +3006,10 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .dproj-file.
 -----------------------------------------------------------------------------}
-function  WriteDProjSettings(const _bpgPath:string;_dprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):string;
+function  WriteDProjSettings(const _bpgPath:string;_dprojFilename:String;
+  _Conditions:string;_SearchPath:String;_ProjectOutputPath:string;
+  _BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;
+  const _DelphiVersion:integer;const _CurrentPlatform,_CurrentConfig: string):string;
 const
 cTagConfig1='<PropertyGroup Condition="''$(Cfg_1)';
 cTagConfig2='<PropertyGroup Condition="''$(Cfg_2)';
@@ -3058,7 +3074,7 @@ begin
   end;
 
 // make all paths relative
-  _searchPath       :=RelativePaths(ExtractFilePath(_dprojFilename),_searchPath,_DelphiVersion);
+  _searchPath       :=RelativePaths(ExtractFilePath(_dprojFilename),_searchPath,_DelphiVersion,_CurrentPlatform,_CurrentConfig);
   _ProjectOutputPath:=RelativePath(ExtractFilePath(_dprojFilename),_ProjectOutputPath,_DelphiVersion,false);
   _BPLOutputPath    :=RelativePath(ExtractFilePath(_dprojFilename),_BPLOutputPath,_DelphiVersion,false);
   _DCUOutputPath    :=RelativePath(ExtractFilePath(_dprojFilename),_DCUOutputPath,_DelphiVersion,false);
@@ -3103,7 +3119,7 @@ end;
   Result:    boolean
   Description: write path settings to cfg,bdsproj,dproj,.dof file.
 -----------------------------------------------------------------------------}
-function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer):string; // get informations from the cfg-file.
+function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // get informations from the cfg-file.
 begin
   result:='';
   case _DelphiVersion of
@@ -3115,7 +3131,7 @@ begin
     else begin
       if fileexists(changefileext(_Filename,'.cfg'))     then  result:=WriteCFGSettings(_bpgPath,changefileext(_Filename,'.cfg'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_ProjectType,_DelphiVersion);
       if fileexists(changefileext(_Filename,'.bdsproj')) then  result:=WriteBDSProjSettings(_bpgPath,changefileext(_Filename,'.bdsproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion);
-      if fileexists(changefileext(_Filename,'.dproj'))   then  result:=WriteDProjSettings(_bpgPath,changefileext(_Filename,'.dproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_DCPOutputPath,_silent,_DelphiVersion);
+      if fileexists(changefileext(_Filename,'.dproj'))   then  result:=WriteDProjSettings(_bpgPath,changefileext(_Filename,'.dproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_DCPOutputPath,_silent,_DelphiVersion,_CurrentPlatform, _CurrentConfig);
     end;
   end;
 end;
@@ -3135,7 +3151,7 @@ var
 begin
   Result:=false;
   _PackageName:=lowercase(_PackageName);
-  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY or KEY_WOW64_64KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
@@ -4054,7 +4070,7 @@ _NoOfDeletedKeys:integer;
 begin
   _FileName := GetDelphiApplication(_DelphiVersion);
   if not FileExists(_FileName) then exit;
-  VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys);
+  VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys,'','');
   trace(5,'StartUpDelphi:Try to start Delphi from <%s>.',[_FileName]);
 {$IF CompilerVersion < 20.0}
   ShellExecute(0, 'open', PChar(_FileName), PChar(' /ns "'+_ProjectName+'"'), nil, SW_SHOWNORMAL);

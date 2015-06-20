@@ -640,7 +640,7 @@ begin
   _Dir := '';
   if not SelectDirectory(cSelectBPLFolder, '', _Dir) then exit;
   edtPackageBPLDirectory.Text := RelativePath(DMMain.BPGPath, _Dir, DMMain.CurrentDelphiVersion);
-  SetDelphiPackageDir(DMMain.CurrentDelphiVersion, _Dir,DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5));
+  SetDelphiPackageDir(DMMain.CurrentDelphiVersion, _Dir,DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5), DMMain.PlatformToCompile);
   SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
 end;
 
@@ -1002,7 +1002,7 @@ begin
   GUItoApplicationSettings;
   GUItoProjectSettings;
   if (Sender as TEdit) = edtPackageBPLDirectory then
-    SetDelphiPackageDir(DMMain.CurrentDelphiVersion, (Sender as TEdit).Text, DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5));
+    SetDelphiPackageDir(DMMain.CurrentDelphiVersion, (Sender as TEdit).Text, DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5), DMMain.PlatformToCompile);
   DMMain.InitProjectDataForHint;
   SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
 end;
@@ -1246,7 +1246,7 @@ cCouldNotCleanupRegistry='Could not delete some keys from the registery. You mig
 var
 _NoOfDeletedKeys:integer;
 begin
-  if not VerifyRegistry(DMMain.CurrentDelphiVersion,_NoOfDeletedKeys) then begin
+  if not VerifyRegistry(DMMain.CurrentDelphiVersion,_NoOfDeletedKeys,DMMain.PlatformToCompile, DMMain.ConfigToCompile) then begin
     Application.MessageBox(pchar(cCouldNotCleanupRegistry),pchar(cError),MB_ICONINFORMATION);
     exit;
   end;
@@ -1405,7 +1405,7 @@ end;
 procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersion: integer);
 begin
   SetDelphiVersionCombobox(_DelphiVersion);
-  if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion);
+  if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion, DMMain.PlatformToCompile);
   actShowDOFFile.Visible:=(_DelphiVersion<8);
   gbxPlatform.Visible:=(_DelphiVersion>=15);
   gbxConfig.Visible:=(_DelphiVersion>=12);
