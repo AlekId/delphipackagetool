@@ -349,7 +349,7 @@ begin
   if Pos('.',_ExtName)=1 then delete(_extname,1,1);
   _BaseKeyName:= _ExtName + 'file';
   _RegistryFileName:=ExtractFilenameOnly(_AppName)+'.'+_extname;
-  _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
+  _reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   try
     try
       _reg.RootKey:=HKEY_CLASSES_ROOT;
@@ -392,7 +392,7 @@ begin
   if Pos('.',_ExtName)=1 then delete(_extname,1,1);
   _BaseKeyName:= _ExtName + 'file';
   _RegistryFileName:=ExtractFilenameOnly(_AppName)+'.'+_extname;
-  _reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
+  _reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   try
     try
       _reg.RootKey:=HKEY_CLASSES_ROOT;

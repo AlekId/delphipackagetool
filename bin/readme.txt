@@ -71,8 +71,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.22   ( 25.06.2015 )
+-SH: changes to make writing to the registry working again.
+
 1.9.2.21   ( 20.06.2015 )
--cs: received patch from Christoph Schneider to make versions for XEn work (Platform and Config). Thank you.
+-CS: received patch from Christoph Schneider to make versions for XEn work (Platform and Config). Thank you.
 
 1.9.2.20   ( 11.06.2015 )
 -SH: fix: when switching between different delphi versions, the displayed hint on a package/project was not updated.

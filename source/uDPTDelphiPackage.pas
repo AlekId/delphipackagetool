@@ -1038,7 +1038,7 @@ var
 begin
   result:=false;
   _PackageName:=lowercase(_PackageName);
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKey(_Key,false) then begin
@@ -1147,7 +1147,7 @@ begin
     exit;
   end;
 
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   _ValueNames:=TStringList.create;
   try
     _Reg.RootKey := _ROOTKEY;
@@ -1162,8 +1162,8 @@ begin
         _packageName:=_ValueNames[i];
         _packageName:=ReplaceTag(_packageName,_DelphiVersion, _CurrentPlatform,_CurrentConfig);
         if pos(lowercase(_DelphiBINPath),lowercase(_packageName))<>0 then continue;
-        if not _Reg.DeleteValue(_packageName) then begin
-          trace(3,'Problem in CleanUpPackagesByRegistry: Could not delete package <%s> for delphi <%d>.',[_packageName,_DelphiVersion]);
+        if not _Reg.DeleteValue(_ValueNames[i]) then begin
+          trace(3,'Problem in CleanUpPackagesByRegistry: Could not delete package <%s> for delphi <%d>.',[_ValueNames[i],_DelphiVersion]);
           continue;
         end;
         trace(5,'Deleted Package <%s> for delphi version <%d> from registry.',[_packageName,_DelphiVersion]);
@@ -1801,7 +1801,7 @@ _Reg: TRegistry;
 _DelphiPackageDirKey: string;
 begin
   result:=false;
-  _Reg := TRegistry.Create(KEY_READ or KEY_WOW64_32KEY);
+  _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   try
     _Reg.RootKey := _RootKey;
     _DelphiPackageDirKey := DelphiPackageDirKey(_DelphiVersion, _PlatformToCompile);
