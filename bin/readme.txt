@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.23   ( 12.10.2015 )
+-SH: added definitions for Delphi 10 Seattle.
+
 1.9.2.22   ( 25.06.2015 )
 -SH: changes to make writing to the registry working again.
 
