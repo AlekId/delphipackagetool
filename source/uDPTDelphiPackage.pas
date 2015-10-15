@@ -1781,7 +1781,7 @@ begin
     exit;
   end;
 
-  trace(3, 'GetDelphiStdPackagesDir: Directory of platform dependent standard packages for Delphi version <%d>, target platform <%s>: <%s>',[_DelphiVersion, _PlatformToCompile, sRet]);
+  trace(5, 'GetDelphiStdPackagesDir: Directory of platform dependent standard packages for Delphi version <%d>, target platform <%s>: <%s>',[_DelphiVersion, _PlatformToCompile, sRet]);
 
   Result := IncludeTrailingPathDelimiter(sRet);
 end;
