@@ -1171,10 +1171,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpAllExecute(Sender: TObject);
 begin
-  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
-  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Known Packages'   ,FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
-  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
-  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Known Packages'   ,true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Known Packages'   ,true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FCurrentDelphiVersion,'Disabled Packages',true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FCurrentDelphiVersion,'Disabled Packages',true, FPlatformToCompile, FConfigToCompile);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1459,10 +1459,10 @@ begin
   case _RemoveType of
     tpr_3rdparty:  begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesNotInBIN),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
-                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Known Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
-                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
-                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Disabled Packages',FDelphiRootDirectory+'bin',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Known Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Known Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,CurrentDelphiVersion,'Disabled Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,CurrentDelphiVersion,'Disabled Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
                    end;
     tpr_projectsbpl:begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesInBPL),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;

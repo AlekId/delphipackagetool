@@ -71,6 +71,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+
+1.9.2.24  ( 15.10.2015 )
+-SH: applied patch received from Andreas Heim about BDSBin-Tag for Delphi.
+
 1.9.2.23   ( 12.10.2015 )
 -SH: added definitions for Delphi 10 Seattle.
 

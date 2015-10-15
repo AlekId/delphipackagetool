@@ -40,6 +40,7 @@ function  ReadAllPlatformsOfProject(const _filename: string; var _Platforms: TSt
 function  ReadConfigurationSettings(const _filename:string;var _Config:string;var _Platform:string;var _CompilerSwitches: string;var _Conditions:string;var _SearchPath:string;var _ProjectOutputPath:string;var _BPLOutputPath:string;var _DCUOutputPath:string;var _DCPOutputPath:string;var _NameSpaces:string):boolean;
 function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string):string; // get informations from the cfg-file.
 function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns delphi root directory e.g. C:\Program files\Borland\Delphi7
+function  GetDelphiStdPackagesDir(const _DelphiVersion: integer; const _PlatformToCompile: string): string;  // returns directory with platform dependent standard packages included in Delphi e.g. C:\Program files\Embarcadero\RAD Studio\9.0\<bin|bin64>
 function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and bds versions.
 procedure InitBatchFile(const _filename:string); // reset batch file
 function  SaveBatchFile:string; // save the batch file.
@@ -51,7 +52,7 @@ function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:strin
 function  GetDelphiPathTag(const _version:integer):string; // returns $(DELPHI) or $(BDS) according to the version number
 function  VersionNoToIDEName(const _version:integer;const _NameType:TDelphiNameType=tdn_long):string; // turns a ide version no 1-9 into 6.0,7.0,BDS 1.0,BDS 2.0
 function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0 into 6 or bds 4.0 into 10.
-function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
+function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
@@ -1133,17 +1134,30 @@ end;
   the packages located in the path <_DelphiBINPath>.
   if <_deletefiles> is set to true, then the corresponding dcp and bpl files will be deleted.
 -----------------------------------------------------------------------------}
-function CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _DelphiBINPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; //
+function CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; //
 var
-i:integer;
-_DelphiRootDirKey:string;
-_Reg: TRegistry;
-_ValueNames:TStrings;
-_packageName:string;
+  i:integer;
+  _DelphiRootDirKey:string;
+  _DelphiStdPackagesWin32Dir: string;
+  _DelphiStdPackagesWin64Dir: string;
+  _DelphiStdPackagesCurPlatformDir: string;
+  _Reg: TRegistry;
+  _ValueNames:TStrings;
+  _packageName:string;
 begin
   result:=false;
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in CleanUpPackagesByRegistry: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
+    exit;
+  end;
+
+  _DelphiStdPackagesWin32Dir       := GetDelphiStdPackagesDir(_DelphiVersion, sWin32);
+  _DelphiStdPackagesWin64Dir       := GetDelphiStdPackagesDir(_DelphiVersion, sWin64);
+  _DelphiStdPackagesCurPlatformDir := GetDelphiStdPackagesDir(_DelphiVersion, _CurrentPlatform);
+
+  if (_DelphiStdPackagesCurPlatformDir = '') and (_DelphiStdPackagesWin32Dir = '') and (_DelphiStdPackagesWin64Dir = '') then
+  begin
+    trace(3,'Problem in CleanUpPackagesByRegistry: Directory of platform dependent standard packages not found. Delphi Version <%d>, platform <%s>',[_DelphiVersion, _CurrentPlatform]);
     exit;
   end;
 
@@ -1159,14 +1173,30 @@ begin
     _Reg.GetValueNames(_ValueNames);
     try
       for i:=0 to _ValueNames.count-1 do begin
-        _packageName:=_ValueNames[i];
-        _packageName:=ReplaceTag(_packageName,_DelphiVersion, _CurrentPlatform,_CurrentConfig);
-        if pos(lowercase(_DelphiBINPath),lowercase(_packageName))<>0 then continue;
+        if _CurrentPlatform <> '' then
+        begin
+          _packageName:=_ValueNames[i];
+          _packageName:=ReplaceTag(_packageName,_DelphiVersion, _CurrentPlatform,_CurrentConfig);
+          if pos(lowercase(_DelphiStdPackagesCurPlatformDir),lowercase(_packageName))<>0 then continue;
+        end
+        else
+        begin
+          _packageName:=_ValueNames[i];
+          _packageName:=ReplaceTag(_packageName,_DelphiVersion, sWin32,_CurrentConfig);
+          if pos(lowercase(_DelphiStdPackagesWin32Dir),lowercase(_packageName))<>0 then continue;
+
+          _packageName:=_ValueNames[i];
+          _packageName:=ReplaceTag(_packageName,_DelphiVersion, sWin64,_CurrentConfig);
+          if pos(lowercase(_DelphiStdPackagesWin64Dir),lowercase(_packageName))<>0 then continue;
+        end;
+
         if not _Reg.DeleteValue(_ValueNames[i]) then begin
           trace(3,'Problem in CleanUpPackagesByRegistry: Could not delete package <%s> for delphi <%d>.',[_ValueNames[i],_DelphiVersion]);
           continue;
         end;
+
         trace(5,'Deleted Package <%s> for delphi version <%d> from registry.',[_packageName,_DelphiVersion]);
+
         if _deletefiles then begin
           if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistry: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
           _packageName:=ChangeFileExt(_packageName,'.dcp');
@@ -1398,7 +1428,7 @@ begin
 
   _filename := StringReplace(_filename, cBDSTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cBDSBINTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
+  _filename := StringReplace(_filename, cBDSBINTag, ExcludeTrailingPathDelimiter(GetDelphiStdPackagesDir(_DelphiVersion, _CurrentPlatform)), [rfReplaceAll, rfIgnoreCase]);
 
   _filename := StringReplace(_filename, cProgramFilesTag, ExcludeTrailingPathDelimiter(GetSystemPath(spProgFiles)), [rfReplaceAll, rfIgnoreCase]);
 
@@ -1720,6 +1750,42 @@ begin
   result:=_GetDelphiRootDir(HKEY_LOCAL_MACHINE);
   if result='' then result:=_GetDelphiRootDir(HKEY_CURRENT_USER);
 end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: GetDelphiStdPackagesDir
+  Author:    Andreas Heim
+  Date:      13-Oct-2015
+  Arguments: const _DelphiVersion:integer
+             const _Platform: integer
+  Result:    string
+  Description: returns directory with target platform dependent standard packages
+               included in Delphi
+               e.g. C:\Program files\Embarcadero\RAD Studio\9.0\bin (Win32-Platform)
+                    C:\Program files\Embarcadero\RAD Studio\9.0\bin64 (Win64-Platform)
+-----------------------------------------------------------------------------}
+function GetDelphiStdPackagesDir(const _DelphiVersion: integer; const _PlatformToCompile: string): string;
+var
+  sRet: string;
+
+begin
+  Result := '';
+
+  sRet := GetDelphiRootDir(_DelphiVersion);
+  sRet := IncludeTrailingPathDelimiter(sRet) + 'bin';
+
+  if SameText(_PlatformToCompile, sWin64) then
+    sRet := sRet + '64';
+
+  if not DirectoryExists(sRet) then begin
+    trace(3, 'Problem in GetDelphiStdPackagesDir: Could not get directory of platform dependent standard packages for Delphi version <%d>, target platform <%s>.',[_DelphiVersion, _PlatformToCompile]);
+    exit;
+  end;
+
+  trace(3, 'GetDelphiStdPackagesDir: Directory of platform dependent standard packages for Delphi version <%d>, target platform <%s>: <%s>',[_DelphiVersion, _PlatformToCompile, sRet]);
+
+  Result := IncludeTrailingPathDelimiter(sRet);
+end;
+
 
 function DelphiPackageDirKey(_DelphiVersion:integer; const _PlatformToCompile: string): string;
 var
