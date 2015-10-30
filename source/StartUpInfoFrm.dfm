@@ -57,14 +57,5 @@ object FrmStartUpInfo: TFrmStartUpInfo
       Caption = 'Don'#39't show again'
       TabOrder = 1
     end
-    object btnHistory: TBitBtn
-      Left = 472
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'History'
-      TabOrder = 2
-      OnClick = btnHistoryClick
-    end
   end
 end

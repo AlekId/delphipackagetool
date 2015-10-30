@@ -18,8 +18,6 @@ type
     mmoInfoText: TMemo;
     btnOk: TBitBtn;
     cbxDontShow: TCheckBox;
-    btnHistory: TBitBtn;
-    procedure btnHistoryClick(Sender: TObject);
   private
   public
   end;
@@ -43,19 +41,12 @@ begin
     with _FrmStartUpInfo do begin
       cbxDontShow.checked := not _shownexttimeagain;
       mmoInfoText.Lines.LoadFromFile(ExtractFilePath(Application.exename) +cReadmeFile);
-      btnHistory.enabled := FileExists(cHistoryFile);
       ShowModal;
       _shownexttimeagain := not cbxDontShow.checked;
     end;
   finally
     _FrmStartUpInfo.Free;
   end;
-end;
-
-procedure TFrmStartUpInfo.btnHistoryClick(Sender: TObject);
-begin
-  if not fileexists(ExtractFilePath(Application.exename)+cHistoryFile) then exit;
-  mmoInfoText.Lines.LoadFromFile(ExtractFilePath(Application.exename)+cHistoryFile);
 end;
 
 end.
