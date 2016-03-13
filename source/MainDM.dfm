@@ -80,7 +80,7 @@ object DMMain: TDMMain
       OnExecute = actDeleteFilesExecute
     end
     object actRecompileAllPackages: TAction
-      Caption = 'actRecompileAllPackages'
+      Caption = 'Install All'
       OnExecute = actRecompileAllPackagesExecute
     end
     object actRevertChanges: TAction

@@ -107,8 +107,7 @@ object FrmMain: TFrmMain
       Top = 8
       Width = 209
       Height = 57
-      Hint = 'This will recompile&reinstall all Projects and Packages.'
-      Action = actRecompileAll
+      Action = DMMain.actRecompileAllPackages
       Caption = 'Install All'
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -495,7 +494,7 @@ object FrmMain: TFrmMain
   end
   object MainMenu1: TMainMenu
     Left = 1088
-    Top = 8
+    Top = 16
     object F1: TMenuItem
       Caption = 'File'
       object NewPackageGroup1: TMenuItem

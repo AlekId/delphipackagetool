@@ -72,6 +72,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 History:
 ********
 
+1.9.2.25  ( 13.03.2016 )
+-SH: moved setting createInstallBatch from application-settings to project-settings.
+
 1.9.2.24  ( 15.10.2015 )
 -SH: applied patch received from Andreas Heim about BDSBin-Tag for Delphi.
 

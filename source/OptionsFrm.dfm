@@ -105,17 +105,6 @@ object FrmOptions: TFrmOptions
       State = cbChecked
       TabOrder = 5
     end
-    object cbxCreateBatchFile: TCheckBox
-      Left = 544
-      Top = 160
-      Width = 145
-      Height = 17
-      Hint = 'Create the Install-Batch and .Reg-Files'
-      Caption = 'Create Install-Batch File'
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 6
-    end
     object cbxChangeFiles: TCheckBox
       Left = 8
       Top = 160
@@ -142,7 +131,7 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 7
+      TabOrder = 6
     end
     object edtSourceEditorParams: TEdit
       Left = 520
@@ -176,7 +165,7 @@ object FrmOptions: TFrmOptions
       Caption = 'Trace'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 8
+      TabOrder = 7
     end
     object cbxBackupSourceOnly: TCheckBox
       Left = 272
@@ -189,7 +178,7 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 9
+      TabOrder = 8
     end
   end
   object pnlBottom: TPanel
