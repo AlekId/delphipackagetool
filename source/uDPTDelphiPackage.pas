@@ -74,7 +74,7 @@ function  RemoveTrailingSemikolon(const _path:string):string;
 function AddTag(_filename: string;_DelphiVersion:integer): string;
 
 var
-  FCreateBatchFile:boolean;
+  gCreateBatchFile:boolean;
 
 implementation
 
@@ -1528,10 +1528,12 @@ end;
 function SaveBatchFile:string; // save the batch file to _filename
 begin
   result:='';
-  if not FCreateBatchFile then exit;
+  if not gCreateBatchFile then exit;
   try
+    CheckDirectory(extractfilepath(FBatchFilename));
     FBatchFile.SaveToFile(FBatchFilename);
     result:=FBatchFilename;
+    ShowFolder(extractfilepath(FBatchFilename));
   except
     on e:exception do trace(1,'Error in SaveBatchFile: Could not save file <%s>. <%s>.',[FBatchFilename,e.message]);
   end;
@@ -3338,7 +3340,10 @@ begin
       try
         _RegFile.Add('');
         _RegFileName := 'Register_Package_' + ChangeFileExt(ExtractFilename(_PackageName), '.reg');
-        if FCreateBatchFile then _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
+        if gCreateBatchFile then begin
+          CheckDirectory(extractfilepath(FBatchFilename));
+          _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
+        end;
         FBatchFile.Add(_RegFileName);
       except
         On E:Exception do Showmessage(format('Could not save file <%s> because <%s>.', [_RegFileName, E.Message]));
@@ -3410,7 +3415,7 @@ begin
     if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
     try
       _RegFileName := 'UnRegister_Package_' + ChangeFileExt(ExtractFilename(_PackageName), '.reg');
-      if FCreateBatchFile then _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
+      if gCreateBatchFile then _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
       FBatchFile.Add(_RegFileName);
     except
       On E:Exception do Showmessage(format('Could not save file <%s> because <%s>.', [_RegFileName, E.Message]));

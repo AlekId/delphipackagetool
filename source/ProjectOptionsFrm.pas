@@ -59,6 +59,7 @@ type
     lblReleaseCompilerSwitches: TLabel;
     edtReleaseCompilerSwitches: TEdit;
     cbxAutoBackup: TCheckBox;
+    cbxCreateInstallBatch: TCheckBox;
     procedure btnAddPathClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -440,6 +441,7 @@ begin
   DMMain.ProjectSettings.SetString('Application/Events/OnBeforeInstallAll',1,edtBeforeInstallAll.Text);
   DMMain.ProjectSettings.SetString('Application/Events/OnAfterInstallAll',2,edtAfterInstallAll.Text);
   DMMain.ProjectSettings.SetString('Application/CompilerSwitches',3,edtCompilerSwitches.Text);
+  DMMain.ProjectSettings.SetBoolean('Application/CreateInstallBatch',4,cbxCreateInstallBatch.checked);
   DMMain.ProjectSettings.SetString('Application/LibSuffix',10,edtLibSuffix.Text);
   DMMain.ProjectSettings.SetString('Application/DebugCompilerSwitches',18,edtDebugCompilerSwitches.Text);
   DMMain.ProjectSettings.SetString('Application/ReleaseCompilerSwitches',19,edtReleaseCompilerSwitches.Text);
@@ -470,6 +472,7 @@ begin
   edtDebugCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/DebugCompilerSwitches',18);
   edtReleaseCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/ReleaseCompilerSwitches',19);
   cbxAutoBackup.Checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup',20);
+  cbxCreateInstallBatch.checked:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
 end;
 
 {-----------------------------------------------------------------------------

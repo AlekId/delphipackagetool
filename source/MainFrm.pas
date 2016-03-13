@@ -242,12 +242,12 @@ type
     procedure FillProjectGrid;
     function  ExtractFilenameFromLog:string;
     procedure StgFilesShowCellHint(X, Y: Integer);
-    procedure DoWriteLog(Sender:TObject;const _msg:string);
-    procedure DoDeleteLog(Sender: TObject);
     procedure DoDelphiVersionChangeEvent(Sender:TObject;const _DelphiVersion:integer);
     procedure DoProjectGroupOpen(Sender:TObject);
     procedure DoProjectGroupClose(Sender:TObject);
     procedure DoApplicationStateChange(Sender:TObject;const _OldState,_NewState:TApplicationState);
+    procedure DoWriteLog(Sender:TObject;const _msg:string);
+    procedure DoDeleteLog(Sender: TObject);
     procedure DoPackageInstallEvent(Sender:TObject;const _PackageName:string;const _Message:string;const _ProjectNumber:integer);
     procedure DoPackageUnInstallEvent(Sender:TObject;const _PackageName:string;const _Message:string;const _ProjectNumber:integer);
     procedure DoCurrentProjectCompileStateChanged(Sender:TObject;const _ProjectName:string;const _CompileState:string;const _CompileDateTime:string;const _ProjectVersion:string;const _ProjectNumber:integer;const _Description:string);
@@ -377,7 +377,6 @@ begin
   _FrmOptions := TFrmOptions.create(nil);
   try
     _FrmOptions.showmodal;
-    FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
     FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
   finally
     _FrmOptions.free;
@@ -982,7 +981,7 @@ begin
   _FrmProjectOptions := TFrmProjectOptions.create(nil);
   try
     _FrmProjectOptions.showmodal;
-    FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
+    gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
     FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
   finally
     _FrmProjectOptions.free;
@@ -1437,7 +1436,6 @@ end;
 procedure TFrmMain.DoProjectGroupOpen(Sender: TObject);
 begin
   ClearLog;
-  FCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
   PrepareGUI(DMMain.BPGFilename);
 end;
 

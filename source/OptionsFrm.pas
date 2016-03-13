@@ -44,7 +44,6 @@ type
     edtCompilerSwitches: TEdit;
     lblCompilerSwitches: TLabel;
     cbxAutomaticShowAddPathDialog: TCheckBox;
-    cbxCreateBatchFile: TCheckBox;
     cbxChangeFiles: TCheckBox;
     cbxModifyEnvironment: TCheckBox;
     edtSourceEditorParams: TEdit;
@@ -208,7 +207,6 @@ begin
   DMMain.ApplicationSettings.SetBoolean('Application/AutomaticSearchFiles', 18,cbxAutomaticShowAddPathDialog.Checked);
   DMMain.ApplicationSettings.SetFile('Application/DiffTool', 29,edtDiffTool.Text);
   DMMain.ApplicationSettings.SetString('Application/CompilerSwitches',11,edtCompilerSwitches.Text);
-  DMMain.ApplicationSettings.SetBoolean('Application/CreateInstallBatch',4,cbxCreateBatchFile.Checked);
   DMMain.ApplicationSettings.SetBoolean('Application/ChangeFiles', 13,cbxChangeFiles.Checked);
   DMMain.ApplicationSettings.SetBoolean('Application/ModifyEnvironmentPath', 14,cbxModifyEnvironment.Checked);
   DMMain.ApplicationSettings.SetBoolean('Application/Trace',20,cbxTrace.checked);
@@ -230,7 +228,6 @@ begin
   edtCompilerSwitches.Text:=DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches',11);
   edtDiffTool.Text:=DMMain.ApplicationSettings.FileValue('Application/DiffTool', 29);
   cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18);
-  cbxCreateBatchFile.Checked:=DMMain.ApplicationSettings.BoolValue('Application/CreateInstallBatch',4);
   cbxChangeFiles.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ChangeFiles', 13);
   cbxModifyEnvironment.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ModifyEnvironmentPath', 14);
   cbxTrace.checked:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);

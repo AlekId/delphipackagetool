@@ -199,7 +199,6 @@ type
     property  BPGConfigList: TStringList read FBPGConfigList;
     property  ConfigToCompile: string read FConfigToCompile;
     property  PlatformToCompile: string read FPlatformToCompile;                // information read from the registery.
-
     property  CurrentBPGPlatformList: TStringList read FCurrentBPGPlatformList; // selected platforms for the current project group
     property  CurrentBPGConfigList: TStringList read FCurrentBPGConfigList;     // selected configs for the current project group
     property  ZipFilename:string read FZipFilename;
@@ -578,6 +577,7 @@ begin
   ProjectSettings.GetStringValue('Application/Events/OnBeforeInstallAll',1,'','The name of the batch file which will be executed when user presses "Install All".', true,false,false);
   ProjectSettings.GetStringValue('Application/Events/OnAfterInstallAll',2,'','The name of the batch file which will be executed after all projects have been compiled successfully.', true,false,false);
   ProjectSettings.GetStringValue('Application/CompilerSwitches',3,'-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
+  ProjectSettings.GetBoolValue('Application/CreateInstallBatch',4,false,'If enabled, then a compile&install batch file will be created.', true,false,false);
   ProjectSettings.GetIntegerValue('Application/DelphiVersion',5,7,'The compiler Version used for this project.',true,false,false);
   ProjectSettings.GetPathValue('Application/PackageOutputPath', 6, 'bpl\$(DELPHIVERSION)\', 'Path to the Delphi Projects\BPL directory.', true,false,false);
   ProjectSettings.GetPathValue('Application/DCUOutputPath', 7, 'dcu\$(DELPHIVERSION)\', 'Output Path for the dcu-files.', true,false,false);
@@ -614,6 +614,7 @@ begin
   CurrentDelphiVersion := ProjectSettings.IntegerValue('Application/DelphiVersion',5);
   CurrentBPGPlatformList.CommaText := ProjectSettings.StringValue('Application/Platform',14);
   CurrentBPGConfigList.CommaText := ProjectSettings.StringValue('Application/Config',16);
+  gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
 // this will avoid breaking changes for version before D2010 for existing projects.
   if (FCurrentDelphiVersion<=14) and
      (ProjectSettings.PathValue('Application/DCPOutputPath', 17)=cDefaultDCPPath)
@@ -1094,7 +1095,6 @@ begin
   ApplicationSettings.GetIntegerValue('Compiler/DelphiVersion', 1,LatestIDEVersion, 'Delphi Version', true,false,false);
   ApplicationSettings.GetFileValue('Compiler/DelphiCompiler', 2, '$(DELPHI)\Bin\DCC32.EXE', 'The Borland Delphi Compiler <DCC32.EXE>.', true,false,false);
   ApplicationSettings.GetFileValue('Application/ProjectGroupFile', 3, '', 'The name of Borland Package Group File', true,false,false);
-  ApplicationSettings.GetBoolValue('Application/CreateInstallBatch',4,false,'If enabled, then a compile&install batch file will be created.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/SilentMode', 5, False, 'If this settings is true, then no dialog boxes will be shown.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StopOnFailure', 6, false, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StartDelphiOnClose', 7, False, 'Start Delphi when this application terminates.', true,false,false);
@@ -1215,7 +1215,7 @@ begin
   _start := gettickcount;
   DeleteLog;
   WriteLog('Start to compile all projects of file <%s>.', [FBPGFilename]);
-  InitBatchFile(FBPGPath + changeFileExt(extractFileName(FBPGFilename), '.bat'));
+  InitBatchFile(FBPGPath + 'batch\'+changeFileExt(extractFileName(FBPGFilename), '.bat'));
   ApplicationState := tas_working;
   try
     _CompiledProjects := CompileAndInstallProjects(FBPGProjectList);
