@@ -105,7 +105,7 @@ const
   cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';
   cProjectGroupFilter='*.bpg;*.groupproj;*.bdsgroup';
 
-  DelphiVersions: array [1..24] of TDelphiVersionInfo = (
+  DelphiVersions: array [1..25] of TDelphiVersionInfo = (
     (
       Name: cDelphiName;           //1
       VersionStr: '1.0';
@@ -366,6 +366,17 @@ const
       LongName: 'Embarcadero RAD Studio 10 Seattle';
       CompilerVersion:30;
       CompilerVersionStr:'VER300';
+      Supported: True),
+   (
+      Name: cRSName;              //25
+      VersionStr: 'XE10.1';
+      IDEVersion: 18;
+      IDEVersionStr: '18.0';
+      CoreIdeVersion: '???';
+      ShortName: 'XE10';
+      LongName: 'Embarcadero RAD Studio 10.1 Berlin';
+      CompilerVersion:31;
+      CompilerVersionStr:'VER310';
       Supported: True)
   );
 
