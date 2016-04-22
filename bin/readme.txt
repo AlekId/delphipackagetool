@@ -72,6 +72,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 History:
 ********
 
+1.9.2.26  ( 21.04.2016 )
+-SH: added definitions for Delphi 10.1 Berlin.
+
 1.9.2.25  ( 13.03.2016 )
 -SH: moved setting createInstallBatch from application-settings to project-settings.
 
