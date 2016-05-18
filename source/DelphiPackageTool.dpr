@@ -21,7 +21,8 @@ uses
   uDTPProjectData in 'uDTPProjectData.pas',
   ProjectOptionsFrm in 'ProjectOptionsFrm.pas' {FrmProjectOptions},
   uDPTDblList in 'uDPTDblList.pas',
-  uDPTDelphiPackage in 'uDPTDelphiPackage.pas';
+  uDPTDelphiPackage in 'uDPTDelphiPackage.pas',
+  SelectFilesFrm in 'SelectFilesFrm.pas' {FrmSelectFiles};
 
 {$R *.res}
 

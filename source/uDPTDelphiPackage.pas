@@ -55,6 +55,7 @@ function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
+function  CleanUpPackageByEnvPaths:boolean;
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
@@ -94,7 +95,9 @@ uses
   uDPTPathFilenameConvert,
   uDPTXMLReader,
   uDPTJclFuncs,
+  uDPTEnvironmentPath,
   uDTPProjectData,
+  SelectFilesFrm,
   MSXML_TLB;
 
 var
@@ -985,8 +988,6 @@ _Reg: TRegistry;
 _ValueNames:TStrings;
 _packageName:string;
 begin
-//ShowMessage('Feature not supported for XE8');
-//exit;
   result:=true;
   if not GetIDERootKey(_DelphiVersion,_DelphiRootDirKey) then begin
     trace(3,'Problem in CleanupByRegistry: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
@@ -1023,7 +1024,6 @@ begin
     _ValueNames.free;
   end;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: RemoveValueFromRegistry
@@ -1203,14 +1203,62 @@ begin
           if uDPTDelphiPackage.DeleteFile(_packageName) then trace(5,'CleanUpPackagesByRegistry: Deleted File <%s> for delphi version <%d>.',[_packageName,_DelphiVersion]);
         end;
       end;
+      result:=true;
     except
       on e:exception do trace(1,'Warning in CleanUpPackagesByRegistry: Could not delete the key <%s> for delphi version <%s>.You need to have Admin rights for this computer.%s',[_DelphiRootDirKey,_DelphiVersion,e.message]);
     end;
-    _Reg.CloseKey;
-    result:=true;
   finally
     _ValueNames.free;
+    _Reg.CloseKey;
     _Reg.Free;
+  end;
+end;
+
+{*-----------------------------------------------------------------------------
+  Procedure: CleanUpPackageByEnvPaths
+  Author:    sam
+  Date:      18-Mai-2016
+  Arguments: None
+  Result:    boolean
+  Description: 1.) get all paths from environment variable.
+               2.) search all  bpl and dcp files in this paths.
+               3.) display a dialog to the user where he can select the
+                   files to be deleted.
+-----------------------------------------------------------------------------}
+function CleanUpPackageByEnvPaths:boolean;
+var
+i,j:integer;
+_EnvPaths:TStrings;
+_FilesOfPath:TStringList;
+_FilesToDisplay:TStringList;
+_FilesToDelete:TStringList;
+_path:string;
+_file:string;
+begin
+  result:=false;
+  _FilesOfPath:=TStringList.Create;
+  _FilesToDisplay:=TStringList.Create;
+  _EnvPaths:=GetGlobalEnvironmentPathList;
+  try
+    for i:=0 to _EnvPaths.Count-1 do begin
+      _path:=_EnvPaths[i]+'\';
+      _FilesOfPath.Clear;
+      AllFilesOfPath(_path,'*.bpl',_FilesOfPath);
+      for j:=0 to _FilesOfPath.Count-1 do _FilesToDisplay.add(_path+_FilesOfPath[j]);
+      _FilesOfPath.Clear;
+      AllFilesOfPath(_path,'*.dcp',_FilesOfPath);
+      for j:=0 to _FilesOfPath.Count-1 do _FilesToDisplay.add(_path+_FilesOfPath[j]);
+    end;
+    if not SelectFilesDlg(_FilesToDisplay,_FilesToDelete) then exit;
+    for i:=0 to _FilesToDelete.Count-1 do begin
+      _file:=_FilesToDelete[i];
+      DeleteFile(_File);
+    end;
+  finally
+    _FilesToDisplay.free;
+    _EnvPaths.free;
+    _FilesToDelete.free;
+    _FilesOfPath.Free;
   end;
 end;
 

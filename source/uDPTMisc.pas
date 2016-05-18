@@ -43,7 +43,7 @@ function IsFilenameValid(_filename:string):boolean; // check if the given name <
 procedure Trace(const _level:byte;const _msg:String;const _params:array of const);
 function BackupFile(_Filename:String;_BackupExt:String='.old';_BackupPath:String='';_DeleteOriginalFile:boolean=true):Boolean;
 function ExtractFilenameOnly(_filename:String):String; // filename without path and without file extenstion.
-procedure AllFilesOfPath(_Path, _Mask : string;_FileList:TStrings;_withExtension:boolean=true); // get all files with extension <_FileExt> of path <_path> into the Filelist.
+procedure AllFilesOfPath(_Path, _Mask : string;FileList:TStrings;_withExtension:boolean=true); // get all files with extension <_FileExt> of path <_path> into the Filelist.
 function CheckPropExists(_component:TComponent;_propname:string):Boolean; // check if the component has a property with namd <_propname>.
 function SetProperty(_persistent:TPersistent;var PropName:string;_Value:string):Boolean; // set a property of an component
 function StringToFloat(_str:string;var value:extended):Boolean;
@@ -896,21 +896,21 @@ end;
 //Example: AllFilesOfPath(PackagePath,'*.pas',FFileList);
 // 31.01.2004 - added optional parameter <_withExtension>. If false then the extension is cut off before adding to the list.
 //*************************************************************************
-procedure AllFilesOfPath(_Path, _Mask : string;_FileList:TStrings;_withExtension:boolean=true);
+procedure AllFilesOfPath(_Path, _Mask : string;FileList:TStrings;_withExtension:boolean=true);
 var
   SearchRec : TSearchRec;
   _Filename:string;
 begin
-  if not assigned(_FileList) then exit;
+  if not assigned(FileList) then exit;
   try
     if SysUtils.FindFirst(_Path+_Mask, faAnyFile, SearchRec) <> 0 then exit;
     _Filename:=trim(SearchRec.Name);
     if not _withExtension then _Filename:=ExtractFilenameOnly(_Filename);
-    if _Filename<>'' then _FileList.add(_Filename);
+    if _Filename<>'' then FileList.add(_Filename);
     while SysUtils.FindNext(SearchRec) = 0 do begin
       _Filename:=trim(SearchRec.Name);
       if not _withExtension then _Filename:=ExtractFilenameOnly(_Filename);
-      if _Filename<>'' then _FileList.add(_Filename);
+      if _Filename<>'' then FileList.add(_Filename);
     end;
   finally
     SysUtils.FindClose(SearchRec);
