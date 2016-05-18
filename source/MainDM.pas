@@ -732,7 +732,7 @@ begin
   _Platform := '';
   ApplicationState := tas_init;
   FCurrentDelphiVersion := LatestIDEVersion;
-  FCurrentBPLOutputPath := GetDelphiPackageDir(FCurrentDelphiVersion,FPlatformToCompile);
+  FCurrentBPLOutputPath := '';
   FCurrentDCUOutputPath := '';
   FApplicationIniFilename := changefileext(application.ExeName, '.ini');
   FConfigToCompile := '';
@@ -1469,6 +1469,7 @@ begin
                       CleanUpPackagesByPath(CurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
                     end;
   end;
+  CleanUpPackageByEnvPaths;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2404,6 +2405,7 @@ begin
     for _PlatformIndex := 0 to FPlatformsToCompileList.Count - 1 do begin
       for _ConfigIndex := 0 to FConfigsToCompileList.Count - 1 do begin
         FPlatformToCompile := FPlatformsToCompileList[_PlatformIndex];
+        FCurrentBPLOutputPath:=GetDelphiPackageDir(FCurrentDelphiVersion,FPlatformToCompile);
         FConfigToCompile := FConfigsToCompileList[_ConfigIndex];
 
         LoadCurrentProject;
