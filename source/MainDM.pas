@@ -1469,7 +1469,7 @@ begin
                       CleanUpPackagesByPath(CurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
                     end;
   end;
-  CleanUpPackageByEnvPaths;
+  CleanUpPackageByEnvPaths(IsSilentMode);
 end;
 
 {*-----------------------------------------------------------------------------
