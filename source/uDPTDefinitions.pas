@@ -39,6 +39,12 @@ type
 
   TDelphiNameType=(tdn_short,tdn_long);
 
+  TPlatforTypes=(tpl_win16,
+                 tpl_win32,
+                 tpl_win64);
+                 
+  TSupportedPlatforms=set of TPlatforTypes;
+
   TDelphiVersionInfo = record
     Name: string;
     VersionStr: string;
@@ -49,6 +55,7 @@ type
     LongName:string;
     CompilerVersion:double;
     CompilerVersionStr:string;
+    SupportedPlatforms:TSupportedPlatforms;
     Supported: Boolean;
   end;
 

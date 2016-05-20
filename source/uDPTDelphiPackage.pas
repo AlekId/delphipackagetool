@@ -55,7 +55,7 @@ function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
-function  CleanUpPackageByEnvPaths:boolean;
+function  CleanUpPackageByEnvPaths(const _silent:boolean):boolean;
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
@@ -1225,7 +1225,7 @@ end;
                3.) display a dialog to the user where he can select the
                    files to be deleted.
 -----------------------------------------------------------------------------}
-function CleanUpPackageByEnvPaths:boolean;
+function CleanUpPackageByEnvPaths(const _silent:boolean):boolean;
 var
 i,j:integer;
 _EnvPaths:TStrings;
@@ -1249,10 +1249,12 @@ begin
       AllFilesOfPath(_path,'*.dcp',_FilesOfPath);
       for j:=0 to _FilesOfPath.Count-1 do _FilesToDisplay.add(_path+_FilesOfPath[j]);
     end;
-    if not SelectFilesDlg(_FilesToDisplay,_FilesToDelete) then exit;
+    if _FilesToDisplay.count=0 then exit; // no files found, no need to show the dialog.
+    if not SelectFilesDlg('Please select files to be deleted.','Delete selected files',_FilesToDisplay,_Silent,_FilesToDelete) then exit;
+    if _FilesToDelete.Count=0 then exit; // now file marked for deletion
     for i:=0 to _FilesToDelete.Count-1 do begin
       _file:=_FilesToDelete[i];
-      DeleteFile(_File);
+      uDPTDelphiPackage.DeleteFile(_File);
     end;
   finally
     _FilesToDisplay.free;
@@ -4096,7 +4098,10 @@ begin
     exit;
   end;
   try
-    if not SysUtils.DeleteFile(_Filename) then exit;
+    if not SysUtils.DeleteFile(_Filename) then begin
+      trace(1,'Error when deleting file <%s>. The file may be in use.',[_Filename]);
+      exit;
+    end;
     FBatchFile.add('del "'+_Filename+'"');
     trace(3,'Deleted file <%s>.',[_Filename]);
     result:=true;
