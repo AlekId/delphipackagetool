@@ -31,6 +31,7 @@ type
     rbtAllThirdParty: TRadioButton;
     rbtAllProjectsBPL: TRadioButton;
     cbxDeleteBPLAndDCPFiles: TCheckBox;
+    lblInfo: TLabel;
   private
   public
   end;
