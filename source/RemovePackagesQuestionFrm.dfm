@@ -60,6 +60,15 @@ object FrmRemovePackage: TFrmRemovePackage
     Height = 127
     Align = alClient
     TabOrder = 1
+    object lblInfo: TLabel
+      Left = 32
+      Top = 104
+      Width = 335
+      Height = 13
+      Caption = 
+        '(Note: This deletes only packages which are referenced in  the r' +
+        'egistry)'
+    end
     object rbtAllThirdParty: TRadioButton
       Left = 32
       Top = 32
