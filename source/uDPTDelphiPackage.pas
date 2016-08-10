@@ -256,7 +256,7 @@ begin
   if _DelphiVersion <= 7 then exit;  // delphi 1-7 do nothing, because bdsprojectdir was introduced later.
 
   //Delphi 8 .. RAD Studio 2010
-  LocStr := LoadResStrings(GetDelphiRootDir(_DelphiVersion) + 'Bin\coreide' + DelphiVersions[_DelphiVersion].CoreIdeVersion + '.',['Borland Studio Projects', 'RAD Studio', 'Projects', 'Embarcadero', 'Studio']);
+  LocStr := LoadResStrings(GetDelphiRootDir(_DelphiVersion) + 'Bin\coreide' + DelphiVersions[_DelphiVersion].PackageVersion + '.',['Borland Studio Projects', 'RAD Studio', 'Projects', 'Embarcadero', 'Studio']);
 
   if DelphiVersions[_DelphiVersion].IDEVersion < 5 then begin
     Result := LocStr[0];
@@ -1473,6 +1473,8 @@ end;
 function ReplaceTag(_filename: string; _DelphiVersion: Integer;const _CurrentPlatform, _CurrentConfig: string): string;
 begin
   _filename := StringReplace(_filename, cDelphiVersionTag, DelphiVersions[_DelphiVersion].ShortName, [rfReplaceAll, rfIgnoreCase]);
+
+  _filename := StringReplace(_filename, cPackageVersionTag, DelphiVersions[_DelphiVersion].PackageVersion, [rfReplaceAll, rfIgnoreCase]);
 
   _filename := StringReplace(_filename, cDelphiTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
@@ -2824,7 +2826,7 @@ begin
     _CompilerSwitches := '';
     _DCPOutputPath := _BPLOutputPath;
   end;
-  if _Conditions <> '' then _Conditions := '-D"'+_Conditions+'"';
+  if _Conditions <> '' then _Conditions := '-D'+_Conditions;
 end;
 
 {-----------------------------------------------------------------------------

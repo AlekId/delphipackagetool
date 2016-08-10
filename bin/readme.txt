@@ -72,6 +72,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 History:
 ********
 
+1.9.2.30  ( 10.08.2016 )
+-SH: added new PlaceHolder $(PackageVersion) which will be replaced by definition from http://docwiki.embarcadero.com/RADStudio/Berlin/de/Compiler-Versionen
+
 1.9.2.27  ( 19.05.2016 )
 -SH: added new dialog to function <Tool><Clean up Delphi>.
      The new dialog will search all folder's defined in the windows environment path

@@ -50,7 +50,7 @@ type
     VersionStr: string;
     IDEVersion: Integer;
     IDEVersionStr: string;
-    CoreIdeVersion: string;
+    PackageVersion: string;
     ShortName:string;
     LongName:string;
     CompilerVersion:double;
@@ -96,6 +96,7 @@ const
   cBDSUserDirTag='$(BDSUSERDIR)';
   cProgramFilesTag='$(PROGRAMFILES)';
   cDelphiVersionTag='$(DELPHIVERSION)';
+  cPackageVersionTag='$(PACKAGEVERSION)';
   cPlatformTag='$(PLATFORM)';
   cConfigTag='$(CONFIG)';
   cRADStudioDirName='RAD Studio';
@@ -118,7 +119,7 @@ const
       VersionStr: '1.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '10';
+      PackageVersion: '10';
       ShortName: 'D1';
       LongName: 'Borland Delphi 1.0';
       CompilerVersion:8;
@@ -129,7 +130,7 @@ const
       VersionStr: '2.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '20';
+      PackageVersion: '20';
       ShortName: 'D2';
       LongName: 'Borland Delphi 2.0';
       CompilerVersion:9;
@@ -140,7 +141,7 @@ const
       VersionStr: '3.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '30';
+      PackageVersion: '30';
       ShortName: 'D3';
       LongName: 'Borland Delphi 3.0';
       CompilerVersion:10;
@@ -151,7 +152,7 @@ const
       VersionStr: '4.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '40';
+      PackageVersion: '40';
       ShortName: 'D4';
       LongName: 'Borland Delphi 4.0';
       CompilerVersion:12;
@@ -162,7 +163,7 @@ const
       VersionStr: '5.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '50';
+      PackageVersion: '50';
       ShortName: 'D5';
       LongName: 'Borland Delphi 5.0';
       CompilerVersion:13;
@@ -173,7 +174,7 @@ const
       VersionStr: '6.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '60';
+      PackageVersion: '60';
       ShortName: 'D6';
       LongName: 'Borland Delphi 6.0';
       CompilerVersion:14;
@@ -184,7 +185,7 @@ const
       VersionStr: '7.0';
       IDEVersion: 0;
       IDEVersionStr: '';
-      CoreIdeVersion: '70';
+      PackageVersion: '70';
       ShortName: 'D7';
       LongName: 'Borland Delphi 7.0';
       CompilerVersion:15;
@@ -195,7 +196,7 @@ const
       VersionStr: '8';
       IDEVersion: 2;
       IDEVersionStr: '2.0';
-      CoreIdeVersion: '71';
+      PackageVersion: '71';
       ShortName: 'D8';
       LongName: 'Borland Delphi 8 .NET';
       CompilerVersion:16;
@@ -206,7 +207,7 @@ const
       VersionStr: '2005';
       IDEVersion: 3;
       IDEVersionStr: '3.0';
-      CoreIdeVersion: '90';
+      PackageVersion: '90';
       ShortName: 'D2005';
       LongName: 'Borland Delphi 2005';
       CompilerVersion:17;
@@ -217,7 +218,7 @@ const
       VersionStr: '2006';
       IDEVersion: 4;
       IDEVersionStr: '4.0';
-      CoreIdeVersion: '100';
+      PackageVersion: '100';
       ShortName: 'D2006';
       LongName: 'Borland Developer Studio 2006/Turbo Delphi';
       CompilerVersion:18;
@@ -228,7 +229,7 @@ const
       VersionStr: '2007';
       IDEVersion: 5;
       IDEVersionStr: '5.0';
-      CoreIdeVersion: '100';
+      PackageVersion: '100';
       ShortName: 'D2007';
       LongName: 'CodeGear RAD Studio 2007/CodeGear Delphi 2007 for Win32';
       CompilerVersion:18.5;
@@ -239,7 +240,7 @@ const
       VersionStr: '2009';
       IDEVersion: 6;
       IDEVersionStr: '6.0';
-      CoreIdeVersion: '120';
+      PackageVersion: '120';
       ShortName: 'D2009';
       LongName: 'CodeGear RAD Studio 2009/CodeGear Delphi 2009 for Win32';
       CompilerVersion:20;
@@ -250,7 +251,7 @@ const
       VersionStr: 'n/a';
       IDEVersion: 0;
       IDEVersionStr: 'n/a';
-      CoreIdeVersion: '0';
+      PackageVersion: '0';
       ShortName: 'n/a';
       Supported: False),
     (
@@ -258,7 +259,7 @@ const
       VersionStr: '2010';
       IDEVersion: 7;
       IDEVersionStr: '7.0';
-      CoreIdeVersion: '140';
+      PackageVersion: '140';
       ShortName: 'D2010';
       LongName: 'Embarcadero RAD Studio 2010';
       CompilerVersion:21;
@@ -269,7 +270,7 @@ const
       VersionStr: 'XE';
       IDEVersion: 8;
       IDEVersionStr: '8.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '150';
       ShortName: 'XE';
       LongName: 'Embarcadero RAD Studio XE';
       CompilerVersion:22;
@@ -280,7 +281,7 @@ const
       VersionStr: 'XE2';
       IDEVersion: 9;
       IDEVersionStr: '9.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '160';
       ShortName: 'XE2';
       LongName: 'Embarcadero RAD Studio XE2';
       CompilerVersion:23;
@@ -291,7 +292,7 @@ const
       VersionStr: 'XE3';
       IDEVersion: 10;
       IDEVersionStr: '10.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '170';
       ShortName: 'XE3';
       LongName: 'Embarcadero RAD Studio XE3';
       CompilerVersion:24;
@@ -302,7 +303,7 @@ const
       VersionStr: 'XE4';
       IDEVersion: 11;
       IDEVersionStr: '11.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '180';
       ShortName: 'XE4';
       LongName: 'Embarcadero RAD Studio XE4';
       CompilerVersion:25;
@@ -313,7 +314,7 @@ const
       VersionStr: 'XE5';
       IDEVersion: 12;
       IDEVersionStr: '12.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '190';
       ShortName: 'XE5';
       LongName: 'Embarcadero RAD Studio XE5';
       CompilerVersion:26;
@@ -324,7 +325,7 @@ const
       VersionStr: 'AppMethod';
       IDEVersion: 13;
       IDEVersionStr: '???';
-      CoreIdeVersion: '???';
+      PackageVersion: '???';
       ShortName: '???';
       LongName: 'AppMethod';
       CompilerVersion:26.5;
@@ -335,7 +336,7 @@ const
       VersionStr: 'XE6';
       IDEVersion: 14;
       IDEVersionStr: '14.0';
-      CoreIdeVersion: '210';
+      PackageVersion: '200';
       ShortName: 'XE6';
       LongName: 'Embarcadero RAD Studio XE6';
       CompilerVersion:27;
@@ -346,7 +347,7 @@ const
       VersionStr: 'XE7';
       IDEVersion: 15;
       IDEVersionStr: '15.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '210';
       ShortName: 'XE7';
       LongName: 'Embarcadero RAD Studio XE7';
       CompilerVersion:28;
@@ -357,7 +358,7 @@ const
       VersionStr: 'XE8';
       IDEVersion: 16;
       IDEVersionStr: '16.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '220';
       ShortName: 'XE8';
       LongName: 'Embarcadero RAD Studio XE8';
       CompilerVersion:29;
@@ -368,7 +369,7 @@ const
       VersionStr: 'XE10';
       IDEVersion: 17;
       IDEVersionStr: '17.0';
-      CoreIdeVersion: '???';
+      PackageVersion: '230';
       ShortName: 'XE10';
       LongName: 'Embarcadero RAD Studio 10 Seattle';
       CompilerVersion:30;
@@ -379,8 +380,8 @@ const
       VersionStr: 'XE10.1';
       IDEVersion: 18;
       IDEVersionStr: '18.0';
-      CoreIdeVersion: '???';
-      ShortName: 'XE10';
+      PackageVersion: '240';
+      ShortName: 'XE10.1';
       LongName: 'Embarcadero RAD Studio 10.1 Berlin';
       CompilerVersion:31;
       CompilerVersionStr:'VER310';
