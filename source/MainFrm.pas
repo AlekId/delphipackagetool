@@ -1456,10 +1456,12 @@ begin
     end;
     tas_working: begin
       stgFiles.Enabled:=false;
+      pnlTop.Enabled:=false;
     end;
     tas_open: begin
       stgFiles.Enabled:=true;
       actCompileProject.Enabled := True;
+      pnlTop.Enabled:=true;
     end;
   end;
 end;

@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.31  ( 13.03.2017 )
+-SH: fix in relation with package-suffix and "Allow to change files". 
+-SH: method GetLibSuffix returns now the PackageVersion instead of the ShortName. If you have set Lib-Suffix to <Auto>, the suffix will now be <240> instead of <XE10.1>
 
 1.9.2.30  ( 10.08.2016 )
 -SH: added new PlaceHolder $(PackageVersion) which will be replaced by definition from http://docwiki.embarcadero.com/RADStudio/Berlin/de/Compiler-Versionen

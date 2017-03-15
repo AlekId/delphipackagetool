@@ -198,7 +198,7 @@ type
     property  BPGPlatformList: TStringList read FBPGPlatformList;
     property  BPGConfigList: TStringList read FBPGConfigList;
     property  ConfigToCompile: string read FConfigToCompile;
-    property  PlatformToCompile: string read FPlatformToCompile;                // information read from the registery.
+    property  PlatformToCompile: string read FPlatformToCompile;                // information read from the registry.
     property  CurrentBPGPlatformList: TStringList read FCurrentBPGPlatformList; // selected platforms for the current project group
     property  CurrentBPGConfigList: TStringList read FCurrentBPGConfigList;     // selected configs for the current project group
     property  ZipFilename:string read FZipFilename;
@@ -558,8 +558,8 @@ function TDMMain.GetLibSuffix(_ProjectType:TProjectType;_libsuffix:string): stri
 begin
   result:=_libsuffix;
   if _ProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
-  if not ProjectSettings.BoolValue('Application/ChangeFiles', 13) then exit;  // if changing of files is not allowed, then we can not change the suffix.
-  if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FCurrentDelphiVersion].ShortName
+  if not ApplicationSettings.BoolValue('Application/ChangeFiles', 13) then exit;  // if changing of files is not allowed, then we can not change the suffix.
+  if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FCurrentDelphiVersion].PackageVersion
   else if lowercase(ProjectSettings.StringValue('Application/LibSuffix',10))=lowercase(cLIBNoneTag) then result:=''
   else result:=ProjectSettings.StringValue('Application/LibSuffix',10);
 end;
@@ -1055,6 +1055,14 @@ begin
   FBPGProjectList.Free;
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: SetDelphiVersion
+  Author:    sam
+  Date:
+  Arguments: const Value: Integer
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TDMMain.SetDelphiVersion(const Value: Integer);
 resourcestring
 cAskForIDE='The IDE <%s> you used last time for this project is not installed on this computer! Do you want to open this project with IDE <%s>?';
@@ -1069,6 +1077,8 @@ begin
   FDelphiRootDirectory:=GetDelphiRootDir(FCurrentDelphiVersion);
   trace(3,'Set the Compiler Root Directory to <%s>.',[FDelphiRootDirectory]);
   ReadLibraryPath(FCurrentDelphiVersion,FDelphiLibraryPath);
+  FDPTSearchPath := GetGlobalSearchPath(True);
+  GetAllPlatformsAndConfigsOfBPG;
   AdaptSearchPath;
   InitProjectDataForHint;
   FireDelphiVersionChanged;
@@ -2172,7 +2182,7 @@ var
   _ChangedFiles:string;
 begin
   if not _ForceWrite then begin
-    if not ProjectSettings.BoolValue('Application/ChangeFiles', 13) then Exit;    // if DPT is allowed to change the files
+    if not ApplicationSettings.BoolValue('Application/ChangeFiles', 13) then Exit;    // if DPT is allowed to change the files
   end;
 
 // try to update cfg/dproj/bdsproj files.

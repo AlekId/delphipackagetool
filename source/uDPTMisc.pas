@@ -902,12 +902,14 @@ var
   _Filename:string;
 begin
   if not assigned(FileList) then exit;
+  _Path:=IncludetrailingPathDelimiter(_Path);
   try
     if SysUtils.FindFirst(_Path+_Mask, faAnyFile, SearchRec) <> 0 then exit;
     _Filename:=trim(SearchRec.Name);
     if not _withExtension then _Filename:=ExtractFilenameOnly(_Filename);
     if _Filename<>'' then FileList.add(_Filename);
     while SysUtils.FindNext(SearchRec) = 0 do begin
+      if Application.Terminated then exit;
       _Filename:=trim(SearchRec.Name);
       if not _withExtension then _Filename:=ExtractFilenameOnly(_Filename);
       if _Filename<>'' then FileList.add(_Filename);
@@ -931,6 +933,7 @@ _search: TSearchRec;
 begin
   result:=false;
   if not assigned(_FileList) then exit;
+  _Path:=IncludetrailingPathDelimiter(_Path);
   _mask:=lowercase(_mask);
   // find all files
   try
@@ -939,23 +942,20 @@ begin
       repeat
         // add the files to the listbox
         if trim(_search.Name)<>'' then _FileList.Add(_path + _search.Name);
-      until (SysUtils.FindNext(_search) <> 0) or (AbortScan);
+      until (SysUtils.FindNext(_search) <> 0) or (AbortScan) or Application.Terminated;
     end;
 
     Application.ProcessMessages;
     Result := not (AbortScan or Application.Terminated);
-    if not Result then begin
-      Exit;
-    end;
+    if not Result then exit;
 
-    // Subdirectories/ Unterverzeichnisse
     if SysUtils.FindFirst(_path + '*.*', faDirectory, _search) = 0 then
     begin
       repeat
         if ((_search.Attr and faDirectory) = faDirectory) and
            (trim(_search.Name)<>'') and
            (_search.Name[1] <> '.') then AllFilesOfDrive(_path + _search.Name + '\',_mask,_FileList,AbortScan);
-      until (SysUtils.FindNext(_search) <> 0) or (AbortScan);
+      until (SysUtils.FindNext(_search) <> 0) or (AbortScan) or Application.Terminated;
     end;
     result:=true;
   finally
