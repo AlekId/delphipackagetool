@@ -196,7 +196,7 @@ const
       VersionStr: '8';
       IDEVersion: 2;
       IDEVersionStr: '2.0';
-      PackageVersion: '71';
+      PackageVersion: '80';
       ShortName: 'D8';
       LongName: 'Borland Delphi 8 .NET';
       CompilerVersion:16;
@@ -229,7 +229,7 @@ const
       VersionStr: '2007';
       IDEVersion: 5;
       IDEVersionStr: '5.0';
-      PackageVersion: '100';
+      PackageVersion: '110';
       ShortName: 'D2007';
       LongName: 'CodeGear RAD Studio 2007/CodeGear Delphi 2007 for Win32';
       CompilerVersion:18.5;

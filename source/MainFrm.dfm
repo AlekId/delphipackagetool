@@ -254,7 +254,7 @@ object FrmMain: TFrmMain
     end
     object edtDCUPath: TEdit
       Left = 240
-      Top = 163
+      Top = 160
       Width = 601
       Height = 21
       Hint = 'Enter/select the Delphi DCU Path.'
