@@ -202,7 +202,7 @@ var
 
   {-----------------------------------------------------------------------------
     Procedure: TNVBSettings.FontStylesToInteger
-    Author:    herzogs2
+    Author:    sam
     Date:      22-July-2002
     Arguments:  _FontStyle:TFontStyles
     Result:    Integer
@@ -222,7 +222,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.IntegerToFontStyles
-  Author:    herzogs2
+  Author:    sam
   Date:      22-July-2002
   Arguments:  _Value:Integer
   Result:    Integer
@@ -313,7 +313,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.FindSetting
-  Author:    herzogs2
+  Author:    sam
   Date:      17-Dez-2002
   Arguments: Name:String
   Result:    Integer
@@ -340,7 +340,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.SettingExists
-  Author:    herzogs2
+  Author:    sam
   Date:      26-Feb-2002
   Arguments: Name: String
   Result:    Boolean
@@ -353,7 +353,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.GroupExists
-  Author:    herzogs2
+  Author:    sam
   Date:      26-Feb-2002
   Arguments: Group: string
   Result:    Boolean
@@ -406,7 +406,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.SetFloat
-  Author:    herzogs2
+  Author:    sam
   Date:      03-Okt-2002
   Arguments: Name: string; ID, _value: Double
   Result:    boolean
@@ -428,7 +428,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.SetColor
-  Author:    herzogs2
+  Author:    sam
   Date:      21-Mrz-2002
   Arguments: Name: string; ID: integer;_value: TColor
   Result:    boolean
@@ -485,7 +485,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.SetPath
-  Author:    herzogs2
+  Author:    sam
   Date:
   Arguments: Name: string; ID: integer;_value: string
   Result:    boolean
@@ -1243,7 +1243,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.GetCount
-  Author:    herzogs2
+  Author:    sam
   Date:      26-Feb-2002
   Arguments: None
   Result:    Integer
@@ -1256,7 +1256,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.SetFileName
-  Author:    herzogs2
+  Author:    sam
   Date:      02-Jul-2002
   Arguments: const Value: string
   Result:    None
@@ -1270,7 +1270,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.Initialize
-  Author:    herzogs2
+  Author:    sam
   Date:      25-Jun-2002
   Arguments: None
   Result:    None
@@ -1288,7 +1288,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.CleanUp
-  Author:    herzogs2
+  Author:    sam
   Date:      25-Jun-2002
   Arguments: None
   Result:    None
@@ -1303,7 +1303,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TNVBSettings.VerifyFilePath
-  Author:    herzogs2
+  Author:    sam
   Date:      02-Jul-2002
   Arguments: None
   Result:    None

@@ -55,7 +55,7 @@ function  IDENameToVersionNo(_version:string):integer; // turns the ide name 6.0
 function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:integer;const _DelphiSubKey:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the key HKEY_LOCAL_MACHINE/Software/Borland/Delphi/%VERSIONNO%/Known Packages and the same for HKEY_CURRENT_USER
 function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
-function  CleanUpPackageByEnvPaths(const _silent:boolean):boolean;
+function  CleanUpPackageByEnvPaths(const _DelphiVersion:integer;const _silent:boolean):boolean;
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
@@ -72,7 +72,14 @@ function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE i
 function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
 function  RemoveTrailingSemikolon(const _path:string):string;
-function AddTag(_filename: string;_DelphiVersion:integer): string;
+function  AddTag(_filename: string;_DelphiVersion:integer): string;
+function  GetIDEEnvironmentPath(const _DelphiVersion:integer): string; // read the environments-path for delphi version <_DelphiVersion>.
+function  SetIDEEnvironmentPath(const _DelphiVersion:integer;_IDEEnvironmentPath:string;const _silent:boolean):boolean; //set IDE Environment Path <_IDEEnvironmentPath> for version <_DelphiVersion>.
+function  IsPathInIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean; // checks if the path <_path> is already in the IDE environment variable.
+function  AddIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean; // add the path <_path> to the IDE Environment Variable.
+function  VerifyIDEEnvrionmentsPath(const _DelphiVersion:integer;const _silent:boolean;out DeletedPathEntries:integer):boolean; // remove in-existent folders from the IDE Environments Path. Returns the number of deleted entries in <DeletedPathEntries>.
+function  GetIDEEnvironmentPathList(const _DelphiVersion:integer): TStrings;
+
 
 var
   gCreateBatchFile:boolean;
@@ -95,7 +102,6 @@ uses
   uDPTPathFilenameConvert,
   uDPTXMLReader,
   uDPTJclFuncs,
-  uDPTEnvironmentPath,
   uDTPProjectData,
   SelectFilesFrm,
   MSXML_TLB;
@@ -107,7 +113,7 @@ var
 
 {-----------------------------------------------------------------------------
   Procedure: RemoveDoublePathEntries
-  Author:    herzogs2
+  Author:    sam
   Date:      30-Mrz-2010
   Arguments: _Path:string
   Result:    string
@@ -132,7 +138,6 @@ begin
     _list.free;
   end;
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: OldestIDEVersion
@@ -480,7 +485,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FindLine
-  Author:    herzogs2
+  Author:    sam
   Date:      25-Mrz-2010
   Arguments: var content:TStrings;_Tag:string;var removedText:string
   Result:    integer
@@ -671,7 +676,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ExtractFilenamesFromDCC32Output
-  Author:    herzogs2
+  Author:    sam
   Date:      16-Okt-2007
   Arguments: const _BasePath:string;const _CompilerOutput:TStringList
   Result:    TStringList
@@ -778,7 +783,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: WriteDOFFile
-  Author:    herzogs2
+  Author:    sam
   Date:      15-Jun-2007
   Arguments: _bpgPath,_dofFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean
   Result:    boolean
@@ -906,7 +911,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadLibraryPath
-  Author:    HerzogS2
+  Author:    sam
   Date:      09-Mrz-2007
   Arguments: _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath
   Result:    boolean
@@ -957,7 +962,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: GetDelphiPathTag
-  Author:    HerzogS2
+  Author:    sam
   Date:      08-Mrz-2007
   Arguments: const _version:integer
   Result:    string
@@ -1027,7 +1032,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: RemoveValueFromRegistry
-  Author:    herzogs2
+  Author:    sam
   Date:      30-Aug-2002
   Arguments: _RootKey:HKey;_Key,_PackageName:string
   Result:    None
@@ -1225,7 +1230,7 @@ end;
                3.) display a dialog to the user where he can select the
                    files to be deleted.
 -----------------------------------------------------------------------------}
-function CleanUpPackageByEnvPaths(const _silent:boolean):boolean;
+function CleanUpPackageByEnvPaths(const _DelphiVersion:integer;const _silent:boolean):boolean;
 var
 i,j:integer;
 _EnvPaths:TStrings;
@@ -1238,7 +1243,7 @@ begin
   result:=false;
   _FilesOfPath:=TStringList.Create;
   _FilesToDisplay:=TStringList.Create;
-  _EnvPaths:=GetGlobalEnvironmentPathList;
+  _EnvPaths:=GetIDEEnvironmentPathList(_DelphiVersion);
   try
     for i:=0 to _EnvPaths.Count-1 do begin
       _path:=_EnvPaths[i]+'\';
@@ -1368,7 +1373,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: DetermProjectTypeBDS
-  Author:    herzogs2
+  Author:    sam
   Date:      26-Mai-2008
   Arguments: const _projectfilename:string;const _projectGroupfilename
   Result:    TProjectType
@@ -1424,7 +1429,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: DetermProjectTypeGroupProj
-  Author:    herzogs2
+  Author:    sam
   Date:      15-Mrz-2010
   Arguments: const _projectfilename:string;const _projectGroupfilename:string
   Result:    TProjectType
@@ -1466,9 +1471,10 @@ end;
   Description: replaces the Tag <$(DELPHI)> with the real delphi path.
                replaces the Tag <$(BDS)> with the real delphi path.
                replaces the Tag <$(PROGRAMFILES)> with the real program files path.
-               replaces  the Tag <$(DELPHIVERSION)> with the real delphi version.
-               replaces  the Tag <$(BDSCOMMONDIR)> with the real bds common path.
-               replaces  the Tag <$(BDSPROJECTSDIR)> with the real bds projects path.
+               replaces the Tag <$(DELPHIVERSION)> with the real delphi version.
+               replaces the Tag <$(BDSCOMMONDIR)> with the real bds common path.
+               replaces the Tag <$(BDSPROJECTSDIR)> with the real bds projects path.
+               replaces the Tag <$(public)> with windows public path.
 ----------------------------------------------------------------------------}
 function ReplaceTag(_filename: string; _DelphiVersion: Integer;const _CurrentPlatform, _CurrentConfig: string): string;
 begin
@@ -1492,6 +1498,9 @@ begin
 
   _filename := StringReplace(_filename, cConfigTag, _CurrentConfig, [rfReplaceAll, rfIgnoreCase]);
 
+  _filename := StringReplace(_filename, cUsersPublicTag, ExcludeTrailingPathDelimiter(GetSystemPath(spPublic)), [rfReplaceAll, rfIgnoreCase]);
+
+
   if pos(UpperCase(cBDSUserDirTag), UpperCase(_fileName)) > 0 then
     _filename := StringReplace(_filename, cBDSUserDirTag, ReadBDSUserDir(_DelphiVersion), [rfReplaceAll, rfIgnoreCase]);
 
@@ -1500,7 +1509,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: PrepapreRegistryPath
-  Author:    herzogs2
+  Author:    sam
   Date:      15-Jun-2007
   Arguments: _filename:string
   Result:    string
@@ -1988,7 +1997,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadCFGSettings
-  Author:    herzogs2
+  Author:    sam
   Date:      27-Sep-2002
   Arguments: _cfgFilename:String;var _Conditions:String
   Result:    boolean
@@ -2068,7 +2077,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadBDSProjSettings
-  Author:    herzogs2
+  Author:    sam
   Date:      27-Mai-2008
   Arguments: const _bdsprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string
   Result:    boolean
@@ -2114,7 +2123,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadDPROJSettingsD2005_D2007
-  Author:    herzogs2
+  Author:    sam
   Date:      03-Mrz-2010
   Arguments: const _dprojFilename: string    path + name of project file
              var _Config:string              out: found configuration  ('' = not found)
@@ -2831,7 +2840,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadProjectFilenameFromDProj
-  Author:    herzogs2
+  Author:    sam
   Date:      29-Mai-2008
   Arguments: const _Filename:String
   Result:    string
@@ -2864,7 +2873,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: AddTag
-  Author:    herzogs2
+  Author:    sam
   Date:      15-Jun-2007
   Arguments: _filename: string;_DelphiVersion:integer
   Result:    string
@@ -2894,7 +2903,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: WriteCFGSettings
-  Author:    HerzogS2
+  Author:    sam
   Date:      07-Mrz-2007
   Arguments: _cfgFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath:string
   Result:    boolean
@@ -3005,7 +3014,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: WriteBDSProjSettings
-  Author:    herzogs2
+  Author:    sam
   Date:      08-Jul-2008
   Arguments: const _bpgPath,_bdsprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer
   Result:    boolean
@@ -3120,7 +3129,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: WriteDProjSettings
-  Author:    herzogs2
+  Author:    sam
   Date:      08-Jul-2008
   Arguments: const _bpgPath,_bdsprojFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _DelphiVersion:integer
   Result:    boolean
@@ -3233,7 +3242,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: WriteSettingsToDelphi
-  Author:    herzogs2
+  Author:    sam
   Date:      08-Jul-2008
   Arguments: const _bpgPath,_cfgFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _DelphiVersion:integer
   Result:    boolean
@@ -3258,7 +3267,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: AddPackageToRegistry
-  Author:    herzogs2
+  Author:    sam
   Date:      30-Aug-2002
   Arguments: _RootKey:HKey;_Key,_PackageName,_PackageDescription:string
   Result:    None
@@ -3298,7 +3307,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CanInstallPackage
-  Author:    herzogs2
+  Author:    sam
   Date:      22-Aug-2002
   Arguments: _PackageName:string
   Result:    boolean
@@ -3325,7 +3334,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: InstallPackage
-  Author:    herzogs2
+  Author:    sam
   Date:      30-Aug-2002
   Arguments: _PackageName,_PackageDirectory:String;_DelphiVersion:Integer
   Result:    None
@@ -3408,7 +3417,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: UninstallPackage
-  Author:    herzogs2
+  Author:    sam
   Date:      30-Aug-2002
   Arguments: _PackageName,_PackageDirectory:String;_DelphiVersion:Integer
   Result:    None
@@ -3480,7 +3489,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadPackageInfoDelphi
-  Author:    herzogs2
+  Author:    sam
   Date:      22-Aug-2002
   Arguments: _PackageName:string
   Result:    String
@@ -3531,7 +3540,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ReadPackageInfo
-  Author:    herzogs2
+  Author:    sam
   Date:      23-Dez-2009
   Arguments: const _PackageName:string;var Description:string
   Result:    boolean
@@ -3661,7 +3670,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CompileProject
-  Author:    herzogs2
+  Author:    sam
   Date:      29-Aug-2002
   Arguments:
   _Compiler,                 --> full name and path to bcc32.exe
@@ -4083,7 +4092,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: DeleteFile
-  Author:    herzogs2
+  Author:    sam
   Date:      22-Aug-2002
   Arguments: _Filename:String
   Result:    None
@@ -4217,6 +4226,244 @@ function RemoveTrailingSemikolon(const _path:string):string;
 begin
   result:=_path;
   if LastPos(result, ';') = length(result) then System.Delete(result, length(result), 1);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: GetIDEEnvironmentPath
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer
+  Result:    string
+  Description: read the environments variable for Delphi-Version <_DelphiVersion>.
+-----------------------------------------------------------------------------}
+function GetIDEEnvironmentPath(const _DelphiVersion:integer): string;
+const
+cEnvironmentsValueName='PATH';
+var
+_Reg: TRegistry;
+_IDERootKey:string;
+begin
+  result := '';
+  if not GetIDERootKey(_DelphiVersion,_IDERootKey) then exit;
+  _Reg := TRegistry.Create;
+  try
+    _Reg.rootkey := HKEY_CURRENT_USER;
+    _IDERootKey:=_IDERootKey+'Environment Variables';
+    if not _Reg.OpenKeyReadOnly(_IDERootKey) then begin
+      trace(1,'Error in GetIDEEnvironmentPath: Could not open <HKEY_LOCAL_MACHINE,%s>. Check user rights.',[_IDERootKey]);
+      exit;
+    end;
+    if not _Reg.ValueExists(cEnvironmentsValueName) then begin
+      trace(1,'Error in GetIDEEnvironmentPath: Could not find variable <%s>. Check user rights.',[cEnvironmentsValueName]);
+      exit;
+    end;
+    Result := _Reg.ReadString(cEnvironmentsValueName);
+    trace(5,'GetIDEEnvironmentPath: Read value <%s> from registry.',[result]);
+  finally
+    _Reg.CloseKey;
+    _Reg.Free;
+  end;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: SetIDEEnvironmentPath
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer;_IDEEnvironmentPath:string;const _silent:boolean
+  Result:    boolean
+  Description: set IDE Environment Path <_IDEEnvironmentPath> for version <_DelphiVersion>.
+-----------------------------------------------------------------------------}
+function SetIDEEnvironmentPath(const _DelphiVersion:integer;_IDEEnvironmentPath:string;const _silent:boolean):boolean;
+resourcestring
+cAskToChangeEnvrionmentPath='Do you want to change the Delphi''s Environment Path to <%s>?';
+var
+_IDERootKey: string;
+
+  function _SetIDEEnvironmentPath(_RootKey:HKEY):boolean;
+  const
+  cEnvironmentsValueName='PATH';
+  var
+  _Reg: TRegistry;
+  begin
+    result:=false;
+
+    _Reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
+    try
+      _Reg.RootKey := _RootKey;
+      if not _Reg.OpenKey(_IDERootKey,false) then begin
+        trace(1,'Problem in _SetIDEEnvironmentPath: The Key <%s,%s> was not found in the registry.',[HKEYToStr(_RootKey),_IDERootKey]);
+        exit;
+      end;
+      try
+        _Reg.WriteString(cEnvironmentsValueName,_IDEEnvironmentPath);
+         trace(3,'Successfully set <%s> to <%s>',[cEnvironmentsValueName,_IDEEnvironmentPath]);
+        result:=true;
+      except
+        on e:exception do trace(1,'Warning in _SetIDEEnvironmentPath: Could not write the IDE Environment Path for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',
+          [DelphiVersions[_DelphiVersion].LongName,e.message]);
+      end;
+      _Reg.CloseKey;
+    finally
+      _Reg.Free;
+    end;
+  end;
+
+begin
+  result:=false;
+  if not GetIDERootKey(_DelphiVersion,_IDERootKey) then begin
+    trace(3,'Problem in SetIDEEnvironmentPath: Could not find key for Delphi Version <%d>.',[_DelphiVersion]);
+    exit;
+  end;
+  _IDERootKey:=_IDERootKey+'Environment Variables';
+  if not _Silent then begin
+    if Application.MessageBox(pchar(format(cAskToChangeEnvrionmentPath,[_IDEEnvironmentPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+  end;
+  result:=_SetIDEEnvironmentPath(HKEY_CURRENT_USER);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: GetIDEEnvironmentPathList
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer
+  Result:    TStrings
+  Description:
+-----------------------------------------------------------------------------}
+function GetIDEEnvironmentPathList(const _DelphiVersion:integer): TStrings;
+var
+  _s: string;
+  _path: string;
+begin
+  result := TStringList.create;
+  _s := GetIDEEnvironmentPath(_DelphiVersion);
+  while _s <> '' do begin
+    _path := lowercase(trim(GetField(';', _s)));
+    if _path = '' then continue;
+    _path := ExcludeTrailingPathDelimiter(_path);
+    if result.IndexOf(_path) = -1 then result.add(lowercase(_path));
+  end;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: IsPathInIDEEnvironmentPath
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer;const _path: string
+  Result:    boolean
+  Description: returns <true> if the path <_path> is already in the IDEenvironment variable.
+-----------------------------------------------------------------------------}
+function IsPathInIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean; // checks if the path <_path> is already in the IDE environment variable.
+var
+  _pathList: TStrings;
+  _entry: string;
+begin
+  result := false;
+  _pathList := GetIDEEnvironmentPathList(_DelphiVersion);
+  try
+    _entry := lowercase(_path);
+    _entry := ExcludeTrailingPathDelimiter(_entry);
+    if _entry = '' then exit;
+    if (_pathList.IndexOf(_entry) = -1) and
+      (_pathList.IndexOf(IncludeTrailingPathDelimiter(_entry)) = -1) then exit;
+    result := true;
+  finally
+    _pathList.free;
+  end;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: SetIDEEnvironmentPathList
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer;const _list: TStrings
+  Result:    boolean
+  Description: set the IDE Environment Path to the value created
+               by the content of <_list>.
+-----------------------------------------------------------------------------}
+function SetIDEEnvironmentPathList(const _DelphiVersion:integer;const _list: TStrings): boolean;
+var
+  i: integer;
+  _path: string;
+  _entry: string;
+begin
+  _path := '';
+  for i := 0 to _list.count - 1 do begin
+    _entry := _list[i];
+    if IsLastChar('\', _entry) then Delete(_entry, length(_entry), 1);
+    _path := _path + _entry + ';';
+  end;
+  result := SetIDEEnvironmentPath(_DelphiVersion,_path, false);
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: AddIDEEnvironmentPath
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer;const _path: string
+  Result:    boolean
+  Description: add the path <_path> to the IDE Envrionment Path.
+-----------------------------------------------------------------------------}
+function AddIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean;
+var
+_PathList: TStrings;
+begin
+  result := false;
+  if _path = '' then exit;
+  _pathList := GetIDEEnvironmentPathList(_DelphiVersion);
+  try
+    if _pathList.IndexOf(lowercase(_path)) > -1 then exit;
+    _pathList.Add(lowercase(_path));
+    trace(1, 'Added the directory <%s> to the IDE Environments Variable.', [_path]);
+    result := SetIDEEnvironmentPathList(_DelphiVersion,_pathList);
+  finally
+    _pathList.free;
+  end;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: VerifyIDEEnvrionmentsPath
+  Author:    sam
+  Date:      17-Mrz-2017
+  Arguments: const _DelphiVersion:integer
+  Result:    boolean
+  Description: remove in-existent folders from the IDE Environments Path.
+-----------------------------------------------------------------------------}
+function VerifyIDEEnvrionmentsPath(const _DelphiVersion:integer;const _silent:boolean;out DeletedPathEntries:integer):boolean;
+resourcestring
+cAskToCleanUPEnvrionmentPath='The folder <%s> does not exist, but the Delphi IDE Environment Path contains this entry. Shall DPT clean-up this entry?';
+var
+i:integer;
+_PathList: TStrings;
+_Path:string;
+_NewPathValue:string;
+begin
+  DeletedPathEntries:=0;
+  _PathList:=GetIDEEnvironmentPathList(_DelphiVersion);
+  for i:=0 to _PathList.Count-1 do begin
+    _path:=ReplaceTag(_PathList[i],_DelphiVersion,'',''); // try to expand place-holders.
+    if pos('%',_path)>0 then begin // if there is still a placeholder in the path-name, then don't touch it.
+      _NewPathValue:=_NewPathValue+_PathList[i]+';';
+      continue;
+    end;
+    if DirectoryExists(_path) or                 // if the path still exists
+       (lowercase(_path)='$(path)') then begin    // or it is the entry $(path)
+      _NewPathValue:=_NewPathValue+_PathList[i]+';';  // then keep it
+      continue;
+    end;
+    if not _silent then begin
+      if Application.MessageBox(pchar(format(cAskToCleanUPEnvrionmentPath,[_path])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then begin
+        _NewPathValue:=_NewPathValue+_PathList[i]+';';  // or if the user wants to keept it
+        continue;
+      end;
+    end;
+    trace(2,'VerifyIDEEnvrionmentsPath: Remove path <%s>.',[_path]);
+    inc(DeletedPathEntries);
+  end;
+  if DeletedPathEntries=0 then begin  // nothing changed, so we can leave method here.
+    result:=true;
+    exit;
+  end;
+  result:=SetIDEEnvironmentPath(_DelphiVersion,_NewPathValue,false);
 end;
 
 initialization

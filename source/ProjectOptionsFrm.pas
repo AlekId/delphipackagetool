@@ -241,7 +241,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormClose
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject; var Action: TCloseAction
   Result:    None
@@ -255,7 +255,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: LoadSearchPathData
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: None
   Result:    boolean
@@ -272,7 +272,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormCreate
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -313,7 +313,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormDestroy
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -327,7 +327,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: AddPath
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: _path: string
   Result:    boolean
@@ -350,7 +350,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: btnAddDefaultPathClick
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -369,7 +369,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: btnSelectOnBeforeInstallAllClick
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -384,7 +384,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: btnOnAfterInstallAllClick
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -430,7 +430,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: GUIToSettings
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: None
   Result:    None
@@ -450,7 +450,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: SettingsToGUI
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: None
   Result:    None
@@ -477,7 +477,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormCloseQuery
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject;var CanClose: Boolean
   Result:    None

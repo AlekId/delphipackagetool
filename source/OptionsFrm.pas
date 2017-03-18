@@ -45,7 +45,6 @@ type
     lblCompilerSwitches: TLabel;
     cbxAutomaticShowAddPathDialog: TCheckBox;
     cbxChangeFiles: TCheckBox;
-    cbxModifyEnvironment: TCheckBox;
     edtSourceEditorParams: TEdit;
     lblSourceEditorParams: TLabel;
     lblDiffTool: TLabel;
@@ -111,7 +110,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormClose
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject; var Action: TCloseAction
   Result:    None
@@ -125,7 +124,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormDestroy
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -138,7 +137,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: btnSelectOnBeforeInstallAllClick
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -152,7 +151,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: btnOnAfterInstallAllClick
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject
   Result:    None
@@ -194,7 +193,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: GUIToSettings
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: None
   Result:    None
@@ -208,14 +207,13 @@ begin
   DMMain.ApplicationSettings.SetFile('Application/DiffTool', 29,edtDiffTool.Text);
   DMMain.ApplicationSettings.SetString('Application/CompilerSwitches',11,edtCompilerSwitches.Text);
   DMMain.ApplicationSettings.SetBoolean('Application/ChangeFiles', 13,cbxChangeFiles.Checked);
-  DMMain.ApplicationSettings.SetBoolean('Application/ModifyEnvironmentPath', 14,cbxModifyEnvironment.Checked);
   DMMain.ApplicationSettings.SetBoolean('Application/Trace',20,cbxTrace.checked);
   DMMain.ApplicationSettings.SetBoolean('Application/BackupSourceOnly',30,cbxBackupSourceOnly.Checked);
 end;
 
 {-----------------------------------------------------------------------------
   Procedure: SettingsToGUI
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: None
   Result:    None
@@ -229,14 +227,13 @@ begin
   edtDiffTool.Text:=DMMain.ApplicationSettings.FileValue('Application/DiffTool', 29);
   cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18);
   cbxChangeFiles.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ChangeFiles', 13);
-  cbxModifyEnvironment.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ModifyEnvironmentPath', 14);
   cbxTrace.checked:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
   cbxBackupSourceOnly.Checked:=DMMain.ApplicationSettings.BoolValue('Application/BackupSourceOnly',30);
 end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormCloseQuery
-  Author:    herzogs2
+  Author:    sam
   Date:      05-Mai-2010
   Arguments: Sender: TObject;var CanClose: Boolean
   Result:    None
@@ -251,7 +248,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: btnDiffToolClick
-  Author:    herzogs2
+  Author:    sam
   Date:      06-Mai-2010
   Arguments: Sender: TObject
   Result:    None

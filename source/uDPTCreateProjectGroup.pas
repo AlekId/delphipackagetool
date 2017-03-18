@@ -28,7 +28,7 @@ uses
 
 {-----------------------------------------------------------------------------
   Procedure: CreateBPGFile
-  Author:    herzogs2
+  Author:    sam
   Date:      04-Jun-2008
   Arguments: const _lstProjectFiles:TListBox;const _bpgFilename:string
   Result:    None
@@ -94,7 +94,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CreateBDSGroup
-  Author:    herzogs2
+  Author:    sam
   Date:      04-Jun-2008
   Arguments: const _lstProjectFiles:TListBox;const _bpgFilename:string
   Result:    None
@@ -192,7 +192,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CreateGroupProj
-  Author:    herzogs2
+  Author:    sam
   Date:      21-Jan-2009
   Arguments: const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer
   Result:    None
@@ -337,9 +337,7 @@ begin
     _lineToInsert:=format('  </Target>',[]);
     _file.insert(j,_lineToInsert);
 //    inc(j);
-    if RenameFile(_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')) then begin
-      trace(1,'Renamed the file <%s> to <%s>.',[_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')]);
-    end;
+    if RenameFile(_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')) then trace(1,'Renamed the file <%s> to <%s>.',[_projectGroupFilename,changeFileExt(_projectGroupFilename,'.~old')]);
     _File.SaveToFile(_projectGroupFilename);
     trace(1,'Saved ProjectGroup-File <%s>.',[_projectGroupFilename]);
   finally
@@ -349,7 +347,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CreateProjectGroupFile
-  Author:    herzogs2
+  Author:    sam
   Date:      06-Nov-2008
   Arguments: const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer
   Result:    None

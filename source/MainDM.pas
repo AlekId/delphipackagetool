@@ -92,6 +92,7 @@ type
     FDPTSearchPath: string;                   // search path defined in DPT Options Dialog.
     FDelphiRootDirectory: string;             // e.g. <C:\Program files\Borland\Delphi7>
     FDelphiCompilerFile: string;              // e.g. <C:\Program files\Borland\Delphi7\bin\dcc32.exe>
+    FIDEEnvironmentPath: string;              // the Environment Path-Variable configured for the IDE. content of regitsty-value "HKEY_CURRENT_USER\Software\Embarcadero\BDS\18.0\Environment Variables"
     FBPGPath: string;                         // path to the package group file .bpg
     FBPGFilename: string;                     // the full path and filename of the .bpg file.
     FAbortCompileUser: Boolean;               // set to true if you want to abort compilation
@@ -600,6 +601,8 @@ end;
   Description: open the package group file.
 -----------------------------------------------------------------------------}
 function TDMMain.OpenBPG(const _Filename: string): Boolean;
+var
+_NoOfRemovedEnvironmentPaths:integer;
 begin
   Result := False;
   if not FileExists(_Filename) then begin
@@ -624,6 +627,7 @@ begin
   FDPTSearchPath := GetGlobalSearchPath(True);
   GetAllPlatformsAndConfigsOfBPG;
   SetLastUsedBPGFile(BPGFilename);
+  VerifyIDEEnvrionmentsPath(FCurrentDelphiVersion,IsSilentMode,_NoOfRemovedEnvironmentPaths);
   ApplicationState := tas_open;
   if Assigned(FOnBPGOpen) then FOnBPGOpen(Self);
   InitProjectDataForHint;
@@ -1076,6 +1080,8 @@ begin
   trace(3,'Set current delphi version to <%d>.',[FCurrentDelphiVersion]);
   FDelphiRootDirectory:=GetDelphiRootDir(FCurrentDelphiVersion);
   trace(3,'Set the Compiler Root Directory to <%s>.',[FDelphiRootDirectory]);
+  FIDEEnvironmentPath:=GetIDEEnvironmentPath(FCurrentDelphiVersion);
+  trace(3,'Read "Environments PATH" for IDE: <%s>.',[FIDEEnvironmentPath]);
   ReadLibraryPath(FCurrentDelphiVersion,FDelphiLibraryPath);
   FDPTSearchPath := GetGlobalSearchPath(True);
   GetAllPlatformsAndConfigsOfBPG;
@@ -1114,7 +1120,6 @@ begin
   ApplicationSettings.GetStringValue('Application/CompilerSwitches',11,'-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',12,3,'Select the trace level of the Log-file. 1-5.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/ChangeFiles', 13,false,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/ModifyEnvironmentPath',14,false,'If set to true, the DelphiPackageTool will change the computers environment path.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath',15,'C:\','Specifies the last used search path.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/UseSkins', 17, True, 'If true then the application will be skinned.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', 18, True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
@@ -1323,7 +1328,7 @@ begin
 end;
 {-----------------------------------------------------------------------------
   Procedure: DeleteBPLAndDCPFiles
-  Author:    herzogs2
+  Author:    sam
   Date:      10-Dez-2012
   Arguments: None
   Result:    None delete bpl and dcp file.
@@ -1391,7 +1396,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: InstallCurrentPackage
-  Author:    herzogs2
+  Author:    sam
   Date:      17-Dez-2012
   Arguments: None
   Result:    None
@@ -1399,7 +1404,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.InstallCurrentPackage;
 resourcestring
-  cPathIsNotInEnv='The path <%s> not yet in your Environments Path. Do you want to add it? If you do not add it, then the Delphi IDE might compilain about Packages not found when starting the IDE.';
+  cPathIsNotInEnv='The path <%s> not yet in your IDE Environments Path. Do you want to add it? If you do not add it, then the Delphi IDE might compilain about Packages not found when starting the IDE.';
   cCouldNotAddEnvPath='Could not add the Path <%s> to the Environments Variable. Please try to add it manually be using Windows Path Editor.';
 var
   _message:string;
@@ -1410,12 +1415,10 @@ begin
   WriteLog('Installed Package <%s>.',[FCurrentProjectFilename]);
   TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).IDEInstall:=_message;
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FCurrentProjectFilename,_message,FCurrentProjectNo);
-  if not ApplicationSettings.BoolValue('Application/ModifyEnvironmentPath', 14) then exit;
-  if IsPathInEnvironmentPath(FCurrentProjectOutputPath) then exit;
+  if IsPathInIDEEnvironmentPath(FCurrentDelphiVersion,FCurrentProjectOutputPath) then exit;
   if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FCurrentProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then begin
-    if not AddGlobalEnvironmentPath(FCurrentProjectOutputPath) then Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FCurrentProjectOutputPath])),pchar(cInformation),MB_OK);
-  end
-  else ApplicationSettings.SetBoolean('Application/ModifyEnvironmentPath', 14,false);
+    if not AddIDEEnvironmentPath(FCurrentDelphiVersion,FCurrentProjectOutputPath) then Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FCurrentProjectOutputPath])),pchar(cInformation),MB_OK);
+  end;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1433,7 +1436,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: UninstallCurrentPackage
-  Author:    herzogs2
+  Author:    sam
   Date:      17-Dez-2012
   Arguments: None
   Result:    None
@@ -1479,7 +1482,7 @@ begin
                       CleanUpPackagesByPath(CurrentDelphiVersion,FCurrentBPLOutputPath,FCurrentDCPOutputPath,_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
                     end;
   end;
-  CleanUpPackageByEnvPaths(IsSilentMode);
+  CleanUpPackageByEnvPaths(FCurrentDelphiVersion,IsSilentMode);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2276,7 +2279,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: OldFilesExist
-  Author:    herzogs2
+  Author:    sam
   Date:      16-Sep-2010
   Arguments: _ChangedFiles:string
   Result:    boolean
@@ -2718,7 +2721,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: actWriteDPTPathsToProjectExecute
-  Author:    herzogs2
+  Author:    sam
   Date:      04-Okt-2010
   Arguments: Sender: TObject
   Result:    None
@@ -2745,7 +2748,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: SetLastUsedBPGFile
-  Author:    herzogs2
+  Author:    sam
   Date:      17-Dez-2012
   Arguments: _BPGfilename: string
   Result:    None

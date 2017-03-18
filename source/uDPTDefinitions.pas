@@ -47,9 +47,9 @@ type
 
   TDelphiVersionInfo = record
     Name: string;
-    VersionStr: string;
+    VersionStr: string;      // the version short name e.g. XE10.1
     IDEVersion: Integer;
-    IDEVersionStr: string;
+    IDEVersionStr: string;    // the IDE version string as used in the registery e.g. "7.0" --> \Software\Borland\Delphi\7.0 or "18.0" --> Software\Embarcadero\BDS\18.0\ 
     PackageVersion: string;
     ShortName:string;
     LongName:string;
@@ -99,6 +99,7 @@ const
   cPackageVersionTag='$(PACKAGEVERSION)';
   cPlatformTag='$(PLATFORM)';
   cConfigTag='$(CONFIG)';
+  cUsersPublicTag='$(PUBLIC)';
   cRADStudioDirName='RAD Studio';
   cEmbaStudioDirName='Embarcadero\Studio';
   cDelphiName = 'Delphi';
@@ -118,29 +119,29 @@ const
       Name: cDelphiName;           //1
       VersionStr: '1.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '1.0';
       PackageVersion: '10';
       ShortName: 'D1';
       LongName: 'Borland Delphi 1.0';
       CompilerVersion:8;
       CompilerVersionStr: 'VER80';
-      Supported: True),  
+      Supported: True),
     (
       Name: cDelphiName;          //2
       VersionStr: '2.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '2.0';
       PackageVersion: '20';
       ShortName: 'D2';
       LongName: 'Borland Delphi 2.0';
       CompilerVersion:9;
       CompilerVersionStr: 'VER90';
-      Supported: True), 
+      Supported: True),
     (
       Name: cDelphiName;          //3
       VersionStr: '3.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '3.0';
       PackageVersion: '30';
       ShortName: 'D3';
       LongName: 'Borland Delphi 3.0';
@@ -151,7 +152,7 @@ const
       Name: cDelphiName;          //4
       VersionStr: '4.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '4.0';
       PackageVersion: '40';
       ShortName: 'D4';
       LongName: 'Borland Delphi 4.0';
@@ -162,7 +163,7 @@ const
       Name: cDelphiName;          //5
       VersionStr: '5.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '5.0';
       PackageVersion: '50';
       ShortName: 'D5';
       LongName: 'Borland Delphi 5.0';
@@ -173,7 +174,7 @@ const
       Name: cDelphiName;          //6
       VersionStr: '6.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '6.0';
       PackageVersion: '60';
       ShortName: 'D6';
       LongName: 'Borland Delphi 6.0';
@@ -184,7 +185,7 @@ const
       Name: cDelphiName;          //7
       VersionStr: '7.0';
       IDEVersion: 0;
-      IDEVersionStr: '';
+      IDEVersionStr: '7.0';
       PackageVersion: '70';
       ShortName: 'D7';
       LongName: 'Borland Delphi 7.0';
