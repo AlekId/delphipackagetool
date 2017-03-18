@@ -118,21 +118,6 @@ object FrmOptions: TFrmOptions
       ShowHint = True
       TabOrder = 4
     end
-    object cbxModifyEnvironment: TCheckBox
-      Left = 8
-      Top = 184
-      Width = 185
-      Height = 17
-      Hint = 
-        'If enabled, then the PackageTool tries to add the path to the bp' +
-        'l-files into the environment settings.'
-      Caption = 'Modify Environment Settings.'
-      Checked = True
-      ParentShowHint = False
-      ShowHint = True
-      State = cbChecked
-      TabOrder = 6
-    end
     object edtSourceEditorParams: TEdit
       Left = 520
       Top = 80
@@ -165,11 +150,11 @@ object FrmOptions: TFrmOptions
       Caption = 'Trace'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 7
+      TabOrder = 6
     end
     object cbxBackupSourceOnly: TCheckBox
-      Left = 272
-      Top = 208
+      Left = 8
+      Top = 192
       Width = 185
       Height = 17
       Hint = 'Only backup source files. No compiled stuff.'
@@ -178,7 +163,7 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 8
+      TabOrder = 7
     end
   end
   object pnlBottom: TPanel

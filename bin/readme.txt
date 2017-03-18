@@ -71,6 +71,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.32  ( 18.03.2017 )
+-SH: instead of modifying the global environments-path, the delphi IDE Environment-Path is now used. (this was a  mis-conecption for a long time which is now corrected).
+-SH: Removed setting "Allow modifiy Environment Path".
+
 1.9.2.31  ( 13.03.2017 )
 -SH: fix in relation with package-suffix and "Allow to change files". 
 -SH: method GetLibSuffix returns now the PackageVersion instead of the ShortName. If you have set Lib-Suffix to <Auto>, the suffix will now be <240> instead of <XE10.1>

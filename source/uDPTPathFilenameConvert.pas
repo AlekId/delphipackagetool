@@ -171,7 +171,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: MakeAbsolutePath
-  Author:    herzogs2
+  Author:    sam
   Date:      30-Mrz-2010
   Arguments: _basePath,_path.string;_DelphiVersion:integer
   Result:    string

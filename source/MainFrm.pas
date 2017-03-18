@@ -215,8 +215,7 @@ type
     procedure actSelectDcpPathExecute(Sender: TObject);
     procedure actCompileProjectExecute(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: Boolean);
+    procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;var Handled: Boolean);
     procedure actShowProjectOptionsExecute(Sender: TObject);
   private
     FExternalEditorFilename:string;

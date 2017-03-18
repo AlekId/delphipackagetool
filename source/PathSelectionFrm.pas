@@ -296,7 +296,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FormShow
-  Author:    herzogs2
+  Author:    sam
   Date:      11-Jul-2008
   Arguments: Sender: TObject
   Result:    None

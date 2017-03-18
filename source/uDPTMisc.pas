@@ -30,7 +30,7 @@ type
   TSystemPath = (spDesktop, spStartMenu, spPrograms, spStartup, spPersonal, spAppData, spFonts, spSendTo,
     spRecent, spFavorites, spCache, spCookies, spHistory, spNetHood, spPrintHood, spTemplates, spLocADat,
     spWindRoot, spWindSys, spTempPath, spRootDir, spProgFiles, spComFiles, spConfigPath, spDevicePath,
-    spMediaPath, spWallPaper, spCommonDocs);
+    spMediaPath, spWallPaper, spCommonDocs, spPublic);
 
 
   TNVBTraceProcedure=procedure(_level:byte;_msg:String;_params:Array of Const) of object;
@@ -102,7 +102,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: FindLine
-  Author:    herzogs2
+  Author:    sam
   Date:      25-Mrz-2010
   Arguments: var content:TStrings;_Tag:string;var removedText:string
   Result:    integer
@@ -269,7 +269,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: CheckDirectory
-  Author:    HerzogS2
+  Author:    sam
   Date:      08-Mrz-2007
   Arguments: const _name:string
   Result:    boolean
@@ -410,7 +410,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: IsFilenameValid
-  Author:    HerzogS2
+  Author:    sam
   Date:      19-Dez-2003
   Arguments: _filename:string
   Result:    boolean
@@ -436,7 +436,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: GetSystemPath
-  Author:    HerzogS2
+  Author:    sam
   Date:      10-Dez-2003
   Arguments: SystemPath: TSystemPath
   Result:    string
@@ -560,11 +560,12 @@ begin
             Reg.CloseKey;
           end;
         end;
-      spCommonDocs: CSIDL := CSIDL_COMMON_DOCUMENTS;
+      spCommonDocs,spPublic: CSIDL := CSIDL_COMMON_DOCUMENTS;
     end;
     if CSIDL > -1 then begin
       SHGetSpecialFolderPath(GetActiveWindow, Path, CSIDL, False);
       Result := Path;
+      if SystemPath=spPublic then result:=ExcludeTrailingBackslash(ExtractFilePath(result));
     end;
   finally
     Reg.Free;
@@ -732,7 +733,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: BackupFile
-  Author:    herzogs2
+  Author:    sam
   Date:      23-Aug-2002
   Arguments: _Filename:String;_BackupExt:String='.old';_BackupPath:String=''
   Result:    Boolean  True if successful.
@@ -779,7 +780,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: ExtractFilenameOnly
-  Author:    herzogs2
+  Author:    sam
   Date:      02-Mai-2002
   Arguments: _filename:String
   Result:    String
@@ -797,7 +798,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: GetWindowPath
-  Author:    herzogs2
+  Author:    sam
   Date:      09-Okt-2002
   Arguments: None
   Result:    String  e.g. C:\WINNT\ or C:\Windows\
@@ -816,7 +817,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: StringToFloat
-  Author:    herzogs2
+  Author:    sam
   Date:      23-Apr-2002
   Arguments: _str:string;var _value:Float
   Result:    Boolean
@@ -858,7 +859,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: IsLastChar
-  Author:    herzogs2
+  Author:    sam
   Date:      06-Mrz-2002
   Arguments: _char:char;_s:string
   Result:    boolean
@@ -877,7 +878,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: IsFileReadOnly
-  Author:    herzogs2
+  Author:    sam
   Date:      01-Mrz-2002
   Arguments: _filename:String
   Result:    boolean
