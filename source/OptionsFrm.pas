@@ -1,20 +1,8 @@
 {-----------------------------------------------------------------------------
  Unit Name: OptionsFrm
  Author:    Samuel Herzog
- Purpose:  - set library path and external source code editor.
- History:  06.09.2003 SH -added setting to define an sourcecode editor.
-           23.09.2004 SH -added feature <OnBeforeInstallAll>.
-           12.05.2005 SH -enabled scrollbars in the path list.
-           11.01.2006 SH -check edit field content of the file exits when leaving.
-           17.01.2006 SH - settings for the batch-files before/after install are now
-                           stored project-specific to file <PROJECTNAME.ini>.
-           18.01.2006 SH - fix for OnBeforeInstall/OnAfterInstall.
-           28.01.2006 SH - filepath of OnBeforeInstall/OnAfterInstall is now also
-                           converted to relative path. (relative to the bpg-file)
-                         - added new setting to allow the user to decide if the
-                           install batch-file and the install .reg-files shall be
-                           created or not.
-           31.01.2008 SH - removed dependency from FrmMain.
+ Purpose:  - application options dialog.
+History:
 -----------------------------------------------------------------------------}
 unit OptionsFrm;
 
