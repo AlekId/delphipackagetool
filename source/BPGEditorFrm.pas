@@ -115,7 +115,7 @@ procedure TFrmBPGEditor.btnFindClick(Sender: TObject);
 var
   _Dir: string;
 begin
-  _Dir := DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15);
+  _Dir := DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath');
   if not SysUtils.DirectoryExists(_Dir) then _Dir:='';
   FAbortScan := false;
   if not SelectDirectory('Select Search-Path','',_Dir) then exit;
@@ -190,7 +190,7 @@ _ext:string;
 begin
   _ext:=ExtractFileExt(FProjectGroupFilename);
   SaveDialog1.Title:=format(cPleaseDefineFilename,[_ext]);
-  SaveDialog1.InitialDir:=DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3);
+  SaveDialog1.InitialDir:=DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile');
   SaveDialog1.DefaultExt := _ext;
   SaveDialog1.Filter     := format(cDelphiPackageGroupBPG,[_ext,_ext]);
   SaveDialog1.FileName   := cNewPackageGroup;
