@@ -39,11 +39,11 @@ type
 
   TDelphiNameType=(tdn_short,tdn_long);
 
-  TPlatforTypes=(tpl_win16,
-                 tpl_win32,
-                 tpl_win64);
+  TPlatformTypes=(tpl_win16,
+                  tpl_win32,
+                  tpl_win64);
                  
-  TSupportedPlatforms=set of TPlatforTypes;
+  TSupportedPlatforms=set of TPlatformTypes;
 
   TDelphiVersionInfo = record
     Name: string;
@@ -114,7 +114,7 @@ const
   cProjectGroupExtensions='<.bpg/.bdsgroup/.groupproj>';
   cProjectGroupFilter='*.bpg;*.groupproj;*.bdsgroup';
 
-  DelphiVersions: array [1..25] of TDelphiVersionInfo = (
+  DelphiVersions: array [1..26] of TDelphiVersionInfo = (
     (
       Name: cDelphiName;           //1
       VersionStr: '1.0';
@@ -386,6 +386,17 @@ const
       LongName: 'Embarcadero RAD Studio 10.1 Berlin';
       CompilerVersion:31;
       CompilerVersionStr:'VER310';
+      Supported: True),
+   (
+      Name: cRSName;              //26
+      VersionStr: 'XE10.2';
+      IDEVersion: 19;
+      IDEVersionStr: '19.0';
+      PackageVersion: '250';
+      ShortName: 'XE10.2';
+      LongName: 'Embarcadero RAD Studio 10.2 Tokyo';
+      CompilerVersion:32;
+      CompilerVersionStr:'VER320';
       Supported: True)
   );
 
