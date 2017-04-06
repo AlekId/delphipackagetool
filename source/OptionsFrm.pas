@@ -77,7 +77,7 @@ var
 _DelphiPlaceHolder:string;
 begin
   SettingsToGUI;
-  _DelphiPlaceHolder:=GetDelphiPathTag(DMMain.CurrentDelphiVersion);
+  _DelphiPlaceHolder:=GetDelphiPathTag(DMMain.DelphiVersion);
   VerifySettings;
 end;
 
@@ -209,14 +209,14 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmOptions.SettingsToGUI;
 begin
-  edtCodeEditor.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditor',9);
-  edtSourceEditorParams.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditorParams',28);
-  edtCompilerSwitches.Text:=DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches',11);
-  edtDiffTool.Text:=DMMain.ApplicationSettings.FileValue('Application/DiffTool', 29);
-  cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles', 18);
-  cbxChangeFiles.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ChangeFiles', 13);
-  cbxTrace.checked:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
-  cbxBackupSourceOnly.Checked:=DMMain.ApplicationSettings.BoolValue('Application/BackupSourceOnly',30);
+  edtCodeEditor.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditor');
+  edtSourceEditorParams.Text:=DMMain.ApplicationSettings.StringValue('Application/SourceCodeEditorParams');
+  edtCompilerSwitches.Text:=DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches');
+  edtDiffTool.Text:=DMMain.ApplicationSettings.FileValue('Application/DiffTool');
+  cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles');
+  cbxChangeFiles.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ChangeFiles');
+  cbxTrace.checked:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
+  cbxBackupSourceOnly.Checked:=DMMain.ApplicationSettings.BoolValue('Application/BackupSourceOnly');
 end;
 
 {-----------------------------------------------------------------------------

@@ -37,8 +37,8 @@ function  ReadProjectFilenameFromDProj(const _Filename:String):string; // the re
 function  ReadSupportedConfigsOfProject(const _filename: string; var _Configs: TStringList): Boolean;
 function  ReadSupportedPlatformsOfProject(const _filename: string; var _Platforms: TStringList): Boolean;
 function  ReadAllPlatformsOfProject(const _filename: string; var _Platforms: TStringList): Boolean;
-function  ReadConfigurationSettings(const _filename:string;var _Config:string;var _Platform:string;var _CompilerSwitches: string;var _Conditions:string;var _SearchPath:string;var _ProjectOutputPath:string;var _BPLOutputPath:string;var _DCUOutputPath:string;var _DCPOutputPath:string;var _NameSpaces:string):boolean;
-function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string):string; // get informations from the cfg-file.
+function  ReadConfigurationSettings(const _filename:string;out Config:string;out dPlatform:string;out CompilerSwitches: string;out Conditions:string;out SearchPath:string;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string;out DCPOutputPath:string;out NameSpaces:string):boolean;
+function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string;out ChangedFiles:TStringList):boolean;
 function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns delphi root directory e.g. C:\Program files\Borland\Delphi7
 function  GetDelphiStdPackagesDir(const _DelphiVersion: integer; const _PlatformToCompile: string): string;  // returns directory with platform dependent standard packages included in Delphi e.g. C:\Program files\Embarcadero\RAD Studio\9.0\<bin|bin64>
 function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and bds versions.
@@ -58,9 +58,9 @@ function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;cons
 function  CleanUpPackageByEnvPaths(const _DelphiVersion:integer;const _silent:boolean):boolean;
 function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
-function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
-function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dpk-file.
-function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean):string;  // write libsuffix into the dproj-file.
+function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
+function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;  // write libsuffix into the dpk-file.
+function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean; // write libsuffix into the dproj-file.
 function  DeleteFile(const _Filename:String):boolean;  // delete the file <_filename>.
 function  RemoveProjectFromProjectGroup(const _GroupFilename,_ProjectFilename:string;const _ProjectType:TProjectType):boolean;
 function  ReadBDSCommonDir(const _DelphiVersion:integer):string; // reads the path to the BDSCOMMONDIR.
@@ -89,10 +89,8 @@ implementation
 uses
   uDPTMisc,
   SysUtils,
-  Messages,
   StrUtils,
   TlHelp32,
-  TypInfo,
   Forms,
   XMLDoc,
   XMLIntf,
@@ -515,11 +513,11 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean):string;
+function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
 begin
-  result:='';
-  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_DelphiVersion,_filename,_libsuffix,_silent) else
-  if lowercase(ExtractFileExt(_filename))='.dproj' then result:=WriteDprojFile(_filename,_libsuffix,_silent);
+  result:=false;
+  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_DelphiVersion,_filename,_libsuffix,_silent,NewFilename) else
+  if lowercase(ExtractFileExt(_filename))='.dproj' then result:=WriteDprojFile(_filename,_libsuffix,_silent,NewFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -530,7 +528,7 @@ end;
   Result:    boolean
   Description: write libsuffix into dpk-file.
 -----------------------------------------------------------------------------}
-function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean):string;
+function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
 resourcestring
 cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
@@ -570,16 +568,29 @@ _FileChanged:boolean;
   procedure UpdateImageLib;
   begin
     _index:=FindLine(_File,'vcljpg',_OldText);
-    if _index=-1 then _index:=FindLine(_File,'vclimg',_OldText);
-    if _index=-1 then exit; // none of them is in the file, so nothing to do.
-    _NewText:=_File[_index];
-    if _DelphiVersion<=7 then _newText:=stringreplace(_NewText,'vclimg','vcljpg',[rfIgnoreCase])
-                         else _newText:=stringreplace(_NewText,'vcljpg','vclimg',[rfIgnoreCase]);
-    _File[_index]:=_newText;
-    _FileChanged:=true;
+    if (_index>-1) and
+       (_DelphiVersion>7) then begin    // replace "vcljpg" with "vclimg".
+      _NewText:=_File[_index];
+      _newText:=stringreplace(_NewText,'vcljpg','vclimg',[rfIgnoreCase]);
+      _File[_index]:=_newText;
+      _FileChanged:=true;
+      exit;
+    end;
+
+    _index:=FindLine(_File,'vclimg',_OldText);
+    if (_index>-1) and
+       (_DelphiVersion<=7) then begin    // replace "vclimg" with "vcljpg".
+      _NewText:=_File[_index];
+      _newText:=stringreplace(_NewText,'vclimg','vcljpg',[rfIgnoreCase]);
+      _File[_index]:=_newText;
+      _FileChanged:=true;
+      exit;
+    end;
+
   end;
 begin
-  result:='';
+  result:=false;
+  NewFilename:='';
   _FileChanged:=false;
   if not fileexists(_filename) then begin
     trace(1,'Problem in WriteDPKFile: Could not find the file <%s>. Nothing to do.',[_filename]);
@@ -596,7 +607,8 @@ begin
     try
       _File.SaveToFile(_filename);
       trace(5,'WriteDPKFile: Saved changes to file <%s>.',[_filename]);
-      result:='.dpk_new';
+      NewFilename:=_filename;
+      result:=true;
     except
       on e:exception do trace(1,'Error in WriteDPKFile: Could not save file <%s>. Check User-Rights. <%s>.',[_filename,e.message]);
     end;
@@ -613,7 +625,7 @@ end;
   Result:    boolean
   Description: write libsuffix into .dproj file.
 -----------------------------------------------------------------------------}
-function  WriteDProjFile(_filename:string;const _LibSuffix:string;const _silent:boolean):string;
+function  WriteDProjFile(_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
 resourcestring
 cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
@@ -647,7 +659,8 @@ _LibSuffixAlreadyInFile:boolean;
   end;
 
 begin
-  result:='';
+  result:=false;
+  NewFilename:='';
   _FileChanged:=false;
   _LibSuffixAlreadyInFile:=false;
   if not fileexists(_filename) then begin
@@ -664,7 +677,8 @@ begin
     try
       _File.SaveToFile(_filename);
       trace(5,'WriteDProjFile: Saved changes to file <%s>.',[_filename]);
-      result:='.dproj_new';
+      NewFilename:=_filename;
+      result:=true;
     except
       on e:exception do trace(1,'Error in WriteDProjFile: Could not save file <%s>. Check User-Rights. <%s>.',[_filename,e.message]);
     end;
@@ -789,7 +803,7 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function  WriteDOFFile(_bpgPath,_dofFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer):string; // write info to the dof-file.
+function  WriteDOFFile(_bpgPath,_dofFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _DelphiVersion:integer;out NewFilename:string):boolean; // write info to the dof-file.
 var
 _DOFFile:TStrings;
 _index:integer;
@@ -819,7 +833,8 @@ _searchText:string;
   end;
 
 begin
-  Result:='';
+  result:=false;
+  NewFilename:='';
   _FileChanged:=false;
   if not fileExists(_dofFilename) then begin
     trace(2,'Problem in WriteDOFFile: Could not find the file <%s>.',[_dofFilename]);
@@ -860,7 +875,8 @@ begin
     try
       _DOFFile.SaveToFile(_dofFilename);
       trace(5,'Saved changes to file <%s>.',[_dofFilename]);
-      result:='.dof_new';
+      NewFilename:=_dofFilename;
+      result:=true;
     except
      on e:exception do trace(1,'Error in WriteDOFFile: Could not save file <%s>. Check User-Rights. <%s>.',[_dofFilename,e.message]);
     end;
@@ -881,7 +897,7 @@ function GetIDERootKey(const _version:integer;var RootKey:string):boolean;
 var
 _sDelphiVersion:string;
 begin
-  trace(5,'Enter GetIDERootKey with value <%d>.',[_version]);
+//  trace(5,'Enter GetIDERootKey with value <%d>.',[_version]);
   if _version<=7 then begin // for delphi version 1-7
     _sDelphiVersion:=inttostr(_version)+'.0\';
     RootKey:=cDelphiKey+'\'+_sDelphiVersion;
@@ -906,7 +922,7 @@ begin
     RootKey:=cEmbarcaderoBDSKey+_sDelphiVersion;
     result:=true;
   end;
-  trace(5,'Leave GetIDERootKey with value <%s>.',[RootKey]);
+//  trace(5,'Leave GetIDERootKey with value <%s>.',[RootKey]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -2004,7 +2020,7 @@ end;
   Purpose:   get information from the cfg-file.
   History:
 -----------------------------------------------------------------------------}
-function ReadCFGSettings(const _cfgFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
+function ReadCFGSettings(const _cfgFilename:String;out Conditions:string;out SearchPath:String;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string):boolean; // get informations from the cfg-file.
 var
   _CFGFile:TStrings;
   _Pos:Integer;
@@ -2083,7 +2099,7 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function ReadBDSProjSettings(const _bdsprojFilename:String;var ProjectName:string;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string):boolean; // get informations from the cfg-file.
+function ReadBDSProjSettings(const _bdsprojFilename:String;var ProjectName:string;out Conditions:string;out SearchPath:String;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string):boolean; // get informations from the cfg-file.
 var
 _msg:string;
 _stmt:string;
@@ -2252,27 +2268,27 @@ end;
   Author:    sam
   Date:      06-Mrz-2010
   Arguments: const _dprojFilename:string      path + name of project file
-             var _Config:string               in: desired configuration ('' = use default configuration)
+             var Config:string               in: desired configuration ('' = use default configuration)
                                               out: found configuration  ('' = not found)
-             var _CompilerSwitches: string;
-             var _Defines:string
-             var _SearchPath:string
-             var _ProjectOutputPath:string
-             var _BPLOutputPath:string
-             var _DCUOutputPath:string
-             var _DCPOutputPath:string
+             out CompilerSwitches: string;
+             out Defines:string
+             out SearchPath:string
+             out ProjectOutputPath:string
+             out BPLOutputPath:string
+             out DCUOutputPath:string
+             out DCPOutputPath:string
   Result:    boolean
   Description: read path information from a dproj file used by D2009 or D2010.
 -----------------------------------------------------------------------------}
 function ReadDPROJSettingsD2009_D2010(const _dprojFilename: string;
-                                        var _Config: string;
-                                        var _CompilerSwitches: string;
-                                        var _Defines: string;
-                                        var _SearchPath: string;
-                                        var _ProjectOutputPath: string;
-                                        var _BPLOutputPath: string;
-                                        var _DCUOutputPath: string;
-                                        var _DCPOutputPath: string):boolean;
+                                      var Config: string;
+                                      out CompilerSwitches: string;
+                                      out Defines: string;
+                                      out SearchPath: string;
+                                      out ProjectOutputPath: string;
+                                      out BPLOutputPath: string;
+                                      out DCUOutputPath: string;
+                                      out DCPOutputPath: string):boolean;
 var
   _xmlDOMfile: IXMLDOMDocument;
   _msg: string;
@@ -2283,14 +2299,14 @@ var
   _Tmp: string;
 begin
   Result := false;
-  _desiredConfig := _Config;
-  _Defines := '';
-  _SearchPath := '';
-  _ProjectOutputPath := '';
-  _BPLOutputPath := '';
-  _DCUOutputPath := '';
-  _DCPOutputPath := '';
-  _CompilerSwitches := '';
+  _desiredConfig := Config;
+  Defines := '';
+  SearchPath := '';
+  ProjectOutputPath := '';
+  BPLOutputPath := '';
+  DCUOutputPath := '';
+  DCPOutputPath := '';
+  CompilerSwitches := '';
   _InheritanceList := TStringList.Create;
   _xmlDOMfile := CoDOMDocument.Create;
   try
@@ -2299,32 +2315,26 @@ begin
       exit;
     end;
 
-    if _Config = '' then begin
-      // read default configuration
-      if not ReadNodeDocument(_xmlDOMfile,'/Project/PropertyGroup/Config',_Config,_msg) then begin
-        trace(3,'Warning in ReadDPROJSettingsD2009_D2010: Could not find Config. <%s>.',[_msg]);
-      end;
+    if Config = '' then begin // read default configuration
+      if not ReadNodeDocument(_xmlDOMfile,'/Project/PropertyGroup/Config',Config,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_D2010: Could not find Config. <%s>.',[_msg]);
     end;
-    trace(5,'ReadDPROJSettingsD2009_D2010: Config is <%s>.',[_Config]);
+    trace(5,'ReadDPROJSettingsD2009_D2010: Config is <%s>.',[Config]);
 
     // check for support of configuration
     _Configs := TStringList.Create;
     try
       ReadSupportedConfigsOfProject(_dprojFilename, _Configs);
-      if _Configs.IndexOf(_Config) < 0 then begin
-        // configuration not supported
-        _Config := '';
+      if _Configs.IndexOf(Config) < 0 then begin // configuration not supported
+        Config := '';
         trace(3,'ReadDPROJSettingsD2009_D2010: Warning config "%s" is not supported.',[_desiredConfig]);
       end;
     finally
       _Configs.Free;
     end;
 
-    if (_Config <> '') then begin
+    if (Config <> '') then begin
       // read properties for desired configuration and platform
-      if not ReadNodeDocument(_xmlDOMfile,'/Project/ItemGroup/BuildConfiguration[@Include = "'+_Config+'"]/Key',_BuildConfiguration,_msg) then begin
-        trace(3,'Warning in ReadDPROJSettingsD2009_D2010: Could not find BuildConfiguration. <%s>',[_msg])
-      end;
+      if not ReadNodeDocument(_xmlDOMfile,'/Project/ItemGroup/BuildConfiguration[@Include = "'+Config+'"]/Key',_BuildConfiguration,_msg) then trace(3,'Warning in ReadDPROJSettingsD2009_D2010: Could not find BuildConfiguration. <%s>',[_msg]);
 
       // Inheritance list for attributes
       _InheritanceList.Clear;
@@ -2332,76 +2342,59 @@ begin
       _InheritanceList.Add(_BuildConfiguration);
 
       // Read DCC_Define
-      _Defines := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Define');
-      trace(5,'ReadDPROJSettingsD2009_D2010: DCC_Define is <%s>.',[_Defines]);
+      Defines := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Define');
+      trace(5,'ReadDPROJSettingsD2009_D2010: DCC_Define is <%s>.',[Defines]);
 
       // Read DCC_UnitSearchPath
-      _SearchPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_UnitSearchPath');
-      trace(5,'ReadDPROJSettingsD2009_D2010: SearchPath is <%s>.',[_SearchPath]);
+      SearchPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_UnitSearchPath');
+      trace(5,'ReadDPROJSettingsD2009_D2010: SearchPath is <%s>.',[SearchPath]);
 
       // Read DCC_DcuOutput
-      _DCUOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcuOutput');
-      trace(5,'ReadDPROJSettingsD2009_D2010: DCU Output Path is <%s>.',[_DCUOutputPath]);
+      DCUOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcuOutput');
+      trace(5,'ReadDPROJSettingsD2009_D2010: DCU Output Path is <%s>.',[DCUOutputPath]);
 
       // Read DCC_DcpOutput
-      _DCPOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcpOutput');
-      trace(5,'ReadDPROJSettingsD2009_D2010: DCP Output Path is <%s>.',[_DCPOutputPath]);
+      DCPOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcpOutput');
+      trace(5,'ReadDPROJSettingsD2009_D2010: DCP Output Path is <%s>.',[DCPOutputPath]);
 
       //Read DCC_BplOutput
-      _BPLOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_BplOutput');
-      trace(5,'ReadDPROJSettingsD2009_D2010: BPL Output Path is <%s>.',[_BPLOutputPath]);
+      BPLOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_BplOutput');
+      trace(5,'ReadDPROJSettingsD2009_D2010: BPL Output Path is <%s>.',[BPLOutputPath]);
 
       //Read DCC_ExeOutput
-      _ProjectOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_ExeOutput');
-      trace(5,'ReadDPROJSettingsD2009_D2010: ProjectOutputPath is <%s>.',[_ProjectOutputPath]);
+      ProjectOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_ExeOutput');
+      trace(5,'ReadDPROJSettingsD2009_D2010: ProjectOutputPath is <%s>.',[ProjectOutputPath]);
 
       // Read some compiler switches
       // Local debug symbols
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_LocalDebugSymbols');
-      Trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_LocalDebugSymbols is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'False') then begin
-        // No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$L- '
-      end;
+      trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_LocalDebugSymbols is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'False') then CompilerSwitches := CompilerSwitches + '-$L- '; // No local debug symbols
 
       // Debug information
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DebugInformation');
-      Trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_DebugInformation is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'False') then begin
-        // No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$D- '
-      end;
+      trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_DebugInformation is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'False') then CompilerSwitches := CompilerSwitches + '-$D- '; // No local debug symbols
 
       // Symbol reference info
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_SymbolReferenceInfo');
-      Trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_SymbolReferenceInfo is <%s>.', [_Tmp]);
-      if SameText(_Tmp, '0') then begin
-        // No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$Y- '
-      end;
+      trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_SymbolReferenceInfo is <%s>.', [_Tmp]);
+      if SameText(_Tmp, '0') then CompilerSwitches := CompilerSwitches + '-$Y- '; // No local debug symbols
 
       // Optimize
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Optimize');
-      Trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_Optimize is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'False') then begin
-        // Do not No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$O- '
-      end;
+      trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_Optimize is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'False') then CompilerSwitches := CompilerSwitches + '-$O- '; // Do not No local debug symbols
 
       // Generate stack frames
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_GenerateStackFrames');
-      Trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_GenerateStackFrames is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'True') then begin
-        // Do not generate stack frames
-        _CompilerSwitches := _CompilerSwitches + '-$W+ '
-      end;
+      trace(5, 'ReadDPROJSettingsD2009_D2010: DCC_GenerateStackFrames is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'True') then CompilerSwitches := CompilerSwitches + '-$W+ '; // Do not generate stack frames
 
       // Image base
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_ImageBase');
-      Trace(5,'ReadDPROJSettingsD2009_D2010: DCC_ImageBase is <%s>.', [_Tmp]);
-      if _Tmp <> '' then begin
-        _CompilerSwitches := _CompilerSwitches + '-$K' + _TMP + ' ';
-      end;
+      trace(5,'ReadDPROJSettingsD2009_D2010: DCC_ImageBase is <%s>.', [_Tmp]);
+      if _Tmp <> '' then CompilerSwitches := CompilerSwitches + '-$K' + _TMP + ' ';
 
       Result:=true;
     end;
@@ -2413,35 +2406,35 @@ end;
 
 {*-----------------------------------------------------------------------------
   Procedure: ReadDPROJSettingsDXE_and_Newer
-  Author:    sam
+  Author:    muem/sam
   Date:      26-Oct-2012
   Arguments: const _dprojFilename:string      path + name of project file
-             var _Config:string               in: desired configuration ('' = use default configuration)
+             var Config:string               in: desired configuration ('' = use default configuration)
                                               out: found configuration  ('' = not found)
-             var _Platform:string             in: desired platform ('' = use default platform)
+             var dPlatform:string             in: desired platform ('' = use default platform)
                                               out: found platform  ('' = not found)
-             var _CompilerSwitches: string;
-             var _Defines:string
-             var _SearchPath:string
-             var _ProjectOutputPath:string
-             var _BPLOutputPath:string
-             var _DCUOutputPath:string
-             var _DCPOutputPath:string
-             var _NameSpaces:string
+             out CompilerSwitches: string;
+             out Defines:string
+             out SearchPath:string
+             out ProjectOutputPath:string
+             out BPLOutputPath:string
+             out DCUOutputPath:string
+             out DCPOutputPath:string
+             out NameSpaces:string
   Result:    boolean
   Description: read path information from a dproj file used by Delphi XE or newer.
 -----------------------------------------------------------------------------}
 function ReadDPROJSettingsDXE_and_Newer(const _dprojFilename: string;
-                                        var _Config: string;
-                                        var _Platform: string;
-                                        var _CompilerSwitches: string;
-                                        var _Defines: string;
-                                        var _SearchPath: string;
-                                        var _ProjectOutputPath: string;
-                                        var _BPLOutputPath: string;
-                                        var _DCUOutputPath: string;
-                                        var _DCPOutputPath: string;
-                                        var _NameSpaces: string):boolean;
+                                        var Config: string;
+                                        var dPlatform: string;
+                                        out CompilerSwitches: string;
+                                        out Defines: string;
+                                        out SearchPath: string;
+                                        out ProjectOutputPath: string;
+                                        out BPLOutputPath: string;
+                                        out DCUOutputPath: string;
+                                        out DCPOutputPath: string;
+                                        out NameSpaces: string):boolean;
 var
   _xmlDOMfile: IXMLDOMDocument;
   _msg:string;
@@ -2454,39 +2447,33 @@ var
   _Tmp: string;
 begin
   Result := false;
-  _desiredConfig := _Config;
-  _desiredPlatform := _Platform;
-  _Defines := '';
-  _SearchPath := '';
-  _ProjectOutputPath := '';
-  _BPLOutputPath := '';
-  _DCUOutputPath := '';
-  _DCPOutputPath := '';
-  _NameSpaces := '';
-  _CompilerSwitches := '';
+  _desiredConfig := Config;
+  _desiredPlatform := dPlatform;
+  Defines := '';
+  SearchPath := '';
+  ProjectOutputPath := '';
+  BPLOutputPath := '';
+  DCUOutputPath := '';
+  DCPOutputPath := '';
+  NameSpaces := '';
+  CompilerSwitches := '';
   _InheritanceList := TStringList.Create;
   _xmlDOMfile := CoDOMDocument.Create;
   try
     if not _xmlDOMfile.load(_dprojFilename) then begin
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: Could not find the file <%s>.', [_dprojFilename]);
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: Could not find the file <%s>.', [_dprojFilename]);
       Exit;
     end;
 
-    if _Config = '' then begin
-      // read default configuration
-      if not ReadNodeDocument(_xmlDOMfile, '/Project/PropertyGroup/Config', _Config, _msg) then begin
-        Trace(3, 'Warning in ReadDPROJSettingsDXE_and_Newer: Could not find Config. <%s>.', [_msg]);
-      end;
+    if Config = '' then begin  // read default configuration
+      if not ReadNodeDocument(_xmlDOMfile, '/Project/PropertyGroup/Config', Config, _msg) then trace(3, 'Warning in ReadDPROJSettingsDXE_and_Newer: Could not find Config. <%s>.', [_msg]);
     end;
-    Trace(5, 'ReadDPROJSettingsDXE_and_Newer: Config is <%s>.', [_Config]);
+    trace(5, 'ReadDPROJSettingsDXE_and_Newer: Config is <%s>.', [Config]);
 
-    if _Platform = '' then begin
-      // read default platform
-      if not ReadNodeDocument(_xmlDOMfile, '/Project/PropertyGroup/Platform', _Platform, _msg) then begin
-        Trace(3, 'Warning in ReadDPROJSettingsDXE_and_Newer: Could not find Platform. <%s>.', [_msg]);
-      end;
+    if dPlatform = '' then begin // read default platform
+      if not ReadNodeDocument(_xmlDOMfile, '/Project/PropertyGroup/Platform', dPlatform, _msg) then trace(3, 'Warning in ReadDPROJSettingsDXE_and_Newer: Could not find Platform. <%s>.', [_msg]);
     end;
-    Trace(5, 'ReadDPROJSettingsDXE_and_Newer: Platform is <%s>.', [_Platform]);
+    trace(5, 'ReadDPROJSettingsDXE_and_Newer: Platform is <%s>.', [dPlatform]);
 
     // check for support of configuration and platform
     _Platforms := TStringList.Create;
@@ -2494,109 +2481,92 @@ begin
     try
       ReadSupportedConfigsOfProject(_dprojFilename, _Configs);
       ReadSupportedPlatformsOfProject(_dprojFilename, _Platforms);
-      if _Platforms.IndexOf(_Platform) < 0 then begin
+      if _Platforms.IndexOf(dPlatform) < 0 then begin
         // platform not supported
-        _Platform := '';
-        Trace(3, 'ReadDPROJSettingsDXE_and_Newer: Warning platform "%s" is not supported.', [_desiredPlatform]);
+        dPlatform := '';
+        trace(3, 'ReadDPROJSettingsDXE_and_Newer: Warning platform "%s" is not supported.', [_desiredPlatform]);
       end;
-      if _Configs.IndexOf(_Config) < 0 then begin
+      if _Configs.IndexOf(Config) < 0 then begin
         // configuration not supported
-        _Config := '';
-        Trace(3, 'ReadDPROJSettingsDXE_and_Newer: Warning configuration "%s" is not supported.', [_desiredConfig]);
+        Config := '';
+        trace(3, 'ReadDPROJSettingsDXE_and_Newer: Warning configuration "%s" is not supported.', [_desiredConfig]);
       end;
     finally
       _Configs.Free;
       _Platforms.Free;
     end;
 
-    if (_Config <> '') and (_Platform <> '') then begin
+    if (Config <> '') and (dPlatform <> '') then begin
       // read properties for desired configuration and platform
-      if not ReadNodeDocument(_xmlDOMfile, '/Project/ItemGroup/BuildConfiguration[@Include = "' + _Config + '"]/Key', _BuildConfiguration, _msg) then begin
-        Trace(3, 'Warning in ReadDPROJSettingsDXE_and_Newer: Could not find BuildConfiguration. <%s>', [_msg])
+      if not ReadNodeDocument(_xmlDOMfile, '/Project/ItemGroup/BuildConfiguration[@Include = "' + Config + '"]/Key', _BuildConfiguration, _msg) then begin
+        trace(3, 'Warning in ReadDPROJSettingsDXE_and_Newer: Could not find BuildConfiguration. <%s>', [_msg])
       end;
 
       // Inheritance list for attributes
       _InheritanceList.Clear;
       _InheritanceList.Add('Base');
-      _InheritanceList.Add('Base_' + _Platform);
+      _InheritanceList.Add('Base_' + dPlatform);
       _InheritanceList.Add(_BuildConfiguration);
-      _InheritanceList.Add(_BuildConfiguration+'_' + _Platform);
+      _InheritanceList.Add(_BuildConfiguration+'_' + dPlatform);
 
       // Read DCC_Define
-      _Defines := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Define');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_Define is <%s>.', [_Defines]);
+      Defines := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Define');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_Define is <%s>.', [Defines]);
 
       // Read DCC_UnitSearchPath
-      _SearchPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_UnitSearchPath');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: SearchPath is <%s>.', [_SearchPath]);
+      SearchPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_UnitSearchPath');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: SearchPath is <%s>.', [SearchPath]);
 
       // Read DCC_DcuOutput
-      _DCUOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcuOutput');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCU Output Path is <%s>.', [_DCUOutputPath]);
+      DCUOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcuOutput');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCU Output Path is <%s>.', [DCUOutputPath]);
 
       // Read DCC_DcpOutput
-      _DCPOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcpOutput');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCP Output Path is <%s>.', [_DCPOutputPath]);
+      DCPOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DcpOutput');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCP Output Path is <%s>.', [DCPOutputPath]);
 
       // Read DCC_BplOutput
-      _BPLOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_BplOutput');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: BPL Output Path is <%s>.', [_BPLOutputPath]);
+      BPLOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_BplOutput');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: BPL Output Path is <%s>.', [BPLOutputPath]);
 
       // Read DCC_ExeOutput
-      _ProjectOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_ExeOutput');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: ProjectOutputPath is <%s>.', [_ProjectOutputPath]);
+      ProjectOutputPath := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_ExeOutput');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: ProjectOutputPath is <%s>.', [ProjectOutputPath]);
 
       // Read NameSpaces
-      _NameSpaces := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Namespace');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: NameSpaces is <%s>.', [_NameSpaces]);
+      NameSpaces := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Namespace');
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: NameSpaces is <%s>.', [NameSpaces]);
 
       // Read some compiler switches
       // Local debug symbols
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_LocalDebugSymbols');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_LocalDebugSymbols is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'False') then begin
-        // No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$L- '
-      end;
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_LocalDebugSymbols is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'False') then CompilerSwitches := CompilerSwitches + '-$L- ';// No local debug symbols
 
       // Debug information
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_DebugInformation');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_DebugInformation is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'False') then begin
-        // No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$D- '
-      end;
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_DebugInformation is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'False') then CompilerSwitches := CompilerSwitches + '-$D- ';// No local debug symbols
 
       // Symbol reference info
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_SymbolReferenceInfo');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_SymbolReferenceInfo is <%s>.', [_Tmp]);
-      if SameText(_Tmp, '0') then begin
-        // No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$Y- '
-      end;
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_SymbolReferenceInfo is <%s>.', [_Tmp]);
+      if SameText(_Tmp, '0') then CompilerSwitches := CompilerSwitches + '-$Y- '; // No local debug symbols
 
       // Optimize
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_Optimize');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_Optimize is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'False') then begin
-        // Do not No local debug symbols
-        _CompilerSwitches := _CompilerSwitches + '-$O- '
-      end;
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_Optimize is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'False') then CompilerSwitches := CompilerSwitches + '-$O- ';  // Do not No local debug symbols
 
       // Generate stack frames
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_GenerateStackFrames');
-      Trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_GenerateStackFrames is <%s>.', [_Tmp]);
-      if SameText(_Tmp, 'True') then begin
-        // Do not generate stack frames
-        _CompilerSwitches := _CompilerSwitches + '-$W+ '
-      end;
+      trace(5, 'ReadDPROJSettingsDXE_and_Newer: DCC_GenerateStackFrames is <%s>.', [_Tmp]);
+      if SameText(_Tmp, 'True') then CompilerSwitches := CompilerSwitches + '-$W+ ';  // Do not generate stack frames
 
       // Image base
       _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(兌nheritance)''!=''''"]/你ttribute', _InheritanceList, 'DCC_ImageBase');
-      Trace(5,'ReadDPROJSettingsDXE_and_Newer: DCC_ImageBase is <%s>.', [_Tmp]);
-      if _Tmp <> '' then begin
-        _CompilerSwitches := _CompilerSwitches + '-$K' + _TMP + ' ';
-      end;
+      trace(5,'ReadDPROJSettingsDXE_and_Newer: DCC_ImageBase is <%s>.', [_Tmp]);
+      if _Tmp <> '' then CompilerSwitches := CompilerSwitches + '-$K' + _TMP + ' ';
 
       Result:=true;
     end;
@@ -2615,8 +2585,8 @@ end;
                                                out: found configuration  ('' = not found)
              var _Platform: string             in: desired platform ('' = use default platform)
                                                out: found platform  ('' = not found)
-             var _CompilerSwitches: string;
-             var _Conditions: string
+             out CompilerSwitches: string;
+             out Conditions: string
              var _SearchPath: string
              var _ProjectOutputPath: string
              var _BPLOutputPath: string
@@ -2626,28 +2596,28 @@ end;
   Description: read settings from a dproj-file.
 -----------------------------------------------------------------------------}
 function ReadDPROJSettings(const _dprojFilename: string;
-                           var _Config: string;
-                           var _Platform: string;
-                           var _CompilerSwitches: string;
-                           var _Conditions: string;
-                           var _SearchPath: string;
-                           var _ProjectOutputPath: string;
-                           var _BPLOutputPath: string;
-                           var _DCUOutputPath: string;
-                           var _DCPOutputPath: string;
-                           var _NameSpaces: string):boolean; // get informations from the dproj-file.
+                           var Config: string;
+                           var dPlatform: string;
+                           out CompilerSwitches: string;
+                           out Conditions: string;
+                           out SearchPath: string;
+                           out ProjectOutputPath: string;
+                           out BPLOutputPath: string;
+                           out DCUOutputPath: string;
+                           out DCPOutputPath: string;
+                           out NameSpaces: string):boolean; // get informations from the dproj-file.
 var
   _msg: string;
   _ProjectVersion: string;
 begin
   Result := False;
-  _Conditions := '';
-  _SearchPath := '';
-  _NameSpaces := '';
-  _ProjectOutputPath := '';
-  _BPLOutputPath := '';
-  _DCUOutputPath := '';
-  _DCPOutputPath := '';
+  Conditions := '';
+  SearchPath := '';
+  NameSpaces := '';
+  ProjectOutputPath := '';
+  BPLOutputPath := '';
+  DCUOutputPath := '';
+  DCPOutputPath := '';
   _ProjectVersion := '';
   if not fileExists(_dprojFilename) then begin
     trace(5, 'ReadDPROJSettings: Could not find the file <%s>.', [_dprojFilename]);
@@ -2657,40 +2627,40 @@ begin
     trace(3, 'Warning in ReadDPROJSettings: Could not read condition. <%s>.', [_msg]);
   if _ProjectVersion = '' then  begin
     Result := ReadDPROJSettingsD2005_D2007(_dprojFilename,
-                                           _Config,
-                                           _Conditions,
-                                           _SearchPath,
-                                           _ProjectOutputPath,
-                                           _BPLOutputPath,
-                                           _DCUOutputPath,
-                                           _DCPOutputPath);
-    _Platform := sWin32;
-    _CompilerSwitches := '';
+                                           Config,
+                                           Conditions,
+                                           SearchPath,
+                                           ProjectOutputPath,
+                                           BPLOutputPath,
+                                           DCUOutputPath,
+                                           DCPOutputPath);
+    dPlatform := sWin32;
+    CompilerSwitches := '';
   end
   else if _ProjectVersion = '12.0' then begin
     Result := ReadDPROJSettingsD2009_D2010(_dprojFilename,
-                                           _Config,
-                                           _CompilerSwitches,
-                                           _Conditions,
-                                           _SearchPath,
-                                           _ProjectOutputPath,
-                                           _BPLOutputPath,
-                                           _DCUOutputPath,
-                                           _DCPOutputPath);
-    _Platform := sWin32;
+                                           Config,
+                                           CompilerSwitches,
+                                           Conditions,
+                                           SearchPath,
+                                           ProjectOutputPath,
+                                           BPLOutputPath,
+                                           DCUOutputPath,
+                                           DCPOutputPath);
+    dPlatform := sWin32;
   end
   else begin
     Result := ReadDPROJSettingsDXE_and_Newer(_dprojFilename,
-                                             _Config,
-                                             _Platform,
-                                             _CompilerSwitches,
-                                             _Conditions,
-                                             _SearchPath,
-                                             _ProjectOutputPath,
-                                             _BPLOutputPath,
-                                             _DCUOutputPath,
-                                             _DCPOutputPath,
-                                             _NameSpaces);
+                                             Config,
+                                             dPlatform,
+                                             CompilerSwitches,
+                                             Conditions,
+                                             SearchPath,
+                                             ProjectOutputPath,
+                                             BPLOutputPath,
+                                             DCUOutputPath,
+                                             DCPOutputPath,
+                                             NameSpaces);
   end;
 end;
 
@@ -2781,61 +2751,59 @@ end;
   Author:    sam
   Date:      02-Jun-2008
   Arguments: const _filename: string        path + name of project file
-             var _Config: string            in: desired configuration ('' = use default configuration)
+             out Config: string            in: desired configuration ('' = use default configuration)
                                            out: found configuration  ('' = not found)
-             var _Platform: string          in: desired platform ('' = use default platform, 'Win32', 'Win64')
+             out dPlatform: string          in: desired platform ('' = use default platform, 'Win32', 'Win64')
                                            out: found platform  ('' = not found)
-             var _CompilerSwitches: string
-             var _Conditions: string
-             var _SearchPath: string
-             var _ProjectOutputPath: string
-             var _BPLOutputPath: string
-             var _DCUOutputPath: string
-             var _DCPOutputPath: string
-             var _NameSpaces: string
+             out CompilerSwitches: string
+             out Conditions: string
+             out SearchPath: string
+             out ProjectOutputPath: string
+             out BPLOutputPath: string
+             out DCUOutputPath: string
+             out DCPOutputPath: string
+             out NameSpaces: string
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
 function ReadConfigurationSettings(const _filename: string;
-                                   var _Config: string;
-                                   var _Platform: string;
-                                   var _CompilerSwitches: string;
-                                   var _Conditions: string;
-                                   var _SearchPath: string;
-                                   var _ProjectOutputPath: string;
-                                   var _BPLOutputPath: string;
-                                   var _DCUOutputPath: string;
-                                   var _DCPOutputPath: string;
-                                   var _NameSpaces: string): Boolean;
+                                   out Config: string;
+                                   out dPlatform: string;
+                                   out CompilerSwitches: string;
+                                   out Conditions: string;
+                                   out SearchPath: string;
+                                   out ProjectOutputPath: string;
+                                   out BPLOutputPath: string;
+                                   out DCUOutputPath: string;
+                                   out DCPOutputPath: string;
+                                   out NameSpaces: string): Boolean;
 var
-  _fileext: string;
-  _ProjectName: string;
+_fileext: string;
+_ProjectName: string;
 begin
-  Result := False;
+  result := False;
+  NameSpaces:='';
   _fileext := LowerCase(ExtractFileExt(_filename));
-  Trace(5, 'ReadConfigurationSettings: filename <%s>.', [_filename]);
-  if (_fileext = '.dpk') or
-     (_fileext = '.dpr') then begin
-    result := ReadCFGSettings(ChangefileExt(_filename, '.cfg'), _Conditions, _SearchPath, _ProjectOutputPath, _BPLOutputPath, _DCUOutputPath);
-    _Platform := sWin32;
-    if _Config = '' then _Config := sNoConfig;
-    _CompilerSwitches := '';
-    _DCPOutputPath := _BPLOutputPath;
+  trace(5, 'ReadConfigurationSettings: filename <%s>.', [_filename]);
+  if _fileext = '.cfg' then begin
+    result := ReadCFGSettings(_filename, Conditions, SearchPath, ProjectOutputPath, BPLOutputPath, DCUOutputPath);
+    dPlatform := sWin32;
+    if Config = '' then Config := sNoConfig;
+    CompilerSwitches := '';
+    DCPOutputPath := BPLOutputPath;
   end
   else if _fileext = '.dproj' then begin
-    result := ReadDProjSettings(_filename, _Config, _Platform, _CompilerSwitches, _Conditions, _SearchPath, _ProjectOutputPath, _BPLOutputPath, _DCUOutputPath, _DCPOutputPath, _NameSpaces);
-    if _DCPOutputPath = '' then begin
-      _DCPOutputPath := _BPLOutputPath;
-    end;
+    result := ReadDProjSettings(_filename, Config, dPlatform, CompilerSwitches, Conditions, SearchPath, ProjectOutputPath, BPLOutputPath, DCUOutputPath, DCPOutputPath, NameSpaces);
+    if DCPOutputPath = '' then DCPOutputPath:=BPLOutputPath;
   end
   else if _fileext = '.bdsproj' then begin
-    result := ReadBDSProjSettings(_filename, _ProjectName ,_Conditions, _SearchPath, _ProjectOutputPath, _BPLOutputPath, _DCUOutputPath);
-    _Platform := sWin32;
-    if _Config = '' then _Config := sNoConfig;
-    _CompilerSwitches := '';
-    _DCPOutputPath := _BPLOutputPath;
+    result := ReadBDSProjSettings(_filename, _ProjectName ,Conditions, SearchPath, ProjectOutputPath, BPLOutputPath, DCUOutputPath);
+    dPlatform := sWin32;
+    if Config = '' then Config := sNoConfig;
+    CompilerSwitches := '';
+    DCPOutputPath := BPLOutputPath;
   end;
-  if _Conditions <> '' then _Conditions := '-D'+_Conditions;
+  if Conditions <> '' then Conditions := '-D'+Conditions;
 end;
 
 {-----------------------------------------------------------------------------
@@ -2908,8 +2876,20 @@ end;
   Arguments: _cfgFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath:string
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .cfg-file.
+  -returns true a new file has been prepared.
+  - the out-param <NewFilename> contains filename of the new prepared file.
 -----------------------------------------------------------------------------}
-function  WriteCFGSettings(const _bpgPath:string; _cfgFilename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer):string; // get informations from the cfg-file.
+function  WriteCFGSettings(const _bpgPath:string;
+                                 _cfgFilename:String;
+                                 _Conditions:string;
+                                 _SearchPath:String;
+                                 _ProjectOutputPath:string;
+                                 _BPLOutputPath,
+                                 _DCUOutputPath:string;
+                                 const _silent:boolean;
+                                 const _ProjectType:TProjectType;
+                                 const _DelphiVersion:integer;
+                                 out NewFilename:string):boolean;
 var
 _CFGFile:TStrings;
 _FileChanged:boolean;
@@ -2959,7 +2939,8 @@ _FileChanged:boolean;
   end;
 
 begin
-  Result:='';
+  result:=false;
+  NewFilename:='';
   _FileChanged:=false;
   if not fileExists(_cfgFilename) then begin
     trace(2,'Problem in WriteCFGSettings: Could not find the file <%s>.',[_cfgFilename]);
@@ -3003,7 +2984,8 @@ begin
     try
       _CFGFile.SaveToFile(_cfgFilename);
       trace(5,'Saved changes to file <%s>.',[_cfgFilename]);
-      result:='.cfg_new';
+      NewFilename:=_cfgFilename;
+      result:=true;
     except
       on e:exception do trace(1,'Error in WriteCFGSettings: Could not save file <%s>. Check User-Rights. <%s>.',[_cfgFilename,e.message]);
     end;
@@ -3020,10 +3002,15 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .bdsproj-file.
 -----------------------------------------------------------------------------}
-function  WriteBDSProjSettings(const _bpgPath:string; _bdsprojFilename:String;
-  _Conditions:string;_SearchPath:String;_ProjectOutputPath:string;
-  _BPLOutputPath,_DCUOutputPath:string;const _silent:boolean;
-  const _DelphiVersion:integer):string;
+function  WriteBDSProjSettings(const _bpgPath:string;
+                               _bdsprojFilename:String;
+                               _Conditions:string;
+                               _SearchPath:String;
+                               _ProjectOutputPath:string;
+                               _BPLOutputPath,
+                               _DCUOutputPath:string;const _silent:boolean;
+                               const _DelphiVersion:integer;
+                               out NewFilename:string):boolean;
 var
 _BDSProjFile:TStrings;
 _index:integer;
@@ -3046,12 +3033,10 @@ _pos:integer;
   end;
 
 begin
-  Result:='';
+  result:=false;
+  NewFilename:='';
   _FileChanged:=false;
-  if not fileExists(_bdsprojFilename) then begin
-    trace(2,'Problem in WriteBDSProjSettings: Could not find the file <%s>.',[_bdsprojFilename]);
-    exit;
-  end;
+  if not fileExists(_bdsprojFilename) then exit;
 
 // make all paths relative
   _searchPath       :=RelativePaths(ExtractFilePath(_bdsprojFilename),_searchPath,_DelphiVersion,'$PLATFOPRM is not support','$CONFIG is not support');
@@ -3118,7 +3103,8 @@ begin
     try
       _BDSProjFile.SaveToFile(_bdsprojFilename);
       trace(3,'WriteBDSProjSettings: Write changes to file <%s>.',[_bdsprojFilename]);
-      result:='.bdsproj_new';
+      NewFilename:=_bdsprojFilename;
+      result:=true;
     except
       on e:exception do trace(1,'Error in WriteBDSProjSettings: Could not save file <%s>. Check User-Rights. <%s>.',[_bdsprojFilename,e.message]);
     end;
@@ -3135,10 +3121,19 @@ end;
   Result:    boolean
   Description: write the path-settings from the delphipackagetool into the .dproj-file.
 -----------------------------------------------------------------------------}
-function  WriteDProjSettings(const _bpgPath:string;_dprojFilename:String;
-  _Conditions:string;_SearchPath:String;_ProjectOutputPath:string;
-  _BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;
-  const _DelphiVersion:integer;const _CurrentPlatform,_CurrentConfig: string):string;
+function  WriteDProjSettings(const _bpgPath:string;
+                                   _dprojFilename:String;
+                                   _Conditions:string;
+                                   _SearchPath:String;
+                                   _ProjectOutputPath:string;
+                                   _BPLOutputPath,
+                                   _DCUOutputPath,
+                                   _DCPOutputPath:string;
+                                   const _silent:boolean;
+                                   const _DelphiVersion:integer;
+                                   const _CurrentPlatform,
+                                   _CurrentConfig: string;
+                                   out NewFilename:string):boolean;
 const
 cTagConfig1='<PropertyGroup Condition="''$(Cfg_1)';
 cTagConfig2='<PropertyGroup Condition="''$(Cfg_2)';
@@ -3195,7 +3190,8 @@ _posConfig2:integer;
   end;
 
 begin
-  Result:='';
+  result:=false;
+  NewFilename:='';
   _FileChanged:=false;
   if not fileExists(_DProjFilename) then begin
     trace(2,'Problem in WriteDProjSettings: Could not find the file <%s>.',[_dprojFilename]);
@@ -3208,6 +3204,7 @@ begin
   _BPLOutputPath    :=RelativePath(ExtractFilePath(_dprojFilename),_BPLOutputPath,_DelphiVersion,false);
   _DCUOutputPath    :=RelativePath(ExtractFilePath(_dprojFilename),_DCUOutputPath,_DelphiVersion,false);
   _DCPOutputPath    :=RelativePath(ExtractFilePath(_dprojFilename),_DCPOutputPath,_DelphiVersion,false);
+  _ProjectOutputPath:=RelativePath(ExtractFilePath(_dprojFilename),_ProjectOutputPath,_DelphiVersion,false);
 
 // then write them into the dproj-file.
   _DProjFile:=TStringList.Create;
@@ -3220,6 +3217,7 @@ begin
     ChangeSetting('<DCC_UnitSearchPath>',_searchPath);
     ChangeSetting('<DCC_ResourcePath>',_ProjectOutputPath);
     ChangeSetting('<DCC_ObjPath>',_DCUOutputPath);
+    ChangeSetting('<DCC_ExeOutput>',_ProjectOutputPath);
     ChangeSetting('<DCC_BplOutput>',_BPLOutputPath);
     ChangeSetting('<DCC_DcuOutput>',_DCUOutputPath);
     ChangeSetting('<DCC_DcpOutput>',_DCPOutputPath);
@@ -3231,7 +3229,8 @@ begin
     try
       _DProjFile.SaveToFile(_dprojFilename);
       trace(3,'WriteDProjSettings: Write changes to file <%s>.',[_dprojFilename]);
-      result:='.dproj_new';
+      NewFilename:=_dprojFilename;
+      result:=true;
     except
       on e:exception do trace(1,'Error in WriteDProjSettings: Could not save file <%s>. Check User-Rights. <%s>.',[_dprojFilename,e.message]);
     end;
@@ -3248,19 +3247,20 @@ end;
   Result:    boolean
   Description: write path settings to cfg,bdsproj,dproj,.dof file.
 -----------------------------------------------------------------------------}
-function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // get informations from the cfg-file.
+function WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string;out ChangedFiles:TStringList):boolean;
+var
+_NewFilename:string;
 begin
-  result:='';
+  result:=false;
+  ChangedFiles:=TStringList.create;
   case _DelphiVersion of
     5,6,7,8:begin
-              result:=WriteCFGSettings(_bpgPath,changefileext(_Filename,'.cfg'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_ProjectType,_DelphiVersion);
-              if result<>'' then result:=result+';';
-              result:=result+WriteDOFFile(_bpgPath,changefileext(_Filename,'.dof'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion);
+              if WriteCFGSettings(_bpgPath,changefileext(_Filename,'.cfg'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_ProjectType,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
+              if WriteDOFFile(_bpgPath,changefileext(_Filename,'.dof'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
             end;
     else begin
-      if fileexists(changefileext(_Filename,'.cfg'))     then  result:=WriteCFGSettings(_bpgPath,changefileext(_Filename,'.cfg'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_ProjectType,_DelphiVersion);
-      if fileexists(changefileext(_Filename,'.bdsproj')) then  result:=WriteBDSProjSettings(_bpgPath,changefileext(_Filename,'.bdsproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion);
-      if fileexists(changefileext(_Filename,'.dproj'))   then  result:=WriteDProjSettings(_bpgPath,changefileext(_Filename,'.dproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_DCPOutputPath,_silent,_DelphiVersion,_CurrentPlatform, _CurrentConfig);
+      if WriteBDSProjSettings(_bpgPath,changefileext(_Filename,'.bdsproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
+      if WriteDProjSettings(_bpgPath,changefileext(_Filename,'.dproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_DCPOutputPath,_silent,_DelphiVersion,_CurrentPlatform, _CurrentConfig,_NewFilename) then ChangedFiles.add(_NewFilename);
     end;
   end;
 end;
@@ -3358,12 +3358,12 @@ begin
     Exit;
   end;
   if not GetIDERootKey(_DelphiVersion, _PackageKey) then begin
-    Trace(3, 'Problem in InstallPackage: Could not find key for Delphi Version <%d>.', [_DelphiVersion]);
+    trace(3, 'Problem in InstallPackage: Could not find key for Delphi Version <%d>.', [_DelphiVersion]);
     Exit;
   end;
 
   if not CanInstallPackage(_PackageName) then begin
-    Trace(5, 'InstallPackage: The package <%s> is a runtime only package. It will not be installed into the IDE.', [_PackageName]);
+    trace(5, 'InstallPackage: The package <%s> is a runtime only package. It will not be installed into the IDE.', [_PackageName]);
     msg := '-';
     Exit;
   end;
@@ -3371,7 +3371,7 @@ begin
                              else _BplFilename := LowerCase(_PackageDirectory + ExtractFilenameOnly(_PackageName) + '.bpl');
 
   if not fileexists(_BplFilename) then begin
-    Trace(5, 'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.', [_PackageName]);
+    trace(5, 'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.', [_PackageName]);
     Exit;
   end;
 
@@ -3381,7 +3381,7 @@ begin
     _RegFile.Add('');
     _PackageKey := _PackageKey + 'Known Packages';
     if AddPackageToRegistry(HKEY_CURRENT_USER, _PackageKey, _BplFilename, _PackageDescription) then begin
-      Trace(2, 'Installed the package <%s> into the Delphi IDE for the current user.', [ExtractFileName(_PackageName)]);
+      trace(2, 'Installed the package <%s> into the Delphi IDE for the current user.', [ExtractFileName(_PackageName)]);
       _RegFile.Add('[HKEY_CURRENT_USER\' + _PackageKey+']');
       _RegFile.Add('"' + PrepapreRegistryPath(_BplFilename) + '"="' + _PackageDescription + '"');
       msg := 'Current User';
@@ -3389,7 +3389,7 @@ begin
     end;
 
     if AddPackageToRegistry(HKEY_LOCAL_MACHINE,_PackageKey,_BplFilename,_PackageDescription) then begin
-      Trace(2,'Installed the package <%s> into the Delphi IDE for the all users on this computer.',[ExtractFileName(_PackageName)]);
+      trace(2,'Installed the package <%s> into the Delphi IDE for the all users on this computer.',[ExtractFileName(_PackageName)]);
       _RegFile.Add('[HKEY_LOCAL_MACHINE\'+_PackageKey+']');
       _RegFile.Add('"'+PrepapreRegistryPath(_BplFilename)+'"="'+_PackageDescription+'"');
       if msg = 'Current User' then msg := msg + '/All Users'
@@ -3439,7 +3439,7 @@ begin
   if LowerCase(ExtractFileExt(_PackageName)) <> '.dpk' then Exit;
 
   if not GetIDERootKey(_DelphiVersion, _PackageBaseKey) then begin
-    Trace(3,'Problem in UnInstallPackage: Could not find key for Delphi Version <%d>.', [_DelphiVersion]);
+    trace(3,'Problem in UnInstallPackage: Could not find key for Delphi Version <%d>.', [_DelphiVersion]);
     Exit;
   end;
 
@@ -3457,11 +3457,11 @@ begin
     _RegFile.Add('[HKEY_LOCAL_MACHINE\' + _PackageKey + ']');
     _RegFile.Add('"' + _RegFilePackagePath + _BplFilename + '"=-');
     _PackageValue := LowerCase(_PackageDirectory + _BplFilename);
-    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
-    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
     _PackageValue := AddTag(_PackageValue, _DelphiVersion);
-    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
-    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
     _PackageKey := _PackageBaseKey + 'Disabled Packages';
     _RegFile.Add('[HKEY_CURRENT_USER\' + _BplFilename + ']');
     _RegFile.Add('"' + _RegFilePackagePath + _BplFilename + '"=-');
@@ -3469,11 +3469,11 @@ begin
     _RegFile.Add('"' + _RegFilePackagePath + _BplFilename + '"=-');
     _RegFile.Add('');
     _PackageValue := LowerCase(_PackageDirectory + _BplFilename);
-    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
-    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
     _PackageValue := AddTag(_PackageValue, _DelphiVersion);
-    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
-    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then Trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_CURRENT_USER, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for the current user on this computer.', [_PackageDirectory + _BplFilename]);
+    if RemoveValueFromRegistry(HKEY_LOCAL_MACHINE, _PackageKey, _PackageValue) then trace(3, 'Un-Installed the package <%s> from the Delphi IDE for all users of this computer.', [_PackageDirectory + _BplFilename]);
     try
       _RegFileName := 'UnRegister_Package_' + ChangeFileExt(ExtractFilename(_PackageName), '.reg');
       if gCreateBatchFile then _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
@@ -3695,33 +3695,33 @@ begin
   Result := False;
   if not fileexists(_Compiler) then begin
     ShowMessage(Format('Could not find the Delphi Compiler file <%s>. Please check settings.', [_Compiler]));
-    Trace(1, 'Problem in CompileProject: Problem, could not find the Delphi Compiler file <%s>.', [_Compiler]);
+    trace(1, 'Problem in CompileProject: Problem, could not find the Delphi Compiler file <%s>.', [_Compiler]);
     Exit;
   end;
 
   if not FileExists(_ProjectName) then begin
     ShowMessage(Format('Could not find the Project file <%s>. Please check if your BPG-File is still ok.', [_ProjectName]));
-    Trace(1, 'Problem in CompileProject: Problem, could not find the Project file <%s>.', [_ProjectName]);
+    trace(1, 'Problem in CompileProject: Problem, could not find the Project file <%s>.', [_ProjectName]);
     exit;
   end;
 
   if not CheckDirectory(_WorkPath) then begin
-    Trace(1, 'Problem in CompileProject: Problem, could not find the work path <%s>.', [_WorkPath]);
+    trace(1, 'Problem in CompileProject: Problem, could not find the work path <%s>.', [_WorkPath]);
     Exit;
   end;
 
   if not CheckDirectory(_TargetPath) then begin
-    Trace(1, 'Problem in CompileProject: Problem, could not find the target path <%s>.', [_TargetPath]);
+    trace(1, 'Problem in CompileProject: Problem, could not find the target path <%s>.', [_TargetPath]);
     Exit;
   end;
 
   if not CheckDirectory(_DCUPath) then begin
-    Trace(1, 'Problem in CompileProject: Problem, could not find the dcu path <%s>.', [_DCUPath]);
+    trace(1, 'Problem in CompileProject: Problem, could not find the dcu path <%s>.', [_DCUPath]);
     Exit;
   end;
 
   if not CheckDirectory(_DCPPath) then begin
-    Trace(1, 'Problem in CompileProject: Problem, could not find the dcp path <%s>.', [_DCPPath]);
+    trace(1, 'Problem in CompileProject: Problem, could not find the dcp path <%s>.', [_DCPPath]);
     Exit;
   end;
 
@@ -3734,13 +3734,13 @@ begin
   if (LastPos(_DCPPath, '\') = Length(_DCPPath)) and
      (Length(_DCPPath) > 2) then Delete(_DCPPath, Length(_DCPPath), 1);
 
-  Trace(5, '*************************************************************************************', []);
-  Trace(5, 'Compile Project <%s>.', [_ProjectName]);
-  Trace(5, 'Compiler is <%s>.', [_compiler]);
-  Trace(5, 'Work path is <%s>.', [_WorkPath]);
-  Trace(5, 'Output path is <%s>.', [_TargetPath]);
-  Trace(5, 'DCU path is <%s>.', [_DCUPath]);
-  Trace(5, 'DCP path is <%s>.', [_DCPPath]);
+  trace(5, '*************************************************************************************', []);
+  trace(5, 'Compile Project <%s>.', [_ProjectName]);
+  trace(5, 'Compiler is <%s>.', [_compiler]);
+  trace(5, 'Work path is <%s>.', [_WorkPath]);
+  trace(5, 'Output path is <%s>.', [_TargetPath]);
+  trace(5, 'DCU path is <%s>.', [_DCUPath]);
+  trace(5, 'DCP path is <%s>.', [_DCPPath]);
   _commandLine := _CompilerSwitches + ' "' + _ProjectName;
   if _TargetPath <> '' then begin
     case _ProjectType of
@@ -3769,7 +3769,7 @@ begin
     // Delphi XE
     _commandLine := _commandLine + ' -NS"' + _NameSpaces + '"';
   end;
-  Trace(3, 'Command line is %s.', [_commandLine]);
+  trace(3, 'Command line is %s.', [_commandLine]);
   FBatchFile.Add('cd "' + ExtractFilePath(_ProjectName) + '"');
   FBatchFile.Add('"' + _compiler + '" ' + _commandLine);
   _returnValue := WinExecAndWait(_compiler,
@@ -3779,7 +3779,7 @@ begin
                                  SW_HIDE,
                                  Output);
   if _returnValue = 0 then begin
-    Trace(5, 'CompileProject: Successfully build Project file <%s>.', [_ProjectName]);
+    trace(5, 'CompileProject: Successfully build Project file <%s>.', [_ProjectName]);
     Result := True;
   end;
 end;
@@ -3907,7 +3907,7 @@ var
 begin
   if not Assigned(lst) then Exit;
   if not FileExists(_filename) then begin
-    Trace(5, 'ReadPackageListfromGroupProjFileToStrings: Could not find the file <%s>.', [_filename]);
+    trace(5, 'ReadPackageListfromGroupProjFileToStrings: Could not find the file <%s>.', [_filename]);
     Exit;
   end;
   lst.Clear;
@@ -3999,7 +3999,7 @@ var
 begin
   if not Assigned(lst) then exit;
   if not FileExists(_filename) then begin
-    Trace(5, 'ReadPackageListfromBPGFileToStrings: Could not find the file <%s>.', [_filename]);
+    trace(5, 'ReadPackageListfromBPGFileToStrings: Could not find the file <%s>.', [_filename]);
     Exit;
   end;
   _BPGFile := TStringList.Create;
@@ -4057,7 +4057,7 @@ var
 begin
   if not Assigned(lst) then Exit;
   if not FileExists(_filename) then begin
-    Trace(5, 'ReadPackageListfromBDSGroupFileToStrings: Could not find the file <%s>.', [_filename]);
+    trace(5, 'ReadPackageListfromBDSGroupFileToStrings: Could not find the file <%s>.', [_filename]);
     Exit;
   end;
   lst.Clear;

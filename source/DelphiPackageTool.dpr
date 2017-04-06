@@ -37,7 +37,7 @@ begin
   Application.CreateForm(TDMMain, DMMain);
   if not DMMain.IsSilentMode then begin
     // show startup dialog
-    _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning', 10);
+    _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning');
     if _showagain then begin
       ShowStartUpDlg(_showagain);
       DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
@@ -52,12 +52,7 @@ begin
     _CreateMainForm:=exitcode<>0;
   end;
 // show main gui.
-  if _CreateMainForm then begin
-    if DMMain.BPGFilename='' then DMMain.BPGFilename:=DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3);
-    DMMain.LoadBPG(DMMain.BPGFilename);
-    Application.CreateForm(TFrmMain, FrmMain);
-    FrmMain.PrepareGUI(DMMain.BPGFilename);
-  end;
-  
+  if _CreateMainForm then Application.CreateForm(TFrmMain, FrmMain);
+
   Application.Run;
 end.

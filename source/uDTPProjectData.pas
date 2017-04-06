@@ -16,7 +16,6 @@ const
 
 type
   TProjectData = class
-  private
   public
     OutputFilename: string;
     OutputPath: string;
@@ -35,7 +34,6 @@ type
     constructor Create;
     destructor Destroy; override;
   end;
-
 
 
 implementation
