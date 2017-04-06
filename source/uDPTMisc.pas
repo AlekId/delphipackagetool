@@ -720,6 +720,9 @@ var
 _s:string;
 {$endif}
 begin
+  {$ifndef debug}
+     if _level>3 then exit;
+  {$endif}
   if assigned(FWriteMsg) then begin
      FWriteMsg(_level,_msg,_params);
      exit;

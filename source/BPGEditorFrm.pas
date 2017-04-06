@@ -149,7 +149,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmBPGEditor.btnSaveClick(Sender: TObject);
 begin
-  CreateProjectGroupFile(lstBPGFiles, FProjectGroupFilename,DMMain.CurrentDelphiVersion);
+  CreateProjectGroupFile(lstBPGFiles, FProjectGroupFilename,DMMain.DelphiVersion);
   DMMain.SetLastUsedBPGFile(FProjectGroupFilename);
 end;
 
@@ -210,7 +210,7 @@ begin
     end;
   end;
   FProjectGroupFilename:= SaveDialog1.FileName;
-  CreateProjectGroupFile(lstBPGFiles, FProjectGroupFilename,DMMain.CurrentDelphiVersion);
+  CreateProjectGroupFile(lstBPGFiles, FProjectGroupFilename,DMMain.DelphiVersion);
   DMMain.SetLastUsedBPGFile(FProjectGroupFilename);
 end;
 

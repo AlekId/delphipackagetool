@@ -284,7 +284,7 @@ begin
   _FrmProjectOptions := TFrmProjectOptions.create(nil);
   try
     _path := lowercase(ExtractFilePath(lstFiles.Items[lstFiles.ItemIndex]));
-    _path := RelativePath(DMMain.BPGPath,_path,DMMain.CurrentDelphiVersion);
+    _path := RelativePath(DMMain.BPGPath,_path,DMMain.DelphiVersion);
     if trim(_path)='' then exit;
     if not _FrmProjectOptions.AddPath(_path) then exit;
     _FrmProjectOptions.SaveSearchPathData;
@@ -308,7 +308,7 @@ i:integer;
 _item:string;
 begin
   for i:=1 to 10 do begin
-    _item:=DMMain.ApplicationSettings.StringValue(format('Application/SearchPathHistory/Item%d',[i]),100+i);
+    _item:=DMMain.ApplicationSettings.StringValue(format('Application/SearchPathHistory/Item%d',[i]));
     if (_item<>'') and
        (cbxSearchLocation.Items.IndexOf(_item)=-1) then cbxSearchLocation.Items.add(_item);
   end;  

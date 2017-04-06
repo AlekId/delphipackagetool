@@ -34,6 +34,7 @@ function ReadNodesDocument(var xmlfile: IXMLDOMDocument; // the xml DOM document
 implementation
 
 uses
+  SysUtils,
   Dialogs;
 
 
@@ -99,10 +100,14 @@ var
   _xmlDOMfile: IXMLDOMDocument;
 begin
   result := False;
+  if not fileexists(_filename) then begin
+    showmessagefmt('ReadNodeText: File <%s> not found.',[_filename]);
+    exit;
+  end;
   _xmlDOMfile := CoDOMDocument.Create;
   try
     if not _xmlDOMfile.load(_filename) then begin
-      showmessagefmt('file <%s> not found.',[_filename]);
+      showmessagefmt('ReadNodeText: Could not load file <%s>. Supposed to be an XML-File',[_filename]);
       exit;
     end;
     result := ReadNodeDocument(_xmlDOMfile, _statement, value, errormsg);
@@ -126,10 +131,14 @@ var
   _xmlDOMfile: IXMLDOMDocument;
 begin
   result := False;
+  if not fileexists(_filename) then begin
+    showmessagefmt('ReadNodesText: File <%s> not found.',[_filename]);
+    exit;
+  end;
   _xmlDOMfile := CoDOMDocument.Create;
   try
     if not _xmlDOMfile.load(_filename) then begin
-      showmessagefmt('file <%s> not found.',[_filename]);
+      showmessagefmt('ReadNodesText: Could not load file <%s>. Supposed to be an XML-File',[_filename]);
       exit;
     end;
     result := ReadNodesDocument(_xmlDOMfile, _statement, value, errormsg);

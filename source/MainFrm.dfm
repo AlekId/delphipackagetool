@@ -74,12 +74,12 @@ object FrmMain: TFrmMain
       Height = 13
       Caption = 'Delphi Version'
     end
-    object lblPackageDirectory: TLabel
+    object lblOutputDirectory: TLabel
       Left = 240
       Top = 48
-      Width = 207
+      Width = 134
       Height = 13
-      Caption = 'Output Path for Package Directory (bpl files)'
+      Caption = 'Output Path (exe,dll,bpl files)'
     end
     object lblPackageGroupFile: TLabel
       Left = 240
@@ -160,12 +160,12 @@ object FrmMain: TFrmMain
       TabOrder = 4
       OnChange = cbxDelphiVersionsChange
     end
-    object edtPackageBPLDirectory: TEdit
+    object edtOutputDirectory: TEdit
       Left = 240
       Top = 64
       Width = 601
       Height = 21
-      Hint = 'Enter/select the Delphi BPL Path.'
+      Hint = 'Enter/select the output path for exe/dll/bpl files.'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 5
@@ -272,16 +272,6 @@ object FrmMain: TFrmMain
       TabOrder = 13
     end
   end
-  object edtPackageBPGFile: TComboBox
-    Left = 240
-    Top = 16
-    Width = 601
-    Height = 21
-    Style = csDropDownList
-    ItemHeight = 13
-    TabOrder = 2
-    OnChange = edtPackageBPGFileChange
-  end
   object pgcInfo: TPageControl
     Left = 0
     Top = 354
@@ -324,6 +314,13 @@ object FrmMain: TFrmMain
         OnDblClick = mmoTraceDblClick
       end
     end
+  end
+  object edtPackageBPGFile: TEdit
+    Left = 240
+    Top = 16
+    Width = 601
+    Height = 21
+    TabOrder = 2
   end
   object ActionList1: TActionList
     Left = 1136

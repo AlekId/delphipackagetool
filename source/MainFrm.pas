@@ -77,8 +77,8 @@ type
     cbxStopOnFailure: TCheckBox;
     cbxDelphiVersions: TComboBox;
     lblDelphiVersion: TLabel;
-    lblPackageDirectory: TLabel;
-    edtPackageBPLDirectory: TEdit;
+    lblOutputDirectory: TLabel;
+    edtOutputDirectory: TEdit;
     lblPackageGroupFile: TLabel;
     btnLoadFile: TButton;
     Find2: TMenuItem;
@@ -134,7 +134,6 @@ type
     actShowOutputDir: TAction;
     ShowOutputDirectory1: TMenuItem;
     actResetDelphi1: TMenuItem;
-    edtPackageBPGFile: TComboBox;
     ShowProjectGroup1: TMenuItem;
     actAutoBackup: TAction;
     actRecompileAll: TAction;
@@ -161,6 +160,7 @@ type
     actCompileProject: TAction;
     actShowProjectOptions: TAction;
     ProjectOptions2: TMenuItem;
+    edtPackageBPGFile: TEdit;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -202,7 +202,6 @@ type
     procedure cbxStopOnFailureExit(Sender: TObject);
     procedure cbxSilentModeExit(Sender: TObject);
     procedure cbxStartDelphiExit(Sender: TObject);
-    procedure edtPackageBPGFileChange(Sender: TObject);
     procedure ShowProjectGroup1Click(Sender: TObject);
     procedure actRecompileAllExecute(Sender: TObject);
     procedure actRevertChangesExecute(Sender: TObject);
@@ -217,6 +216,9 @@ type
     procedure FormHide(Sender: TObject);
     procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;var Handled: Boolean);
     procedure actShowProjectOptionsExecute(Sender: TObject);
+    function  OpenProjectGroup(_filename:string):boolean;
+    procedure CloseProjectGroup;
+    procedure edtPackageBPLDirectoryExit(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -224,14 +226,13 @@ type
     FStgFilesLastRow: Integer;
     FStgFilesLastCol: Integer;
     procedure OpenBPGFileInEditor;
-    procedure SetCurrentPackage(const _ProjectName:string);
+    procedure SetCurrentProject(const _ProjectName:string);
     procedure PrepareGrid;
     procedure WriteLog(_msg: string;_params:array of const);
     procedure ApplicationSettingstoGUI;  // copy settings into GUI fields.
     procedure GUItoApplicationSettings;  // copy GUI fields into settings.
     procedure ProjectSettingstoGUI;  // copy settings into GUI fields.
     procedure GUItoProjectSettings;  // copy GUI fields into settings.
-    procedure PrepareBPGEditBox(_BPGFilename:string);
     procedure SearchFileSelected;
     procedure SearchFile(_filename:string;_lineno:integer;_compilerOutput:string);
     procedure PrepareRecentFiles;
@@ -255,9 +256,9 @@ type
     procedure ClearLog;
     procedure AttachGUIEvents;
     procedure DetachGUIEvents;
+    procedure UpdateGUI(_NewState: TApplicationState);    
   public
     NVBAppExecExternalCommand: TNVBAppExec;
-    procedure PrepareGUI(_BPGFilename:string);
   end;
 
 var
@@ -296,15 +297,15 @@ resourcestring
 cPleaseSelectProjectGroup='Please select a Package Group File <%s>.';
 cFilter='Delphi Group Files|%s';
 begin
-  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile', 19));
+  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile'));
   OpenDialog1.Title := format(cPleaseSelectProjectGroup,[cProjectGroupExtensions]);
-  OpenDialog1.DefaultExt := DMMain.ApplicationSettings.StringValue('Application/LastUsedExtension',27);
+  OpenDialog1.DefaultExt := DMMain.ApplicationSettings.StringValue('Application/LastUsedExtension');
   OpenDialog1.Filter := format(cFilter,[cProjectGroupFilter]);
   OpenDialog1.FileName := '';
   OpenDialog1.FilterIndex := 3;
   if not OpenDialog1.Execute then exit;
   DMMain.ApplicationSettings.SetString('Application/LastUsedExtension',27,OpenDialog1.DefaultExt);
-  DMMain.LoadBPG(OpenDialog1.FileName);
+  OpenProjectGroup(OpenDialog1.FileName);
 end;
 
 {-----------------------------------------------------------------------------
@@ -329,9 +330,10 @@ begin
   SetPlatformCheckListBox('');
   SetConfigCheckListBox('');
   ApplicationSettingstoGUI;
+  ProjectSettingstoGUI;
   PrepareGrid;
-  PrepareGUI(DMMain.BPGFilename);
   AttachGUIEvents;
+  UpdateGUI(DMMain.ApplicationState) ;
 end;
 
 {-----------------------------------------------------------------------------
@@ -344,7 +346,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
-  FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
+  FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
   NVBAppExecExternalCommand.Wait := True;
@@ -376,7 +378,7 @@ begin
   _FrmOptions := TFrmOptions.create(nil);
   try
     _FrmOptions.showmodal;
-    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
+    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
   finally
     _FrmOptions.free;
   end;
@@ -384,7 +386,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmMain.FormClose
-  Author:    
+  Author:
   Date:      05-Dez-2002
   Arguments: Sender: TObject; var Action: TCloseAction
   Result:    None
@@ -396,9 +398,8 @@ procedure TFrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
 _filename:string;
 begin
-  GUItoProjectSettings;
   GUItoApplicationSettings;
-  DMMain.CloseBPG;
+  CloseProjectGroup;
   DMMain.OnWriteLog:=nil;
   DMMain.OnDelphiVersionChange:=nil;
   if not SysUtils.DirectoryExists(DMMain.BPGPath) then exit;
@@ -533,7 +534,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.cbxDelphiVersionsChange(Sender: TObject);
 begin
-  DMMain.CurrentDelphiVersion:=IDENameToVersionNo(cbxDelphiVersions.Text);
+  DMMain.DelphiVersion:=IDENameToVersionNo(cbxDelphiVersions.Text);
 end;
 
 {-----------------------------------------------------------------------------
@@ -554,10 +555,10 @@ begin
     exit;
   end;
 
-  if isDelphiStarted(DMMain.CurrentDelphiVersion) then begin
-    if Application.MessageBox(pchar(cIDEIsRunning),'Confirma',MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+  if isDelphiStarted(DMMain.DelphiVersion) then begin
+    if Application.MessageBox(pchar(cIDEIsRunning),'Confirmation',MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
   end;
-  StartUpDelphi(DMMain.CurrentDelphiVersion, DMMain.CurrentProjectFilename);
+  StartUpDelphi(DMMain.DelphiVersion, DMMain.CurrentProjectFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -588,7 +589,7 @@ begin
   if DMMain.CurrentProjectFilename = '' then exit;
   _ProjectsToCompile := TStringList.Create;
   try
-    _ProjectsToCompile.Add(RelativeFilename(DMMain.BPGPath, DMMain.CurrentProjectFilename, DMMain.CurrentDelphiVersion));
+    _ProjectsToCompile.Add(RelativeFilename(DMMain.BPGPath, DMMain.CurrentProjectFilename, DMMain.DelphiVersion));
     DMMain.CompileAndInstallProjects(_ProjectsToCompile);
   finally
     _ProjectsToCompile.Free;
@@ -612,9 +613,7 @@ begin
   _ProjectsToCompile := TStringList.Create;
   try
     _SelectedRows:=GetSelectedRows(stgFiles);
-    for i := 0 to length(_SelectedRows)-1 do begin
-      _ProjectsToCompile.Add(stgFiles.cells[1, _SelectedRows[i]]);
-    end;
+    for i := 0 to length(_SelectedRows)-1 do _ProjectsToCompile.Add(stgFiles.cells[1, _SelectedRows[i]]);
     DMMain.CompileAndInstallProjects(_ProjectsToCompile);
   finally
     _ProjectsToCompile.Free;
@@ -637,9 +636,9 @@ var
 begin
   _Dir := '';
   if not SelectDirectory(cSelectBPLFolder, '', _Dir) then exit;
-  edtPackageBPLDirectory.Text := RelativePath(DMMain.BPGPath, _Dir, DMMain.CurrentDelphiVersion);
-  SetDelphiPackageDir(DMMain.CurrentDelphiVersion, _Dir,DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5), DMMain.PlatformToCompile);
-  SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
+  edtOutputDirectory.Text := RelativePath(DMMain.BPGPath, _Dir, DMMain.DelphiVersion);
+  SetDelphiPackageDir(DMMain.DelphiVersion, _Dir,DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5), DMMain.PlatformToCompile);
+  SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -688,7 +687,7 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: SetCurrentPackage
+  Procedure: SetCurrentProject
   Author:    sam
   Date:      15-Jul-2004
   Arguments: _ProjectName: string
@@ -703,12 +702,11 @@ end;
               ..\package1.dpk           --->  c:\package1.dpk
               \components\package1.dpk  --->  c:\projects\components\package1.dpk
 -----------------------------------------------------------------------------}
-procedure TFrmMain.SetCurrentPackage(const _ProjectName: string);
+procedure TFrmMain.SetCurrentProject(const _ProjectName: string);
 begin
   GUItoApplicationSettings;
   GUItoProjectSettings;
-  DMMain.InitCurrentProject(_ProjectName);
-  DMMain.LoadCurrentProject;
+  DMMain.SetCurrentProject(_ProjectName);
 end;
 
 procedure TFrmMain.VersionHistory1Click(Sender: TObject);
@@ -720,7 +718,7 @@ end;
 
 procedure TFrmMain.stgFilesClick(Sender: TObject);
 begin
-  if DMMain.ApplicationState<>tas_working then SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
+  if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
 procedure TFrmMain.stgFilesContextPopup(Sender: TObject;
@@ -735,7 +733,7 @@ begin
     if ARow <= DMMain.BPGProjectList.Count  then begin
       stgFiles.Col := ACol;
       stgFiles.Row := ARow;
-      if DMMain.ApplicationState<>tas_working then SetCurrentPackage(stgFiles.cells[1, stgFiles.Row]);
+      if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
     end;
   end
   else begin
@@ -791,11 +789,11 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.ApplicationSettingstoGUI;
 begin
-  SetDelphiVersionCombobox(DMMain.ApplicationSettings.IntegerValue('Compiler/DelphiVersion', 1));
-  edtPackageBPLDirectory.Text := DMMain.ApplicationSettings.PathValue('Application/PackageOutputPath', 4);
-  cbxSilentMode.checked       := DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5);
-  cbxStopOnFailure.checked    := DMMain.ApplicationSettings.BoolValue('Application/StopOnFailure', 6);
-  cbxStartDelphi.checked      := DMMain.ApplicationSettings.BoolValue('Application/StartDelphiOnClose', 7);
+  SetDelphiVersionCombobox(DMMain.ApplicationSettings.IntegerValue('Compiler/DelphiVersion'));
+  edtOutputDirectory.Text := DMMain.ApplicationSettings.PathValue('Application/PackageOutputPath');
+  cbxSilentMode.checked   := DMMain.ApplicationSettings.BoolValue('Application/SilentMode');
+  cbxStopOnFailure.checked:= DMMain.ApplicationSettings.BoolValue('Application/StopOnFailure');
+  cbxStartDelphi.checked  := DMMain.ApplicationSettings.BoolValue('Application/StartDelphiOnClose');
   PrepareRecentFiles;
 end;
 
@@ -809,9 +807,8 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.GUItoApplicationSettings;
 begin
-  DMMain.ApplicationSettings.SetInteger('Compiler/DelphiVersion', 1, DMMain.CurrentDelphiVersion);
+  DMMain.ApplicationSettings.SetInteger('Compiler/DelphiVersion', 1, DMMain.DelphiVersion);
   DMMain.ApplicationSettings.SetFile('Application/ProjectGroupFile', 3, edtPackageBPGFile.Text);
-  DMMain.ApplicationSettings.SetPath('Application/PackageOutputPath', 4, edtPackageBPLDirectory.Text);
   DMMain.ApplicationSettings.SetBoolean('Application/SilentMode', 5, cbxSilentMode.checked);
   DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', 6, cbxStopOnFailure.checked);
   DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', 7, cbxStartDelphi.checked);
@@ -835,10 +832,10 @@ end;
 procedure TFrmMain.GUItoProjectSettings;
 begin
   if not DMMain.ProjectSettings.isLoaded then exit;
-  DMMain.ProjectSettings.SetInteger('Application/DelphiVersion',5, DMMain.CurrentDelphiVersion);
+  DMMain.ProjectSettings.SetInteger('Application/DelphiVersion',5, DMMain.DelphiVersion);
   DMMain.ProjectSettings.SetString('Application/Platform',14, DMMain.CurrentBPGPlatformList.Commatext);
   DMMain.ProjectSettings.SetString('Application/Config',16, DMMain.CurrentBPGConfigList.Commatext);
-  DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',6,edtPackageBPLDirectory.Text);
+  DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',6,edtOutputDirectory.Text);
   DMMain.ProjectSettings.SetPath('Application/DCPOutputPath',17,edtDcpPath.Text);
   DMMain.ProjectSettings.SetPath('Application/DCUOutputPath',7,edtDcuPath.Text);
 end;
@@ -853,12 +850,13 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.ProjectSettingstoGUI;
 begin
-  if DMMain.ProjectSettings.PathValue('Application/PackageOutputPath', 6) <> '' then edtPackageBPLDirectory.Text:= DMMain.ProjectSettings.PathValue('Application/PackageOutputPath', 6);
-  if DMMain.ProjectSettings.PathValue('Application/DCPOutputPath', 17) <> ''    then edtDcpPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCPOutputPath', 17);
-  if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath', 7) <> ''     then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath', 7);
-  SetDelphiVersionCombobox(DMMain.ProjectSettings.IntegerValue('Application/DelphiVersion',5));
-  SetPlatformCheckListBox(DMMain.ProjectSettings.StringValue('Application/Platform',14));
-  SetConfigCheckListBox(DMMain.ProjectSettings.StringValue('Application/Config',16));
+  edtPackageBPGFile.Text:=DMMain.BPGFilename;
+  if DMMain.ProjectSettings.PathValue('Application/PackageOutputPath') <> '' then edtOutputDirectory.Text:= DMMain.ProjectSettings.PathValue('Application/PackageOutputPath');
+  if DMMain.ProjectSettings.PathValue('Application/DCPOutputPath') <> '' then edtDcpPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCPOutputPath');
+  if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath') <> '' then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath');
+  SetDelphiVersionCombobox(DMMain.ProjectSettings.IntegerValue('Application/DelphiVersion'));
+  SetPlatformCheckListBox(DMMain.ProjectSettings.StringValue('Application/Platform'));
+  SetConfigCheckListBox(DMMain.ProjectSettings.StringValue('Application/Config'));
 end;
 
 {-----------------------------------------------------------------------------
@@ -888,9 +886,9 @@ _bpgFilename:string;
 begin
   GUItoProjectSettings;
   _bpgFilename:=DMMain.BPGFilename;
-  DMMain.CloseBPG;
+  CloseProjectGroup;
   _bpgFilename:=ShowBPGEditor(_bpgFilename);
-  DMMain.LoadBPG(_bpgFilename);
+  OpenProjectGroup(_bpgFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -908,9 +906,9 @@ var
 _bpgFilename:string;
 begin
   SaveDialog1.Title:=cPleaseDefineFilename;
-  SaveDialog1.InitialDir  := DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile', 3);
+  SaveDialog1.InitialDir  := DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile');
   SaveDialog1.FileName    := 'NewPackageGroup';
-  case DMMain.CurrentDelphiVersion of
+  case DMMain.DelphiVersion of
     1,2,3,4,5,6,7:begin
              SaveDialog1.Filter      := '*.bpg|*.bpg';
              SaveDialog1.DefaultExt  := '.bpg';
@@ -927,7 +925,7 @@ begin
   SaveDialog1.FilterIndex:=0;
   if not SaveDialog1.Execute then exit;
   _bpgFilename:=ShowBPGEditor(SaveDialog1.FileName);
-  DMMain.LoadBPG(_bpgFilename);
+  OpenProjectGroup(_bpgFilename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -943,7 +941,7 @@ var
 _filename:string;
 begin
   _filename:='';
-  case DMMain.CurrentDelphiVersion of
+  case DMMain.DelphiVersion of
     5,6,7,8:   _filename:=changeFileExt(DMMain.CurrentProjectFilename,'.cfg');
     9,10,11,12:_filename:=changeFileExt(DMMain.CurrentProjectFilename,'.bdsproj');
     else       _filename:=changeFileExt(DMMain.CurrentProjectFilename,'.dproj');
@@ -980,8 +978,8 @@ begin
   _FrmProjectOptions := TFrmProjectOptions.create(nil);
   try
     _FrmProjectOptions.showmodal;
-    gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch',4);
-    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace',20);
+    gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch');
+    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
   finally
     _FrmProjectOptions.free;
   end;
@@ -999,10 +997,10 @@ procedure TFrmMain.edtPathExit(Sender: TObject);
 begin
   GUItoApplicationSettings;
   GUItoProjectSettings;
-  if (Sender as TEdit) = edtPackageBPLDirectory then
-    SetDelphiPackageDir(DMMain.CurrentDelphiVersion, (Sender as TEdit).Text, DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5), DMMain.PlatformToCompile);
+//  if (Sender as TEdit) = edtPackageBPLDirectory then
+//    SetDelphiPackageDir(DMMain.DelphiVersion, (Sender as TEdit).Text, DMMain.ApplicationSettings.BoolValue('Application/SilentMode'), DMMain.PlatformToCompile);
   DMMain.InitProjectDataForHint;
-  SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
+  SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1020,6 +1018,7 @@ cReadOnlyFile='The file <%s> is marked as read-only. Do you want to change it an
 cProblemToRemoveProject='Problem to remove the Project <%s>. See trace file for more info.';
 var
 _currentRow:integer;
+_bpgFilename:string;
 begin
   if not fileexists(DMMain.BPGFilename) then exit;
   if Application.MessageBox(pchar(format(cDoYouReallyWanttoRemove,[DMMain.CurrentProjectFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
@@ -1028,8 +1027,9 @@ begin
     if not RemoveReadOnlyFlag(DMMain.BPGFilename,true) then exit;
   end;
   _currentRow:=stgFiles.row;
+  _bpgFilename:=DMMain.BPGFilename;
   if DMMain.RemoveProjectFromProjectGroup then begin
-    DMMain.LoadBPG(DMMain.BPGFilename);  // reload the file.
+    OpenProjectGroup(_bpgFilename); // reload the file.
     if _currentRow<stgFiles.RowCount then stgFiles.Row:=_currentRow
                                      else stgFiles.Row:=stgFiles.RowCount-1;
   end else Application.MessageBox(pchar(format(cProblemToRemoveProject,[DMMain.CurrentProjectFilename])),pchar(cError),MB_ICONERROR or MB_OK);
@@ -1174,7 +1174,7 @@ begin
     _pos:=Pos('&',_filename);
     if _pos<>0 then Delete(_filename,_pos,1);
   end;
-  DMMain.LoadBPG(_filename);
+  OpenProjectGroup(_filename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1201,14 +1201,13 @@ begin
   edtPackageBPGFile.Clear;
 // reload the new items.
   for i:=1 to 10 do begin // load recent used file history
-    _filename:=DMMain.ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i]),50+i);
+    _filename:=DMMain.ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i]));
     if _filename='' then continue;
     if not FileExists(_filename) then continue;
     _newMenuitem:=TMenuItem.Create(nil);
     _newMenuitem.Caption:=_filename;
     _newMenuitem.OnClick:=RecentFilesClick;
     mitOpenFile.Add(_newMenuitem);
-    edtPackageBPGFile.Items.Add(_filename);
   end;
 end;
 
@@ -1222,9 +1221,9 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.mitRecentFilesClick(Sender: TObject);
 begin
-  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile',19));
+  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile'));
   if not OpenDialog1.Execute then exit;
-  DMMain.LoadBPG(OpenDialog1.filename);
+  OpenProjectGroup(OpenDialog1.filename);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1244,7 +1243,7 @@ cCouldNotCleanupRegistry='Could not delete some keys from the registery. You mig
 var
 _NoOfDeletedKeys:integer;
 begin
-  if not VerifyRegistry(DMMain.CurrentDelphiVersion,_NoOfDeletedKeys,DMMain.PlatformToCompile, DMMain.ConfigToCompile) then begin
+  if not VerifyRegistry(DMMain.DelphiVersion,_NoOfDeletedKeys,DMMain.PlatformToCompile, DMMain.ConfigToCompile) then begin
     Application.MessageBox(pchar(cCouldNotCleanupRegistry),pchar(cError),MB_ICONINFORMATION);
     exit;
   end;
@@ -1270,8 +1269,8 @@ var
 begin
   _Dir := '';
   if not SelectDirectory(cSelectDCPPath, '', _Dir) then Exit;
-  edtDcpPath.Text := RelativePath(DMMain.BPGPath, _Dir,DMMain.CurrentDelphiVersion);
-  SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
+  edtDcpPath.Text := RelativePath(DMMain.BPGPath, _Dir,DMMain.DelphiVersion);
+  SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1290,8 +1289,8 @@ var
 begin
   _Dir := '';
   if not SelectDirectory(cSelectDCUPath, '', _Dir) then Exit;
-  edtDcuPath.Text := RelativePath(DMMain.BPGPath, _Dir,DMMain.CurrentDelphiVersion);
-  SetCurrentPackage(stgFiles.cells[1, stgFiles.row]);
+  edtDcuPath.Text := RelativePath(DMMain.BPGPath, _Dir,DMMain.DelphiVersion);
+  SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1332,7 +1331,7 @@ end;
 
 {-----------------------------------------------------------------------------
   Procedure: actBackupAllExecute
-  Author:    
+  Author:
   Date:      16-Okt-2007
   Arguments: Sender: TObject
   Result:    None
@@ -1349,7 +1348,7 @@ begin
   _filename:=changefileExt(ExtractFilenameOnly(DMMain.BPGFilename)+'_'+BuildTimeStamp(now),'.zip');
   SaveDialog1.Title:=cChooseZipFilename;
   _path:=extractfilepath(DMMain.BPGFilename)+'backup\';
-  if not CreateDirectory(_path) then _path:=DMMain.ProjectSettings.PathValue('Application/LastUsedBackupPath',11);
+  if not CreateDirectory(_path) then _path:=DMMain.ProjectSettings.PathValue('Application/LastUsedBackupPath');
   SaveDialog1.InitialDir:=_path;
   SaveDialog1.DefaultExt := '.zip';
   SaveDialog1.Filter := 'Zip-File(.zip)|*.zip';
@@ -1386,6 +1385,14 @@ begin
   WriteLog(_msg,[]);
 end;
 
+{-----------------------------------------------------------------------------
+  Procedure: DoDeleteLog
+  Author:
+  Date:      
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.DoDeleteLog(Sender: TObject);
 begin
   mmoLogFile.clear;
@@ -1402,11 +1409,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoDelphiVersionChangeEvent(Sender: TObject;const _DelphiVersion: integer);
 begin
-  SetDelphiVersionCombobox(_DelphiVersion);
-  if DMMain.ApplicationState=tas_init then edtPackageBPLDirectory.Text:=GetDelphiPackageDir(_DelphiVersion, DMMain.PlatformToCompile);
-  actShowDOFFile.Visible:=(_DelphiVersion<8);
-  gbxPlatform.Visible:=(_DelphiVersion>=15);
-  gbxConfig.Visible:=(_DelphiVersion>=12);
+  UpdateGUI(DMMain.ApplicationState);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1419,9 +1422,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoProjectGroupClose(Sender: TObject);
 begin
-  edtDcpPath.Text := '';
-  edtDcuPath.Text := '';
-  PrepareGUI(DMMain.BPGFilename);
+  UpdateGUI(DMMain.ApplicationState);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1435,7 +1436,6 @@ end;
 procedure TFrmMain.DoProjectGroupOpen(Sender: TObject);
 begin
   ClearLog;
-  PrepareGUI(DMMain.BPGFilename);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1448,21 +1448,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoApplicationStateChange(Sender: TObject;const _OldState, _NewState: TApplicationState);
 begin
-  case _NewState of
-    tas_init: begin
-      stgFiles.Enabled:=false;
-      actCompileProject.Enabled := False;
-    end;
-    tas_working: begin
-      stgFiles.Enabled:=false;
-      pnlTop.Enabled:=false;
-    end;
-    tas_open: begin
-      stgFiles.Enabled:=true;
-      actCompileProject.Enabled := True;
-      pnlTop.Enabled:=true;
-    end;
-  end;
+  UpdateGUI(_NewState);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1475,8 +1461,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FillProjectGrid;
 var
-  i: Integer;
+i: Integer;
+_CurrentRow:integer;
 begin
+  _CurrentRow:=stgFiles.row; //
   stgFiles.RowCount := 2;
   stgFiles.FixedRows := 1;
   if DMMain.BPGProjectList.Count = 0 then begin
@@ -1494,6 +1482,7 @@ begin
     end;
     stgFiles.RowCount := DMMain.BPGProjectList.Count+1;
   end;
+  if (_CurrentRow>0) and (_CurrentRow<stgFiles.RowCount) then stgFiles.row:=_CurrentRow;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1561,9 +1550,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.StgFilesShowCellHint(X, Y: Integer);
 var
-  ACol,
-  ARow,
-  i: Integer;
+ACol,
+ARow,
+i: integer;
+_hint:string;
 begin
   // set ShowHint
   stgFiles.ShowHint := True;
@@ -1574,13 +1564,13 @@ begin
     if ARow <= DMMain.BPGProjectList.Count  then begin
       case ACol of
         1: begin
-          stgFiles.Hint := 'Output Filename    := '+extractfilename(TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputFilename)+#10#13+
-                           'Project Output Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath+#10#13+
-                           'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath+#10#13+
-                           'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath+#10#13+
-                           'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath+#10#13+
-                           'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectSearchPath+#10#13+
-                           'DPT Search Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath;
+          _hint:= 'Output Filename    := '+extractfilename(TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputFilename)+#10#13+'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath;
+          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath<>''        then _hint:=_hint+#10#13+'Project Output Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath;
+          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath<>''     then _hint:=_hint+#10#13+'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath;
+          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath<>''     then _hint:=_hint+#10#13+'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath;
+          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectSearchPath<>'' then _hint:=_hint+#10#13+'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectSearchPath;
+          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath<>''     then _hint:=_hint+#10#13+'DPT Search Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath;
+          stgFiles.Hint:=_hint;
         end;
         2: begin
           stgFiles.Hint := '';
@@ -1769,9 +1759,7 @@ var
 begin
   DMMain.CurrentBPGConfigList.Clear;
   for _i := 0 to clbConfig.Count-1 do begin
-    if clbConfig.ItemEnabled[_i] and clbConfig.Checked[_i] then begin
-      DMMain.CurrentBPGConfigList.Add(clbConfig.Items[_i]);
-    end;
+    if clbConfig.ItemEnabled[_i] and clbConfig.Checked[_i] then DMMain.CurrentBPGConfigList.Add(clbConfig.Items[_i]);
   end;
   GUItoProjectSettings;
 end;
@@ -1782,9 +1770,7 @@ var
 begin
   DMMain.CurrentBPGPlatformList.Clear;
   for _i := 0 to clbPlatform.Count-1 do begin
-    if clbPlatform.ItemEnabled[_i] and clbPlatform.Checked[_i] then begin
-      DMMain.CurrentBPGPlatformList.Add(clbPlatform.Items[_i]);
-    end;
+    if clbPlatform.ItemEnabled[_i] and clbPlatform.Checked[_i] then DMMain.CurrentBPGPlatformList.Add(clbPlatform.Items[_i]);
   end;
   GUItoProjectSettings;
 end;
@@ -1799,10 +1785,6 @@ begin
   DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', 7, cbxStartDelphi.checked);
 end;
 
-procedure TFrmMain.edtPackageBPGFileChange(Sender: TObject);
-begin
-  DMMain.LoadBPG(edtPackageBPGFile.Text);
-end;
 
 procedure TFrmMain.mmoTraceDblClick(Sender: TObject);
 begin
@@ -1836,39 +1818,59 @@ begin
   DetachGUIEvents;
 end;
 
-procedure TFrmMain.PrepareBPGEditBox(_BPGFilename: string);
-var
-_index:integer;
-begin
-  _BPGFilename:=lowercase(_BPGFilename);
-  _index:=edtPackageBPGFile.Items.IndexOf(_BPGFilename);  // check if already in the list.
-  if _index=-1 then begin                              // if not then add it.
-    edtPackageBPGFile.Items.add(_BPGFilename);
-    _index:=edtPackageBPGFile.Items.IndexOf(_BPGFilename);
-  end;  
-  edtPackageBPGFile.ItemIndex:=_index;
-end;
-
 {*-----------------------------------------------------------------------------
-  Procedure: PrepareGUI
+  Procedure: UpdateGUI
   Author:    muem/sam
   Date:      17-Feb-2013
-  Arguments: _BPGFilename: string
+  Arguments: 
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure TFrmMain.PrepareGUI(_BPGFilename: string);
+procedure TFrmMain.UpdateGUI(_NewState: TApplicationState);
 begin
-  PrepareBPGEditBox(_BPGFilename);
-  actShowBPGEditor.Enabled:=(_BPGFilename<>'');
-  actShowProjectOptions.Enabled:=(_BPGFilename<>'');
-  actCloseProject.Enabled:=(_BPGFilename<>'');
-  ShowProjectGroup1.Enabled:=(_BPGFilename<>'');
-  actRecompileAll.Enabled:=(_BPGFilename<>'');
-  ProjectSettingstoGUI;
+  actShowDOFFile.Visible:=(DMMain.DelphiVersion<8);
+  gbxPlatform.Visible:=(DMMain.DelphiVersion>=15);
+  gbxConfig.Visible:=(DMMain.DelphiVersion>=12);
+  actShowBPGEditor.Enabled:=(DMMain.BPGFilename<>'');
+  actShowProjectOptions.Enabled:=(DMMain.BPGFilename<>'');
+  actCloseProject.Enabled:=(DMMain.BPGFilename<>'');
+  ShowProjectGroup1.Enabled:=(DMMain.BPGFilename<>'');
+  actRecompileAll.Enabled:=(DMMain.BPGFilename<>'');
+//  edtPackageBPLDirectory.Text:=GetDelphiPackageDir(DMMain.DelphiVersion, DMMain.PlatformToCompile);
   FillProjectGrid;
-  DoDelphiVersionChangeEvent(nil,DMMain.CurrentDelphiVersion);
-  DoApplicationStateChange(nil,DMMain.ApplicationState,DMMain.ApplicationState);
+  case _NewState of
+    tas_init: begin
+      stgFiles.Enabled:=false;
+      actCompileProject.Enabled := False;
+    end;
+    tas_working: begin
+      stgFiles.Enabled:=false;
+      pnlTop.Enabled:=false;
+    end;
+    tas_open: begin
+      stgFiles.Enabled:=true;
+      actCompileProject.Enabled := True;
+      pnlTop.Enabled:=true;
+    end;
+  end;
+end;
+
+procedure TFrmMain.CloseProjectGroup;
+begin
+  GUItoProjectSettings;
+  DMMain.CloseBPG;
+end;
+
+function TFrmMain.OpenProjectGroup(_filename:string):boolean;
+begin
+  result:=false;
+  if not DMMain.OpenBPG(_filename) then exit;
+  ProjectSettingsToGUI;
+end;
+
+procedure TFrmMain.edtPackageBPLDirectoryExit(Sender: TObject);
+begin
+  GUItoProjectSettings;
 end;
 
 end.
