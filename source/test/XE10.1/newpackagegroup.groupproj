@@ -1,0 +1,43 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{a6096eb3-3bd6-4c81-8763-3f537bbfd39c}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Projects Include="VCL\project1\Project1.dproj" />
+    <Projects Include="VCL\project2\Project2.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+<BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="Project1">
+    <MSBuild Projects="VCL\project1\Project1.dproj" Targets="" />
+  </Target>
+  <Target Name="Project1:Clean">
+    <MSBuild Projects="VCL\project1\Project1.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="Project1:Make">
+    <MSBuild Projects="VCL\project1\Project1.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Project2">
+    <MSBuild Projects="VCL\project2\Project2.dproj" Targets="" />
+  </Target>
+  <Target Name="Project2:Clean">
+    <MSBuild Projects="VCL\project2\Project2.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="Project2:Make">
+    <MSBuild Projects="VCL\project2\Project2.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="Project1;Project2;" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="Project1:Clean;Project2:Clean;" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="Project1:Make;Project2:Make;" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>
