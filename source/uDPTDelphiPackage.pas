@@ -22,7 +22,7 @@ uses
 
 function  GetDelphiPackageDir(const _DelphiVersion:integer;const _PlatformToCompile: string):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean;const _PlatformToCompile: string):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
-function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; var msg: string): Boolean; // add package into the regitstry.
+function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; out msg: string): Boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName, _PackageDirectory, _PackageLibSuffix: string; _DelphiVersion: Integer): Boolean;  // remove package from regeistry.
 function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType; var Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
 function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
@@ -30,7 +30,7 @@ procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  
 procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
 function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
 function  WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;Var Output:String): LongWord;
-function  isDelphiStarted(const _DelphiVersion:Integer): Boolean;
+function  IsDelphiStarted(const _DelphiVersion:Integer): Boolean;
 procedure ShutDownDelphi(const _DelphiVersion:Integer;_Blocking : Boolean);
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
 function  ReadProjectFilenameFromDProj(const _Filename:String):string; // the real project filename is now hidden in the dproj-file.
@@ -2153,13 +2153,13 @@ end;
   Description: read dproj settings from a file of version D2005-D2007.
 -----------------------------------------------------------------------------}
 function ReadDPROJSettingsD2005_D2007(const _dprojFilename: string;
-                                      var _Config: string;
-                                      var _Conditions: string;
-                                      var _SearchPath: string;
-                                      var _ProjectOutputPath: string;
-                                      var _BPLOutputPath: string;
-                                      var _DCUOutputPath: string;
-                                      var _DCPOutputPath: string):boolean; // get informations from the cfg-file.
+                                      out Config: string;
+                                      out Conditions: string;
+                                      out SearchPath: string;
+                                      out ProjectOutputPath: string;
+                                      out BPLOutputPath: string;
+                                      out DCUOutputPath: string;
+                                      out DCPOutputPath: string):boolean; // get informations from the cfg-file.
 var
   _msg:string;
   _configuration:string;
@@ -2167,13 +2167,13 @@ var
   _ProjectVersion:string;
 begin
   Result:=false;
-  _Config := '';
-  _Conditions := '';
-  _SearchPath := '';
-  _ProjectOutputPath := '';
-  _BPLOutputPath := '';
-  _DCUOutputPath := '';
-  _DCPOutputPath := '';
+  Config := '';
+  Conditions := '';
+  SearchPath := '';
+  ProjectOutputPath := '';
+  BPLOutputPath := '';
+  DCUOutputPath := '';
+  DCPOutputPath := '';
   _ProjectVersion := '';
   if not fileExists(_dprojFilename) then begin
     trace(5,'ReadDPROJSettingsD2005_D2007: Could not find the file <%s>.',[_dprojFilename]);
@@ -2188,39 +2188,39 @@ begin
       trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not read condition. <%s>.',[_msg]);
     end;
     trace(5,'ReadDPROJSettingsD2005_D2007: Configuration = %s.',[_configuration]);
-    _Config := _configuration;
+    Config := _configuration;
 
     if not ReadNodeText(_dprojFilename,'//PropertyGroup/Platform[@Condition="''$(Platform)'' == ''''"]',_platform,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not read platform. <%s>.',[_msg]);
     trace(5,'ReadDPROJSettingsD2005_D2007: Platform = %s.',[_platform]);
     if _configuration='' then begin
        _configuration:='Base';
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_UnitSearchPath',_SearchPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find SearchPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: SearchPath is <%s>.',[_SearchPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_DcuOutput',_DCUOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCUOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: DCU Output Path is <%s>.',[_DCUOutputPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_DcpOutput',_DCPOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCPOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: DCP Output Path is <%s>.',[_DCPOutputPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_BplOutput',_BPLOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find BPLOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: BPL Output Path is <%s>.',[_BPLOutputPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_Define',_Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find Conditions. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: Conditions are <%s>.',[_Conditions]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_ExeOutput',_ProjectOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find ProjectOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: Project Output Path is <%s>.',[_ProjectOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_UnitSearchPath',SearchPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find SearchPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: SearchPath is <%s>.',[SearchPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_DcuOutput',DCUOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCUOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: DCU Output Path is <%s>.',[DCUOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_DcpOutput',DCPOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCPOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: DCP Output Path is <%s>.',[DCPOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_BplOutput',BPLOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find BPLOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: BPL Output Path is <%s>.',[BPLOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_Define',Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find Conditions. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Conditions are <%s>.',[Conditions]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$('+_configuration+')''!=''''"]/DCC_ExeOutput',ProjectOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find ProjectOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Project Output Path is <%s>.',[ProjectOutputPath]);
     end
     else begin
       if _platform<>'' then _configuration:=_configuration+'|'+_platform;
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_UnitSearchPath',_SearchPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find SearchPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: SearchPath is <%s>.',[_SearchPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_DcuOutput',_DCUOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCUOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: DCU Output Path is <%s>.',[_DCUOutputPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_DcpOutput',_DCPOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCPOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: DCP Output Path is <%s>.',[_DCPOutputPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_BplOutput',_BPLOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find BPLOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: BPL Output Path is <%s>.',[_BPLOutputPath]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_Define',_Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find Conditions. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: Conditions are <%s>.',[_Conditions]);
-      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_ExeOutput',_ProjectOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find ProjectOutputPath. <%s>.',[_msg]);
-      trace(5,'ReadDPROJSettingsD2005_D2007: Project Output Path is <%s>.',[_ProjectOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_UnitSearchPath',SearchPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find SearchPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: SearchPath is <%s>.',[SearchPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_DcuOutput',DCUOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCUOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: DCU Output Path is <%s>.',[DCUOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_DcpOutput',DCPOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find DCPOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: DCP Output Path is <%s>.',[DCPOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_BplOutput',BPLOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find BPLOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: BPL Output Path is <%s>.',[BPLOutputPath]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_Define',Conditions,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find Conditions. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Conditions are <%s>.',[Conditions]);
+      if not ReadNodeText(_dprojFilename,'//PropertyGroup[@Condition="''$(Configuration)|$(Platform)'' == '''+_configuration+'''"]/DCC_ExeOutput',ProjectOutputPath,_msg) then trace(3,'Warning in ReadDPROJSettingsD2005_D2007: Could not find ProjectOutputPath. <%s>.',[_msg]);
+      trace(5,'ReadDPROJSettingsD2005_D2007: Project Output Path is <%s>.',[ProjectOutputPath]);
     end;
   end;
   result:=true;
@@ -2686,10 +2686,7 @@ begin
     _Configs.Add(sDebug);
     _Configs.Add(sRelease);
   end;
-  if _fileext='.dproj' then begin
-    // get supported configs
-    Result := ReadNodesText(_filename,'//ItemGroup/BuildConfiguration[@Include != "Base"]/@Include',_Configs, _msg);
-  end;
+  if _fileext='.dproj' then result := ReadNodesText(_filename,'//ItemGroup/BuildConfiguration[@Include != "Base"]/@Include',_Configs, _msg);   // get supported configs
   trace(5,'ReadSupportedConfigsOfProject: configs <%s>.',[_Configs.CommaText]);
 end;
 
@@ -2714,10 +2711,7 @@ begin
      (_fileext='.dpr') then begin
     _Platforms.Add(sWin32);
   end;
-  if _fileext='.dproj' then begin
-    // get supported platforms
-    Result := ReadNodesText(_filename,'//Platforms/Platform[. = "True"]/@value',_Platforms, _msg);
-  end;
+  if _fileext='.dproj' then result := ReadNodesText(_filename,'//Platforms/Platform[. = "True"]/@value',_Platforms, _msg);  // get supported platforms
   trace(5,'ReadSupportedPlatformsOfProject: platforms <%s>.',[_Platforms.CommaText]);
 end;
 
@@ -3342,7 +3336,7 @@ end;
                directory <_PackageDirectory> for delphi version <_DelphiVersion>.
                The parameter <_PackageDirectory> points to the location of the <.bpl> file.
 -----------------------------------------------------------------------------}
-function InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; var msg: string): Boolean;
+function InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; out msg: string): Boolean;
 var
   _PackageKey: string;
   _RegFile: TStringList;
@@ -3496,7 +3490,7 @@ end;
   Description: get the package description text out of the dpk-file.
                For delphi 1..7
 -----------------------------------------------------------------------------}
-function ReadPackageInfoDelphi(_PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the description and lib suffix
+function ReadPackageInfoDelphi(_PackageName:string;out Description:string;out LibSuffix:string):boolean; // get the description and lib suffix
 var
   _DPKFile:TStrings;
   _Pos:Integer;

@@ -13,14 +13,13 @@ uses
   Windows,
   SysUtils,
   Classes,
-  Graphics,
   Controls,
   Forms,
-  StdCtrls,
   CheckLst,
   ExtCtrls,
   Buttons,
-  Menus;
+  Menus,
+  StdCtrls;
 
 type
   TFrmSelectFiles = class(TForm)

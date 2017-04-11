@@ -40,7 +40,7 @@ begin
     _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning');
     if _showagain then begin
       ShowStartUpDlg(_showagain);
-      DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning', 10,_showagain);
+      DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning',_showagain);
     end;
   end;
 // load the bpg file

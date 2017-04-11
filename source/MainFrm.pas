@@ -90,8 +90,8 @@ type
     Splitter1: TSplitter;
     actCompileSelectedProjects: TAction;
     actCompileSelectedProjects1: TMenuItem;
-    btnSetPackagePath: TButton;
-    actSelectPackageBPLPath: TAction;
+    btnSelectOutputDir: TButton;
+    actSelectOutputDir: TAction;
     actApplicationUpdate: TAction;
     WebUpdate1: TMenuItem;
     VersionHistory1: TMenuItem;
@@ -121,9 +121,9 @@ type
     actCleanUpDelphi1: TMenuItem;
     actVerifyRegistry: TAction;
     actVerifyRegistry1: TMenuItem;
-    edtDCPPath: TEdit;
-    btnSelectDcpPath: TButton;
-    lblDcpPath: TLabel;
+    edtPackageOutputDir: TEdit;
+    btnSelectPackageOutputDir: TButton;
+    lblPackageOutputDir: TLabel;
     actSelectDcuPath: TAction;
     actShowDOFFile: TAction;
     actShowDOFFile1: TMenuItem;
@@ -156,7 +156,7 @@ type
     edtDCUPath: TEdit;
     btnSelectDcuPath: TButton;
     lblDcuPath: TLabel;
-    actSelectDcpPath: TAction;
+    actSelectPackageOutputDir: TAction;
     actCompileProject: TAction;
     actShowProjectOptions: TAction;
     ProjectOptions2: TMenuItem;
@@ -176,7 +176,7 @@ type
     procedure actOpenProjectWithDelphiExecute(Sender: TObject);
     procedure actShowFileExecute(Sender: TObject);
     procedure actCompileSelectedProjectsExecute(Sender: TObject);
-    procedure actSelectPackageBPLPathExecute(Sender: TObject);
+    procedure actSelectOutputDirExecute(Sender: TObject);
     procedure actApplicationUpdateExecute(Sender: TObject);
     procedure VersionHistory1Click(Sender: TObject);
     procedure stgFilesClick(Sender: TObject);
@@ -211,7 +211,7 @@ type
     procedure clbPlatformClickCheck(Sender: TObject);
     procedure clbConfigClickCheck(Sender: TObject);
     procedure stgFilesMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure actSelectDcpPathExecute(Sender: TObject);
+    procedure actSelectPackageOutputDirExecute(Sender: TObject);
     procedure actCompileProjectExecute(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;var Handled: Boolean);
@@ -304,7 +304,7 @@ begin
   OpenDialog1.FileName := '';
   OpenDialog1.FilterIndex := 3;
   if not OpenDialog1.Execute then exit;
-  DMMain.ApplicationSettings.SetString('Application/LastUsedExtension',27,OpenDialog1.DefaultExt);
+  DMMain.ApplicationSettings.SetString('Application/LastUsedExtension',OpenDialog1.DefaultExt);
   OpenProjectGroup(OpenDialog1.FileName);
 end;
 
@@ -321,10 +321,10 @@ end;
 procedure TFrmMain.FormShow(Sender: TObject);
 begin
   caption:='Package Group Rebuilder/Installer '+Getversion;
-  left                              :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Left',23);
-  top                               :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Top',24);
-  width                             :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Width',25);
-  height                            :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Height',26);
+  left                              :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Left');
+  top                               :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Top');
+  width                             :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Width');
+  height                            :=DMMain.ApplicationSettings.IntegerValue('Application/Position/Height');
   pgcInfo.ActivePage:=tabInfo;
   cbxDelphiVersions.Items.Assign(DMMain.InstalledDelphiVersionList);
   SetPlatformCheckListBox('');
@@ -621,23 +621,23 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: actSelectPackageBPLPathExecute
+  Procedure: actSelectOutputPathExecute
   Author:    sam
   Date:      03-Jun-2004
   Arguments: Sender: TObject
   Result:    None
-  Description: set the delphi bpl-path. Default is Projects\BPL
+  Description: set the delphi output path for exe,dll files.
 -----------------------------------------------------------------------------}
-procedure TFrmMain.actSelectPackageBPLPathExecute(Sender: TObject);
+procedure TFrmMain.actSelectOutputDirExecute(Sender: TObject);
 resourcestring
-  cSelectBPLFolder='Select BPL-Directory';
+cSelectOutputFolder='Select Output-Directory for .exe/.dll files.';
 var
-  _Dir: string;
+_Dir: string;
 begin
   _Dir := '';
-  if not SelectDirectory(cSelectBPLFolder, '', _Dir) then exit;
+  if not SelectDirectory(cSelectOutputFolder, '', _Dir) then exit;
   edtOutputDirectory.Text := RelativePath(DMMain.BPGPath, _Dir, DMMain.DelphiVersion);
-  SetDelphiPackageDir(DMMain.DelphiVersion, _Dir,DMMain.ApplicationSettings.BoolValue('Application/SilentMode', 5), DMMain.PlatformToCompile);
+  SetDelphiPackageDir(DMMain.DelphiVersion, _Dir,DMMain.ApplicationSettings.BoolValue('Application/SilentMode'), DMMain.PlatformToCompile);
   SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
@@ -790,7 +790,7 @@ end;
 procedure TFrmMain.ApplicationSettingstoGUI;
 begin
   SetDelphiVersionCombobox(DMMain.ApplicationSettings.IntegerValue('Compiler/DelphiVersion'));
-  edtOutputDirectory.Text := DMMain.ApplicationSettings.PathValue('Application/PackageOutputPath');
+  edtOutputDirectory.Text := DMMain.ApplicationSettings.PathValue('Application/OutputPath');
   cbxSilentMode.checked   := DMMain.ApplicationSettings.BoolValue('Application/SilentMode');
   cbxStopOnFailure.checked:= DMMain.ApplicationSettings.BoolValue('Application/StopOnFailure');
   cbxStartDelphi.checked  := DMMain.ApplicationSettings.BoolValue('Application/StartDelphiOnClose');
@@ -807,18 +807,18 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.GUItoApplicationSettings;
 begin
-  DMMain.ApplicationSettings.SetInteger('Compiler/DelphiVersion', 1, DMMain.DelphiVersion);
-  DMMain.ApplicationSettings.SetFile('Application/ProjectGroupFile', 3, edtPackageBPGFile.Text);
-  DMMain.ApplicationSettings.SetBoolean('Application/SilentMode', 5, cbxSilentMode.checked);
-  DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', 6, cbxStopOnFailure.checked);
-  DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', 7, cbxStartDelphi.checked);
+  DMMain.ApplicationSettings.SetInteger('Compiler/DelphiVersion', DMMain.DelphiVersion);
+  DMMain.ApplicationSettings.SetFile('Application/ProjectGroupFile', edtPackageBPGFile.Text);
+  DMMain.ApplicationSettings.SetBoolean('Application/SilentMode', cbxSilentMode.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', cbxStopOnFailure.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', cbxStartDelphi.checked);
 {$ifdef withTrace}
   DMMain.ApplicationSettings.SetInteger('Application/Tracelevel',12,DMMain.NVBTraceFile.Level);
 {$endif}
-  DMMain.ApplicationSettings.SetInteger('Application/Position/Left',23,left);
-  DMMain.ApplicationSettings.SetInteger('Application/Position/Top',24,top);
-  DMMain.ApplicationSettings.SetInteger('Application/Position/Width',25,width);
-  DMMain.ApplicationSettings.SetInteger('Application/Position/Height',26,height);
+  DMMain.ApplicationSettings.SetInteger('Application/Position/Left',left);
+  DMMain.ApplicationSettings.SetInteger('Application/Position/Top',top);
+  DMMain.ApplicationSettings.SetInteger('Application/Position/Width',width);
+  DMMain.ApplicationSettings.SetInteger('Application/Position/Height',height);
 end;
 
 {-----------------------------------------------------------------------------
@@ -832,12 +832,12 @@ end;
 procedure TFrmMain.GUItoProjectSettings;
 begin
   if not DMMain.ProjectSettings.isLoaded then exit;
-  DMMain.ProjectSettings.SetInteger('Application/DelphiVersion',5, DMMain.DelphiVersion);
-  DMMain.ProjectSettings.SetString('Application/Platform',14, DMMain.CurrentBPGPlatformList.Commatext);
-  DMMain.ProjectSettings.SetString('Application/Config',16, DMMain.CurrentBPGConfigList.Commatext);
-  DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',6,edtOutputDirectory.Text);
-  DMMain.ProjectSettings.SetPath('Application/DCPOutputPath',17,edtDcpPath.Text);
-  DMMain.ProjectSettings.SetPath('Application/DCUOutputPath',7,edtDcuPath.Text);
+  DMMain.ProjectSettings.SetInteger('Application/DelphiVersion', DMMain.DelphiVersion);
+  DMMain.ProjectSettings.SetString('Application/Platform', DMMain.CurrentBPGPlatformList.Commatext);
+  DMMain.ProjectSettings.SetString('Application/Config', DMMain.CurrentBPGConfigList.Commatext);
+  DMMain.ProjectSettings.SetPath('Application/OutputPath',edtOutputDirectory.Text);
+  DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',edtPackageOutputDir.Text);
+  DMMain.ProjectSettings.SetPath('Application/DCUOutputPath',edtDcuPath.Text);
 end;
 
 {-----------------------------------------------------------------------------
@@ -851,9 +851,9 @@ end;
 procedure TFrmMain.ProjectSettingstoGUI;
 begin
   edtPackageBPGFile.Text:=DMMain.BPGFilename;
-  if DMMain.ProjectSettings.PathValue('Application/PackageOutputPath') <> '' then edtOutputDirectory.Text:= DMMain.ProjectSettings.PathValue('Application/PackageOutputPath');
-  if DMMain.ProjectSettings.PathValue('Application/DCPOutputPath') <> '' then edtDcpPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCPOutputPath');
-  if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath') <> '' then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath');
+  if DMMain.ProjectSettings.PathValue('Application/OutputPath') <> ''        then edtOutputDirectory.Text:= DMMain.ProjectSettings.PathValue('Application/OutputPath');
+  if DMMain.ProjectSettings.PathValue('Application/PackageOutputPath') <> '' then edtPackageOutputDir.Text:= DMMain.ProjectSettings.PathValue('Application/PackageOutputPath');
+  if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath') <> ''     then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath');
   SetDelphiVersionCombobox(DMMain.ProjectSettings.IntegerValue('Application/DelphiVersion'));
   SetPlatformCheckListBox(DMMain.ProjectSettings.StringValue('Application/Platform'));
   SetConfigCheckListBox(DMMain.ProjectSettings.StringValue('Application/Config'));
@@ -997,8 +997,6 @@ procedure TFrmMain.edtPathExit(Sender: TObject);
 begin
   GUItoApplicationSettings;
   GUItoProjectSettings;
-//  if (Sender as TEdit) = edtPackageBPLDirectory then
-//    SetDelphiPackageDir(DMMain.DelphiVersion, (Sender as TEdit).Text, DMMain.ApplicationSettings.BoolValue('Application/SilentMode'), DMMain.PlatformToCompile);
   DMMain.InitProjectDataForHint;
   SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
@@ -1153,7 +1151,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actFindDCPandBPLExecute(Sender: TObject);
 begin
-  ShowBPLSearchDialog(DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath',15),ExtractFilenameOnly(DMMain.CurrentProjectFilename));
+  ShowBPLSearchDialog(DMMain.ApplicationSettings.StringValue('Application/LastUsedSearchPath'),ExtractFilenameOnly(DMMain.CurrentProjectFilename));
 end;
 
 {-----------------------------------------------------------------------------
@@ -1254,22 +1252,22 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: actSelectDcpPathExecute
+  Procedure: actSelectPackageOutputDirExecute
   Author:    sam
   Date:      27-Nov-2012
   Arguments: Sender: TObject
   Result:    None
-  Description:
+  Description:  set up the output path for dcp,bpl files.
 -----------------------------------------------------------------------------}
-procedure TFrmMain.actSelectDcpPathExecute(Sender: TObject);
+procedure TFrmMain.actSelectPackageOutputDirExecute(Sender: TObject);
 resourcestring
-  cSelectDCPPath = 'Select DCP-Path';
+cSelectPackagePath = 'Select Package-Path (bpl,dcp).';
 var
-  _Dir: string;
+_Dir: string;
 begin
   _Dir := '';
-  if not SelectDirectory(cSelectDCPPath, '', _Dir) then Exit;
-  edtDcpPath.Text := RelativePath(DMMain.BPGPath, _Dir,DMMain.DelphiVersion);
+  if not SelectDirectory(cSelectPackagePath, '', _Dir) then Exit;
+  edtPackageOutputDir.Text := RelativePath(DMMain.BPGPath, _Dir,DMMain.DelphiVersion);
   SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
@@ -1279,13 +1277,13 @@ end;
   Date:      13-Mrz-2007
   Arguments: Sender: TObject
   Result:    None
-  Description:
+  Description:  set up the output path for dcu files.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actSelectDcuPathExecute(Sender: TObject);
 resourcestring
 cSelectDCUPath='Select DCU-Path';
 var
-  _Dir: string;
+_Dir: string;
 begin
   _Dir := '';
   if not SelectDirectory(cSelectDCUPath, '', _Dir) then Exit;
@@ -1319,14 +1317,14 @@ resourcestring
 cChooseFileSaveLog='Please choose a filename to save the log-output <.txt>.';
 begin
   SaveDialog1.Title:=cChooseFileSaveLog;
-  SaveDialog1.InitialDir:=DMMain.ApplicationSettings.PathValue('Application/LastLogOutputPath',21);
+  SaveDialog1.InitialDir:=DMMain.ApplicationSettings.PathValue('Application/LastLogOutputPath');
   SaveDialog1.DefaultExt := '.txt';
   SaveDialog1.Filter := 'Text-File(.txt)|*.txt';
   SaveDialog1.FileName := DMMain.BPGFilename+'_log.txt';
   SaveDialog1.FilterIndex := 0;
   if not SaveDialog1.Execute then exit;
   mmoLogFile.Lines.SaveToFile(SaveDialog1.filename);
-  DMMain.ApplicationSettings.SetPath('Application/LastLogOutputPath',21,extractFilePath(SaveDialog1.filename));
+  DMMain.ApplicationSettings.SetPath('Application/LastLogOutputPath',extractFilePath(SaveDialog1.filename));
 end;
 
 {-----------------------------------------------------------------------------
@@ -1564,10 +1562,14 @@ begin
     if ARow <= DMMain.BPGProjectList.Count  then begin
       case ACol of
         1: begin
-          _hint:= 'Output Filename    := '+extractfilename(TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputFilename)+#10#13+'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath;
-          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath<>''        then _hint:=_hint+#10#13+'Project Output Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath;
-          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath<>''     then _hint:=_hint+#10#13+'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath;
-          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath<>''     then _hint:=_hint+#10#13+'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath;
+          _hint:= 'Output Filename    := '+extractfilename(TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputFilename);
+
+          _hint:=_hint+#10#13+'DCU Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCUOutputPath;
+          if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectType=tp_bpl then begin
+            if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath<>''     then _hint:=_hint+#10#13+'BPL Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).BPLOutputPath;
+            if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath<>''     then _hint:=_hint+#10#13+'DCP Output Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DCPOutputPath;
+          end
+          else _hint:=_hint+#10#13+'Project Output Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).OutputPath;
           if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectSearchPath<>'' then _hint:=_hint+#10#13+'Project Search Path:='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).ProjectSearchPath;
           if TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath<>''     then _hint:=_hint+#10#13+'DPT Search Path    :='+TProjectData(DMMain.BPGProjectList.Objects[ARow-1]).DPTSearchPath;
           stgFiles.Hint:=_hint;
@@ -1717,8 +1719,7 @@ begin
   DMMain.CurrentBPGPlatformList.CommaText := _Platforms;
   clbPlatform.Items.Assign(DMMain.BPGPlatformList);
 
-  for _i := 0 to clbPlatform.Items.Count-1 do begin
-    // check/uncheck check boxes
+  for _i := 0 to clbPlatform.Items.Count-1 do begin // check/uncheck check boxes
     _itemIndex:=DMMain.CurrentBPGPlatformList.IndexOf(clbPlatform.Items[_i]);
     clbPlatform.Checked[_i] := (_itemIndex>=0);
   end;
@@ -1750,7 +1751,7 @@ end;
 
 procedure TFrmMain.cbxStopOnFailureExit(Sender: TObject);
 begin
-  DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', 6, cbxStopOnFailure.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', cbxStopOnFailure.checked);
 end;
 
 procedure TFrmMain.clbConfigClickCheck(Sender: TObject);
@@ -1777,12 +1778,12 @@ end;
 
 procedure TFrmMain.cbxSilentModeExit(Sender: TObject);
 begin
-  DMMain.ApplicationSettings.SetBoolean('Application/SilentMode', 5, cbxSilentMode.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/SilentMode', cbxSilentMode.checked);
 end;
 
 procedure TFrmMain.cbxStartDelphiExit(Sender: TObject);
 begin
-  DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', 7, cbxStartDelphi.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', cbxStartDelphi.checked);
 end;
 
 
@@ -1836,7 +1837,6 @@ begin
   actCloseProject.Enabled:=(DMMain.BPGFilename<>'');
   ShowProjectGroup1.Enabled:=(DMMain.BPGFilename<>'');
   actRecompileAll.Enabled:=(DMMain.BPGFilename<>'');
-//  edtPackageBPLDirectory.Text:=GetDelphiPackageDir(DMMain.DelphiVersion, DMMain.PlatformToCompile);
   FillProjectGrid;
   case _NewState of
     tas_init: begin

@@ -1,6 +1,6 @@
 object FrmMain: TFrmMain
-  Left = 261
-  Top = 246
+  Left = 262
+  Top = 247
   Width = 1374
   Height = 593
   Caption = 'Package Group Rebuilder/Installer'
@@ -77,9 +77,9 @@ object FrmMain: TFrmMain
     object lblOutputDirectory: TLabel
       Left = 240
       Top = 48
-      Width = 134
+      Width = 117
       Height = 13
-      Caption = 'Output Path (exe,dll,bpl files)'
+      Caption = 'Output Path (exe,dll files)'
     end
     object lblPackageGroupFile: TLabel
       Left = 240
@@ -88,12 +88,12 @@ object FrmMain: TFrmMain
       Height = 13
       Caption = 'Project-Group File <*.bpg/*.bdsgroup/*.groupproj>'
     end
-    object lblDcpPath: TLabel
+    object lblPackageOutputDir: TLabel
       Left = 240
       Top = 96
-      Width = 250
+      Width = 173
       Height = 13
-      Caption = 'Output Path for Delphi Compiled Packages (dcp files)'
+      Caption = 'Output Path Packages (bpl,dcp files)'
     end
     object lblDcuPath: TLabel
       Left = 240
@@ -179,31 +179,31 @@ object FrmMain: TFrmMain
       Action = actOpenProject
       TabOrder = 6
     end
-    object btnSetPackagePath: TButton
+    object btnSelectOutputDir: TButton
       Left = 840
       Top = 64
       Width = 17
       Height = 21
-      Action = actSelectPackageBPLPath
+      Action = actSelectOutputDir
       TabOrder = 7
     end
-    object edtDCPPath: TEdit
+    object edtPackageOutputDir: TEdit
       Left = 240
       Top = 112
       Width = 601
       Height = 21
-      Hint = 'Enter/select the Delphi DCP Path.'
+      Hint = 'Enter/select the Package Path.'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 8
       OnExit = edtPathExit
     end
-    object btnSelectDcpPath: TButton
+    object btnSelectPackageOutputDir: TButton
       Left = 840
       Top = 112
       Width = 17
       Height = 21
-      Action = actSelectDcpPath
+      Action = actSelectPackageOutputDir
       TabOrder = 9
     end
     object gbxPlatform: TGroupBox
@@ -380,9 +380,9 @@ object FrmMain: TFrmMain
       ShortCut = 8312
       OnExecute = actCompileSelectedProjectsExecute
     end
-    object actSelectPackageBPLPath: TAction
+    object actSelectOutputDir: TAction
       Caption = '...'
-      OnExecute = actSelectPackageBPLPathExecute
+      OnExecute = actSelectOutputDirExecute
     end
     object actApplicationUpdate: TAction
       Caption = 'Web Update'
@@ -471,9 +471,9 @@ object FrmMain: TFrmMain
       Caption = 'actSelectAll'
       OnExecute = actSelectAllExecute
     end
-    object actSelectDcpPath: TAction
+    object actSelectPackageOutputDir: TAction
       Caption = '...'
-      OnExecute = actSelectDcpPathExecute
+      OnExecute = actSelectPackageOutputDirExecute
     end
     object actCompileProject: TAction
       Caption = 'Compile Project'

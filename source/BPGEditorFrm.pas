@@ -119,7 +119,7 @@ begin
   if not SysUtils.DirectoryExists(_Dir) then _Dir:='';
   FAbortScan := false;
   if not SelectDirectory('Select Search-Path','',_Dir) then exit;
-  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',15,_Dir);
+  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',_Dir);
   lstAllFiles.Clear;
   FItems.Clear;
   btnAbort.Enabled := true;
