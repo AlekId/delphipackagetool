@@ -9,7 +9,8 @@ unit uDTPProjectData;
 interface
 
 uses
-  classes;
+  classes,
+  uDPTDefinitions;
 
 const
   ProjectDataDelimiter = ': ';
@@ -29,6 +30,7 @@ type
     IDEInstall:string;
     Description:string;
     Version:string;
+    ProjectType:TProjectType;
     CompileResultsList: TStringList;
     VersionsList: TStringList;
     constructor Create;

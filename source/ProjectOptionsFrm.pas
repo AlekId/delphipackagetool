@@ -438,14 +438,14 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmProjectOptions.GUIToSettings;
 begin
-  DMMain.ProjectSettings.SetString('Application/Events/OnBeforeInstallAll',1,edtBeforeInstallAll.Text);
-  DMMain.ProjectSettings.SetString('Application/Events/OnAfterInstallAll',2,edtAfterInstallAll.Text);
-  DMMain.ProjectSettings.SetString('Application/CompilerSwitches',3,edtCompilerSwitches.Text);
-  DMMain.ProjectSettings.SetBoolean('Application/CreateInstallBatch',4,cbxCreateInstallBatch.checked);
-  DMMain.ProjectSettings.SetString('Application/LibSuffix',10,edtLibSuffix.Text);
-  DMMain.ProjectSettings.SetString('Application/DebugCompilerSwitches',18,edtDebugCompilerSwitches.Text);
-  DMMain.ProjectSettings.SetString('Application/ReleaseCompilerSwitches',19,edtReleaseCompilerSwitches.Text);
-  DMMain.ProjectSettings.SetBoolean('Application/AutoBackup',20,cbxAutoBackup.Checked);
+  DMMain.ProjectSettings.SetString('Application/Events/OnBeforeInstallAll',edtBeforeInstallAll.Text);
+  DMMain.ProjectSettings.SetString('Application/Events/OnAfterInstallAll',edtAfterInstallAll.Text);
+  DMMain.ProjectSettings.SetString('Application/CompilerSwitches',edtCompilerSwitches.Text);
+  DMMain.ProjectSettings.SetBoolean('Application/CreateInstallBatch',cbxCreateInstallBatch.checked);
+  DMMain.ProjectSettings.SetString('Application/LibSuffix',edtLibSuffix.Text);
+  DMMain.ProjectSettings.SetString('Application/DebugCompilerSwitches',edtDebugCompilerSwitches.Text);
+  DMMain.ProjectSettings.SetString('Application/ReleaseCompilerSwitches',edtReleaseCompilerSwitches.Text);
+  DMMain.ProjectSettings.SetBoolean('Application/AutoBackup',cbxAutoBackup.Checked);
 end;
 
 {-----------------------------------------------------------------------------

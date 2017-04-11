@@ -189,14 +189,14 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmOptions.GUIToSettings;
 begin
-  DMMain.ApplicationSettings.SetString('Application/SourceCodeEditor',9,edtCodeEditor.Text);
-  DMMain.ApplicationSettings.SetString('Application/SourceCodeEditorParams',28,edtSourceEditorParams.Text);
-  DMMain.ApplicationSettings.SetBoolean('Application/AutomaticSearchFiles', 18,cbxAutomaticShowAddPathDialog.Checked);
-  DMMain.ApplicationSettings.SetFile('Application/DiffTool', 29,edtDiffTool.Text);
-  DMMain.ApplicationSettings.SetString('Application/CompilerSwitches',11,edtCompilerSwitches.Text);
-  DMMain.ApplicationSettings.SetBoolean('Application/ChangeFiles', 13,cbxChangeFiles.Checked);
-  DMMain.ApplicationSettings.SetBoolean('Application/Trace',20,cbxTrace.checked);
-  DMMain.ApplicationSettings.SetBoolean('Application/BackupSourceOnly',30,cbxBackupSourceOnly.Checked);
+  DMMain.ApplicationSettings.SetString('Application/SourceCodeEditor',edtCodeEditor.Text);
+  DMMain.ApplicationSettings.SetString('Application/SourceCodeEditorParams',edtSourceEditorParams.Text);
+  DMMain.ApplicationSettings.SetBoolean('Application/AutomaticSearchFiles',cbxAutomaticShowAddPathDialog.Checked);
+  DMMain.ApplicationSettings.SetFile('Application/DiffTool',edtDiffTool.Text);
+  DMMain.ApplicationSettings.SetString('Application/CompilerSwitches',edtCompilerSwitches.Text);
+  DMMain.ApplicationSettings.SetBoolean('Application/ChangeFiles',cbxChangeFiles.Checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/Trace',cbxTrace.checked);
+  DMMain.ApplicationSettings.SetBoolean('Application/BackupSourceOnly',cbxBackupSourceOnly.Checked);
 end;
 
 {-----------------------------------------------------------------------------

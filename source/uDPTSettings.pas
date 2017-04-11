@@ -20,7 +20,7 @@ uses
 
 
 const
-  cComponentVersion = '1.13';
+  cComponentVersion = '1.14';
 
 type
 
@@ -46,35 +46,30 @@ type
     procedure SetVersion(const Value: string);
     // find the setting name for a specific value in a group of settings
     function FindSettingIdx(const _Name:string):integer;overload;   // try to find the setting with name <name>. Returns the Index of the setting.
-    function FindSettingIdx(const _ID:integer):integer;overload;    // try to find the setting with ID <ID>. Returns the Index of the setting.
     function GetSetting(const _Name: string): TNVBSettingData;overload; // try to find the setting with Name <Name>. Returns setting object.
-    function GetSetting(const _ID: integer): TNVBSettingData;overload; // try to find the setting with ID <ID>. Returns setting object.
-    function GetSetting(const _Name:string;_ID: integer): TNVBSettingData;overload; // try to find the setting with Name or ID <ID>. Returns setting object.
   protected
     procedure Initialize;
     procedure CleanUp;
   public
-    // with Delphi 4>, this could be done with method overload
     // this methods get the values and creates the list entry if not already existing.
-    function GetStringValue(const _Name: string;const ID: integer;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
-    function GetIntegerValue(const _Name: string;const ID: integer;const DefaultValue: integer;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): Integer;
-    function GetBoolValue(const _Name: string;const ID: integer;const DefaultValue: boolean;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): boolean;
-    function GetFileValue(const _Name: string;const ID: integer;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
-    function GetPathValue(const _Name: string;const ID: integer;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
+    function GetStringValue(const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
+    function GetIntegerValue(const _Name: string;const DefaultValue: integer;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): Integer;
+    function GetBoolValue(const _Name: string;const DefaultValue: boolean;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): boolean;
+    function GetFileValue(const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
+    function GetPathValue(const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
     // this methods just gets the value without creating an list-item
-    function StringValue(const _Name: string; _ID: integer=-1): string;
-    function IntegerValue(const _Name: string; _ID: integer=-1): Integer;
-    function BoolValue(const _Name: string; _ID: integer=-1): boolean;
-    function FileValue(const _Name: string; _ID: integer=-1): string;
-    function PathValue(const _Name: string; _ID: integer=-1): string;
+    function StringValue(const _Name: string): string;
+    function IntegerValue(const _Name: string): Integer;
+    function BoolValue(const _Name: string): boolean;
+    function FileValue(const _Name: string): string;
+    function PathValue(const _Name: string): string;
     // this methods just set the values without create
-    function SetString(const _Name: string; _ID: integer; _value: string): boolean;
-    function SetFile(const _Name: string; _ID: integer; _value: string): boolean;
-    function SetInteger(const _Name: string; _ID: integer; _value: Integer): boolean;
-    function SetBoolean(const _Name: string; _ID: integer; _value: Boolean): boolean;
-    function SetPath(const _Name: string; _ID: integer; _value: string): boolean;
-
-    function FindStringIndex(Group: string; Value: string): integer; // returns the item index.
+    function SetString(const _Name: string; _value: string): boolean;
+    function SetFile(const _Name: string; _value: string): boolean;
+    function SetInteger(const _Name: string; _value: Integer): boolean;
+    function SetBoolean(const _Name: string; _value: Boolean): boolean;
+    function SetPath(const _Name: string; _value: string): boolean;
+    function FindStringValueName(Group: string; Value: string): string; // returns the item name.
     function SaveConfig: Boolean; // save all the settings to the file
     function LoadConfig: Boolean;
     constructor Create(AOwner: TComponent); override;
@@ -100,13 +95,8 @@ uses
 {$if CompilerVersion >= 24.0 }
   UITypes,
 {$ifend}
-{$ifdef NoCryptSupport}
   uDPTMisc;
-{$else}
-  uDPTMisc,
-  DCPrc4,
-  DCPsha1;
-{$endif}  
+
 
 //*************************************************************************
 //Procedure: TNVBSettings.SetInteger
@@ -114,12 +104,12 @@ uses
 //Author: SH
 //History: 05.01.2001
 //*************************************************************************
-function TNVBSettings.SetInteger(const _Name: string; _ID, _value: Integer): boolean;
+function TNVBSettings.SetInteger(const _Name: string;_value: Integer): boolean;
 var
   _SettingData: TNVBSettingData;
 begin
   result:=false;
-  _SettingData:=GetSetting(_Name,_ID);
+  _SettingData:=GetSetting(_Name);
   if not assigned(_SettingData) then exit;
   _SettingData.StrValue := IntToStr(_value);
   _SettingData.IntValue := _value;
@@ -133,12 +123,12 @@ end;
 //Author: SH
 //History: 05.01.2001
 //*************************************************************************
-function TNVBSettings.SetString(const _Name: string; _ID: integer; _value: string): boolean;
+function TNVBSettings.SetString(const _Name: string; _value: string): boolean;
 var
   _SettingData: TNVBSettingData;
 begin
   result:=false;
-  _SettingData:=GetSetting(_Name,_ID);
+  _SettingData:=GetSetting(_Name);
   if not assigned(_SettingData) then exit;
   _SettingData.StrValue := _value;
   FSettingsChanged:=true;
@@ -151,12 +141,12 @@ end;
 // Description:
 // Last changes: 10.12.01
 //*****************************************************
-function TNVBSettings.SetFile(const _Name: string; _ID: integer; _value: string): boolean;
+function TNVBSettings.SetFile(const _Name: string;_value: string): boolean;
 var
   _SettingData: TNVBSettingData;
 begin
   result:=false;
-  _SettingData:=GetSetting(_Name,_ID);
+  _SettingData:=GetSetting(_Name);
   if not assigned(_SettingData) then exit;
   _SettingData.StrValue := _value;
   FSettingsChanged:=true;
@@ -171,12 +161,12 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function TNVBSettings.SetPath(const _Name: string; _ID: integer; _value: string): boolean;
+function TNVBSettings.SetPath(const _Name: string;_value: string): boolean;
 var
   _SettingData: TNVBSettingData;
 begin
    result:=false;
-  _SettingData:=GetSetting(_Name,_ID);
+  _SettingData:=GetSetting(_Name);
   if not assigned(_SettingData) then exit;
   _SettingData.StrValue := _value;
   FSettingsChanged:=true;
@@ -189,12 +179,12 @@ end;
 // Description:
 // Last changes: 21.11.01
 //*****************************************************
-function TNVBSettings.SetBoolean(const _Name: string; _ID: integer; _value: Boolean): boolean;
+function TNVBSettings.SetBoolean(const _Name: string; _value: Boolean): boolean;
 var
   _SettingData: TNVBSettingData;
 begin
   result:=false;
-  _SettingData:=GetSetting(_Name,_ID);
+  _SettingData:=GetSetting(_Name);
   if not assigned(_SettingData) then exit;
   if _value then
   begin
@@ -212,19 +202,19 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: FindStringIndex
+  Procedure: FindStringValueName
   Author:    sam
   Date:      31-Okt-2005
   Arguments: Group: string; Value: string
-  Result:    integer
-  Description: get the settings number of value <Value> in group <Group>.
+  Result:    string
+  Description: returns the setting name of value <Value> in group <Group>.
 -----------------------------------------------------------------------------}
-function TNVBSettings.FindStringIndex(Group: string; Value: string): integer;
+function TNVBSettings.FindStringValueName(Group: string; Value: string): string;
 var
   _SettingData: TNVBSettingData;
   Index: integer;
 begin
-  result := -1;
+  result := '';
   for Index := 0 to FSettingList.Count - 1 do // go through all settings
   begin
     _SettingData := TNVBSettingData(FSettingList.Objects[Index]);
@@ -232,7 +222,7 @@ begin
     if (lowercase(_SettingData.StrValue) = lowercase(Value)) and
       (Pos(Group, _SettingData.Name) > 0) then
     begin
-      result := _SettingData.ID;
+      result := _SettingData.Name;
       break;
     end;
   end;
@@ -294,12 +284,8 @@ var
   i: integer;
   _Input: TStrings;
   _LineStr: string;
-{$ifndef NoCryptSupport}
-  _Cipher: TDCP_rc4;
-{$endif}
   _SettingCount: integer;
   _index: Integer;
-  _IdStr: string;
 begin
   Result := false;
   _SettingCount := 0;
@@ -312,10 +298,6 @@ begin
     FIsNew:=true;
     exit;
   end;
-{$ifndef NoCryptSupport}
-  _Cipher := TDCP_rc4.Create(Self);
-  _Cipher.InitStr(FKeyString, TDCP_sha1); // initialize the cipher with a hash of the passphrase
-{$endif}
   _Input := TStringList.Create;
   try
     _Input.LoadFromFile(FFilePath + FFileName);
@@ -324,27 +306,16 @@ begin
       begin
         _LineStr := _input[i];
         if _LineStr = '' then continue;
-        if _LineStr[1] <> '*' then
-        begin
-          {$ifndef NoCryptSupport}
-          if gIsVersion107orOlder and
-             FCryptIt then _LineStr := _Cipher.DecryptString(_LineStr); // decrypt this line of the ini-file.
-          {$endif}
-          _SettingData:=TNVBSettingData.create;
-          {$ifdef NoCryptSupport}
-             ParseTokens(_SettingData, _LineStr);
-          {$else}
-             ParseTokens(_SettingData, _LineStr,_Cipher);
-          {$endif}
-          _IdStr := CreateIDStr(_SettingData.ID);
-          if FSettingList.Find(_IdStr, _Index) then begin
-            _ExistingData:=TNVBSettingData(FSettingList.objects[_Index]);
-            _ExistingData.Free;
-            FSettingList.Delete(_Index);
-          end;
-          FSettingList.AddObject(_IdStr, TObject(_SettingData));
-          inc(_SettingCount);
+        if _LineStr[1] = '*' then continue;
+        _SettingData:=TNVBSettingData.create;
+        ParseTokens(_SettingData, _LineStr);
+        if FSettingList.Find(_SettingData.Name, _Index) then begin
+          _ExistingData:=TNVBSettingData(FSettingList.objects[_Index]);
+          _ExistingData.Free;
+          FSettingList.Delete(_Index);
         end;
+        FSettingList.AddObject(_SettingData.Name, TObject(_SettingData));
+        inc(_SettingCount);
       end;
       FIsLoaded := True; // the settings are loaded now.
       FSettingsChanged := _SettingCount <> FSettingList.count;
@@ -404,9 +375,6 @@ var
   _SettingData: TNVBSettingData;
   _LineStr: string;
   _Output: TStrings;
-{$ifndef NoCryptSupport}
-  _Cipher: TDCP_rc4;
-{$endif}
 begin
   Result := false;
   if csDesigning in ComponentState then exit;
@@ -421,8 +389,7 @@ begin
       DoError(format('Can not save the settings to file <%s> because it is read-only.', [FFilePath + FFileName]), 0);
       exit;
     end;
-    if isFileInUse(FFilePath + FFileName) then
-    begin
+    if isFileInUse(FFilePath + FFileName) then begin
       DoError(format('Can not save the settings to file <%s> because the file is in use by another application.', [FFilePath + FFileName]), 0);
       exit;
     end;
@@ -431,30 +398,15 @@ begin
   // write the configuration file now
 
   _Output := TStringList.Create;
-{$ifndef NoCryptSupport}
-  _Cipher := TDCP_rc4.Create(Self);
-  _Cipher.InitStr(FKeyString, TDCP_sha1); // initialize the cipher with a hash of the passphrase
-{$endif}
   try
     try
       for i1 := 0 to FSettingList.Count - 1 do begin
         _SettingData := TNVBSettingData(FSettingList.Objects[i1]);
         if FCryptIt then _SettingData.isCrypted:=true;
-        {$ifdef NoCryptSupport}
         _LineStr:=CreateLine(_SettingData);
-        {$else}
-        _LineStr:=CreateLine(_SettingData,_Cipher);
-        {$endif}
         if _LineStr='' then continue;
         _Output.Add(_LineStr)
       end;
-{$ifndef NoCryptSupport}
-      if assigned(_Cipher) then
-      begin
-        _Cipher.Burn;
-        FreeAndNil(_Cipher);
-      end;
-{$endif}
       _Output.SaveToFile(FFilePath + FFilename);
       Result := true;
     except
@@ -475,30 +427,26 @@ end;
 //============================================================
 function TNVBSettings.GetSetting(var SettingData: TNVBSettingData): boolean;
 var
-  _IDStr: string;
-  _ExistingData: TNVBSettingData;
-  _NewSettingData: TNVBSettingData;
+_ExistingData: TNVBSettingData;
+_NewSettingData: TNVBSettingData;
 begin
   result := false;
-  _IDStr := '';
-  _ExistingData:=GetSetting(SettingData.Name,SettingData.Id);
+  _ExistingData:=GetSetting(SettingData.Name);
   if assigned(_ExistingData) then begin
     SettingData.assign(_ExistingData);
     result := true;
     exit;
   end;
 
-  // if the entry was not found, then create a new one.
-  if (SettingData.Descr <> '') and // only create it if there is a description available
-     (SettingData.Id > -1) then
-  begin // and at least a setting ID number.
-    _NewSettingData:=TNVBSettingData.create;
-    _NewSettingData.assign(SettingData);
-    if _IDStr = '' then _IDStr := CreateIDStr(SettingData.ID);
-    FSettingList.AddObject(_IDStr, _NewSettingData);
-    result:=true;
-  end
-  else DoError(Format('The setting <%s> needs at least an ID and Description.', [SettingData.Name]), SettingData.ID);
+  if SettingData.Descr = '' then begin
+    DoError(Format('The setting <%s> needs at least an Name and Description.', [SettingData.Name]), 0);
+    exit;
+  end;
+
+  _NewSettingData:=TNVBSettingData.create; // if the entry was not found, then create a new one.
+  _NewSettingData.assign(SettingData);
+  FSettingList.AddObject(SettingData.Name, _NewSettingData);
+  result:=true;
 end;
 
 
@@ -506,7 +454,7 @@ end;
 // configuration file, Value will be overwritten with the customer setting,
 // otherwise a new entry with the default value will be created in the
 // configuration file
-function TNVBSettings.GetStringValue(const _Name: string;const ID: integer;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
+function TNVBSettings.GetStringValue(const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
 var
   _SettingData: TNVBSettingData;
 begin
@@ -514,7 +462,6 @@ begin
   _SettingData:=TNVBSettingData.create;
   try
     _SettingData.Name := _Name;
-    _SettingData.ID := ID;
     _SettingData.SettingType := nvbString;
     _SettingData.StrValue := DefaultValue;
     _SettingData.IntValue := 0;
@@ -533,7 +480,15 @@ begin
   end;
 end;
 
-function TNVBSettings.GetPathValue(const _Name: string;const ID: integer;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
+{*-----------------------------------------------------------------------------
+  Procedure: GetPathValue
+  Author:    sam
+  Date:      09-Apr-2017
+  Arguments: const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean
+  Result:    string
+  Description:
+-----------------------------------------------------------------------------}
+function TNVBSettings.GetPathValue(const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
 var
   _SettingData: TNVBSettingData;
 begin
@@ -541,7 +496,6 @@ begin
   _SettingData:=TNVBSettingData.create;
   try
     _SettingData.Name := _Name;
-    _SettingData.ID := ID;
     _SettingData.SettingType := nvbPath;
     _SettingData.StrValue := DefaultValue;
     _SettingData.IntValue := 0;
@@ -560,7 +514,15 @@ begin
   end;
 end;
 
-function TNVBSettings.GetFileValue(const _Name: string;const ID: integer;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
+{*-----------------------------------------------------------------------------
+  Procedure: GetFileValue
+  Author:    sam
+  Date:      09-Apr-2017
+  Arguments: const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean
+  Result:    string
+  Description:
+-----------------------------------------------------------------------------}
+function TNVBSettings.GetFileValue(const _Name: string;const DefaultValue: string;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): string;
 var
   _SettingData: TNVBSettingData;
 begin
@@ -568,7 +530,6 @@ begin
   _SettingData:=TNVBSettingData.create;
   try
     _SettingData.Name := _Name;
-    _SettingData.ID := ID;
     _SettingData.SettingType := nvbFile;
     _SettingData.StrValue := DefaultValue;
     _SettingData.IntValue := 0;
@@ -591,7 +552,7 @@ end;
 // configuration file, Value will be overwritten with the customer setting,
 // otherwise a new entry with the default value will be created in the
 // configuration file
-function TNVBSettings.GetIntegerValue(const _Name: string;const ID: integer;const DefaultValue: integer;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): Integer;
+function TNVBSettings.GetIntegerValue(const _Name: string;const DefaultValue: integer;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): Integer;
 var
   _SettingData: TNVBSettingData;
 begin
@@ -599,7 +560,6 @@ begin
   _SettingData:=TNVBSettingData.create;
   try
     _SettingData.Name := _Name;
-    _SettingData.ID := ID;
     _SettingData.SettingType := nvbInteger;
     _SettingData.StrValue := IntToStr(DefaultValue);
     _SettingData.IntValue := DefaultValue;
@@ -623,7 +583,7 @@ end;
 // configuration file, Value will be overwritten with the customer setting,
 // otherwise a new entry with the default value will be created in the
 // configuration file
-function TNVBSettings.GetBoolValue(const _Name: string;const ID: integer;const DefaultValue: boolean;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): boolean;
+function TNVBSettings.GetBoolValue(const _Name: string;const DefaultValue: boolean;const _Descr: string;const _isVisible: Boolean;const _isCrypted:boolean;const _isReadOnly:boolean): boolean;
 var
   _SettingData: TNVBSettingData;
 begin
@@ -631,7 +591,6 @@ begin
   _SettingData:=TNVBSettingData.create;
   try
     _SettingData.Name := _Name;
-    _SettingData.ID := ID;
     _SettingData.SettingType := nvbBool;
     _SettingData.StrValue := BooleanToStr(DefaultValue);
     _SettingData.IntValue := 0;
@@ -650,30 +609,30 @@ begin
   end;
 end;
 
-function TNVBSettings.StringValue(const _Name: string; _ID: integer): string;
+function TNVBSettings.StringValue(const _Name: string): string;
 begin
-  result := GetStringValue(_Name, _Id, '', '', true,false,false);
+  result := GetStringValue(_Name, '', '', true,false,false);
 end;
 
-function TNVBSettings.IntegerValue(const _Name: string; _ID: integer): Integer;
+function TNVBSettings.IntegerValue(const _Name: string): Integer;
 begin
-  result := GetIntegerValue(_Name, _Id, 0, '', true,false,false);
+  result := GetIntegerValue(_Name, 0, '', true,false,false);
 end;
 
 
-function TNVBSettings.BoolValue(const _Name: string; _ID: integer): boolean;
+function TNVBSettings.BoolValue(const _Name: string): boolean;
 begin
-  result := GetBoolValue(_Name, _Id, false, '', true,false,false);
+  result := GetBoolValue(_Name, false, '', true,false,false);
 end;
 
-function TNVBSettings.FileValue(const _Name: string; _ID: integer): string;
+function TNVBSettings.FileValue(const _Name: string): string;
 begin
-  result := GetFileValue(_Name, _Id, '', '', true,false,false);
+  result := GetFileValue(_Name, '', '', true,false,false);
 end;
 
-function TNVBSettings.PathValue(const _Name: string; _ID: integer): string;
+function TNVBSettings.PathValue(const _Name: string): string;
 begin
-  result := GetPathValue(_Name, _Id, '', '', true,false,false);
+  result := GetPathValue(_Name, '', '', true,false,false);
 end;
 
 {-----------------------------------------------------------------------------
@@ -830,57 +789,6 @@ begin
   end;
 end;
 
-{*-----------------------------------------------------------------------------
-  Procedure: FindSettingIdx
-  Author:    sam
-  Date:
-  Arguments: const _ID: integer
-  Result:    integer
-  Description: return the list index of setting with ID <_ID>.
------------------------------------------------------------------------------}
-function TNVBSettings.FindSettingIdx(const _ID: integer): integer;
-var
-_IDStr:string;
-begin
-  result:=-1;
-  if _Id < 0 then exit;
-  _IDStr := CreateIDStr(_ID);
-  result:=FSettingList.IndexOf(_IDStr);
-end;
-
-{*-----------------------------------------------------------------------------
-  Procedure: GetSetting
-  Author:    sam
-  Date:
-  Arguments: const _ID: integer
-  Result:    TNVBSettingData
-  Description: try to find setting by ID <_ID>.
------------------------------------------------------------------------------}
-function TNVBSettings.GetSetting(const _ID: integer): TNVBSettingData;
-var
-_index:Longint;
-begin
-  result:=nil;
-  _index:=FindSettingIdx(_ID);
-  if _index=-1 then exit;
-  if _index>=FSettingList.count then exit;
-  result:= TNVBSettingData(FSettingList.Objects[_index]);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: GetSetting
-  Author:    sam
-  Date:      27-Okt-2004
-  Arguments: const _Name: string;ID: integer
-  Result:    TNVBSettingData
-  Description: try to find the setting by ID <_ID>. If not found, then
-               try to find the setting by Name <_Name>.
------------------------------------------------------------------------------}
-function TNVBSettings.GetSetting(const _Name: string;_ID: integer): TNVBSettingData;
-begin
-  result:=GetSetting(_ID);
-  if not assigned(result) then result:=GetSetting(_Name);
-end;
 
 end.
 

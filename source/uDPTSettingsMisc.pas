@@ -1,20 +1,9 @@
 {***************************************************************
  *
  * Unit Name: uDPTSettingsMisc
- * Purpose  : misc. routines used by the NVBSetting components.
+ * Purpose  : misc. routines used by the DPTSetting components.
  * Author   :
  * History  :
- * Changes: 05.06.2003 -SH Bugfix: The decimal seperator must be set independent from the
-                        the system settings.
- * 01.07.2003 -SH Flags are now used to make settings visible,hidden,readonly.
- * 15.10.2004 -SH fix for enum values.
- * 06.05.2006 -SH some code cleanup.
- * 28.06.2006 -SH removed flags.
- * 15.07.2006 -SH added support for readonly settings.
- * 14.08.2006 -SH modifications to crypt a single setting instead of the whole file.
- * 15.11.2006 -SH fixed memory leak about enum-settings.
- * 28.11.2006 -SH added constant for default settings extension.
- * 23.02.2010 -SH added define "NoCryptSupport". If this define is set, then the crypt feature is not compiled into the package.
  ****************************************************************}
 
 unit uDPTSettingsMisc;
@@ -51,7 +40,6 @@ type
 
   TNVBSettingData = class(TObject)
     Name: string;
-    ID: integer;
     SettingType: TNVBSettingType;
     StrValue: string;
     IntValue: integer;
@@ -121,7 +109,6 @@ function CreateLine(const _SettingData: TNVBSettingData;const _Cipher: TDCP_rc4)
 {$endif}
 function GetToken(var Text: string;const _Delimiter: char): string;
 procedure PrepSetRec(var Data: TNVBSettingData);
-function CreateIDStr(ID: integer): string;
 function TypeToStr(SettingData: TNVBSettingData): string;
 function StrtoType(_TypeStr:string):TNVBSettingType;
 function BooleanToStr(Value: boolean): string;
@@ -168,7 +155,6 @@ begin
     else if Pos('Descr=',_TmpStr)=1 then _DescrStr:=_TmpStr
     else if Pos('Flags=',_TmpStr)=1 then begin    // to be backward compatible with older ini-files.
       gIsVersion107orOlder:=true;
-//      if _TmpStr='Flags=0' then _isVisibleStr :='isVisible=1';
       if _TmpStr='Flags=1' then _isCryptedStr :='isCrypted=1';
       _isVisibleStr :='isVisible=1';
       _isReadOnlyStr:='isReadOnly=0';
@@ -179,16 +165,7 @@ begin
   end;
   // set up the setting record
   SettingData.Name:=_NameStr;
-  SettingData.ID:=0;
-  if _IDStr<>'' then
-  begin
-    GetToken(_IDStr,'=');
-    try
-      SettingData.ID:=StrToInt(_IDStr);
-    except
-      SettingData.ID:=0;
-    end;
-  end;
+  if _IDStr<>'' then GetToken(_IDStr,'=');
   GetToken(_TypeStr,'=');
   SettingData.SettingType:=StrtoType(_TypeStr);
   if  SettingData.SettingType=nvbEnum then FillEnumList(_TypeStr,SettingData.EnumList);
@@ -219,7 +196,7 @@ begin
   result:='';
   if not assigned(_SettingData) then exit;
   result := _SettingData.Name + ':';
-  if _SettingData.ID <> 0 then result := result + 'ID=' + IntToStr(_SettingData.ID) + cDelimiterChar;
+  result := result + 'ID=0' + cDelimiterChar;
   result := result + 'Type=' + TypeToStr(_SettingData) + cDelimiterChar;
   result := result + 'Value=' + _SettingData.StrValue + cDelimiterChar;
   result := result + 'Descr=' + _SettingData.Descr + cDelimiterChar;
@@ -436,26 +413,6 @@ begin
   end;
 end;
 
-
-//============================================================
-// PROCEDURE CreateIDStr
-// discription :
-// programmed by : GA
-// tested by :
-// last changes on : 18.09.00
-//============================================================
-function CreateIDStr(ID: integer): string;
-var
-  IDStr: string;
-  i1: integer;
-begin
-  IDStr:=IntToStr(ID);
-  // make a 10 digit number to sort the list
-  for i1:=Length(IDStr) to 9 do IDStr:='0'+IDStr;
-  result:=IDStr;
-end;
-
-
 //============================================================
 // PROCEDURE StrtoType
 // discription :  converts a string into TNVBSettingType
@@ -562,7 +519,6 @@ procedure TNVBSettingData.assign(_dataobject: TNVBSettingData);
 begin
   if not assigned(_dataobject) then exit;
   Name       := _dataobject.Name;
-  ID         := _dataobject.ID;
   SettingType:= _dataobject.SettingType;
   StrValue   := _dataobject.StrValue;
   IntValue   := _dataobject.IntValue;

@@ -238,7 +238,7 @@ begin
   if not SelectDirectory(cSelectPath,'',_Dir) then exit;
   _Dir:=IncludeTrailingPathDelimiter(_Dir);
   edtSearchLocation.Text:=_Dir;
-  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',15,_Dir);
+  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',_Dir);
 end;
 
 end.

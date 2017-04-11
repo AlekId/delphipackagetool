@@ -257,10 +257,10 @@ begin
   if _index=-1 then begin  // its not already in the list.
     cbxSearchLocation.Items.Insert(0,_Dir);
     cbxSearchLocation.ItemIndex:=0;
-    for i:=1 to cbxSearchLocation.Items.count do DMMain.ApplicationSettings.SetString(format('Application/SearchPathHistory/Item%d',[i]),100+i,cbxSearchLocation.Items[i-1]);
+    for i:=1 to cbxSearchLocation.Items.count do DMMain.ApplicationSettings.SetString(format('Application/SearchPathHistory/Item%d',[i]),cbxSearchLocation.Items[i-1]);
   end
   else cbxSearchLocation.ItemIndex:=_index; // this entry is already in the list.
-  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',15,cbxSearchLocation.text);
+  DMMain.ApplicationSettings.SetString('Application/LastUsedSearchPath',cbxSearchLocation.text);
 end;
 
 procedure TFrmPathSelection.edtSearchMaskExit(Sender: TObject);
