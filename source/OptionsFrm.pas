@@ -55,6 +55,7 @@ type
   public
   end;
 
+function ShowOptionsDialog:boolean;
 
 implementation
 
@@ -63,6 +64,28 @@ uses
   MainDM;
 
 {$R *.dfm}
+
+{*-----------------------------------------------------------------------------
+  Procedure: ShowOptionsDialog
+  Author:    sam
+  Date:      14-Apr-2017
+  Arguments: None
+  Result:    boolean
+  Description:
+-----------------------------------------------------------------------------}
+function ShowOptionsDialog:boolean;
+var
+_FrmOptions: TFrmOptions;
+begin
+  result:=false;
+  _FrmOptions := TFrmOptions.create(nil);
+  try
+    if _FrmOptions.showmodal<>mrOk then exit;
+    result:=true;
+  finally
+    _FrmOptions.free;
+  end;
+end;
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmOptions.FormShow

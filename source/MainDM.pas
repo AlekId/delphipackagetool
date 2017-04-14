@@ -1078,8 +1078,8 @@ begin
   ApplicationSettings.GetBoolValue('Application/StopOnFailure', false, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StartDelphiOnClose', False, 'Start Delphi when this application terminates.', true,false,false);
   ApplicationSettings.GetStringValue('Application/PathNameFile', 'DelphiPackageToolPathD'+inttostr(FDelphiVersion)+'.txt', 'The file containing the search path for the compiler.', true,false,false);
-  ApplicationSettings.GetStringValue('Application/SourceCodeEditor','','Define the Source code Editor.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/ShowStartUpWarning', True, 'If true then the startup information screen is shown.', true,false,false);
+  ApplicationSettings.GetStringValue('Application/SourceCodeEditor','..\Notepad++\notepad++.exe','Define the Source code Editor (e.g. Notepad++).',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/ShowStartUpWarning', true, 'If true then the startup information screen is shown.', true,false,false);
   ApplicationSettings.GetStringValue('Application/CompilerSwitches','-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',3,'Select the trace level of the Log-file. 1-5.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/ChangeFiles',false,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
@@ -1092,11 +1092,11 @@ begin
   ApplicationSettings.GetPathValue('Application/LastZipOutputPath','','Last used path to store the zip file.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Position/Left',0,'Stores the last left position of the Main-Form.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Position/Top',0,'Stores the last top position of the Main-Form.',true,false,false);
-  ApplicationSettings.GetIntegerValue('Application/Position/Width',800,'Stores the last width of the Main-Form.',true,false,false);
+  ApplicationSettings.GetIntegerValue('Application/Position/Width',1200,'Stores the last width of the Main-Form.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Position/Height',600,'Stores the last height of the Main-Form.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedExtnsion','.bpg','Stores the last used file-type in the file-open dialog.',true,false,false);
   ApplicationSettings.GetStringValue('Application/SourceCodeEditorParams','%FILENAME%','Define the Source code Editor command Line Parameters.',true,false,false);
-  ApplicationSettings.GetFileValue('Application/DiffTool', 'MyFavoriteDiffTool.exe', 'Define here your favorite Diff-Tool.', true,false,false);
+  ApplicationSettings.GetFileValue('Application/DiffTool', '..\Beyond Compare 2\BC2.exe', 'Define here your favorite Diff-Tool (e.g. BeyondCompare).', true,false,false);
   ApplicationSettings.GetBoolValue('Application/BackupSourceOnly',false,'Only sourcefiles will be taken into the zip-file.',true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/FileHistory/Item%d',[i]),'',format('Recently used File <%d>.',[i]), true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/SearchPathHistory/Item%d',[i]),'',format('Recently used File <%d>.',[i]), true,false,false);

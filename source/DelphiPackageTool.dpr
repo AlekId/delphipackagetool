@@ -27,18 +27,21 @@ uses
 {$R *.res}
 
 var
-  _showagain:boolean;
-  _CreateMainForm:boolean;
+_showagain:boolean;
+_ShowOptionsDialog:boolean;
+_CreateMainForm:boolean;
 begin
   _CreateMainForm:=true;
+  _ShowOptionsDialog:=false;
   Application.Initialize;
-  Application.Title := 'Delphi Package Tool';
+  Application.Title := 'Delphi Package Tool (DPT)';
   Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);
   if not DMMain.IsSilentMode then begin
     // show startup dialog
     _showagain:=DMMain.ApplicationSettings.BoolValue('Application/ShowStartUpWarning');
     if _showagain then begin
+      _ShowOptionsDialog:=true;
       ShowStartUpDlg(_showagain);
       DMMain.ApplicationSettings.SetBoolean('Application/ShowStartUpWarning',_showagain);
     end;
@@ -52,7 +55,10 @@ begin
     _CreateMainForm:=exitcode<>0;
   end;
 // show main gui.
-  if _CreateMainForm then Application.CreateForm(TFrmMain, FrmMain);
+  if _CreateMainForm then begin
+    if _ShowOptionsDialog  then ShowOptionsDialog;
+    Application.CreateForm(TFrmMain, FrmMain);
+  end;
 
   Application.Run;
 end.
