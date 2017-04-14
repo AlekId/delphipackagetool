@@ -222,7 +222,6 @@ type
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
-    FFullTrace:boolean;
     FStgFilesLastRow: Integer;
     FStgFilesLastCol: Integer;
     procedure OpenBPGFileInEditor;
@@ -346,7 +345,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
-  FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
   NVBAppExecExternalCommand := TNVBAppExec.Create(Self);
   NVBAppExecExternalCommand.Name := 'NVBAppExecExternalCommand';
   NVBAppExecExternalCommand.Wait := True;
@@ -372,16 +370,8 @@ end;
   Description: show the options dialog.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actShowOptionsExecute(Sender: TObject);
-var
-_FrmOptions: TFrmOptions;
 begin
-  _FrmOptions := TFrmOptions.create(nil);
-  try
-    _FrmOptions.showmodal;
-    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
-  finally
-    _FrmOptions.free;
-  end;
+  ShowOptionsDialog;
 end;
 
 {-----------------------------------------------------------------------------
@@ -709,6 +699,14 @@ begin
   DMMain.SetCurrentProject(_ProjectName);
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: VersionHistory1Click
+  Author:    sam
+  Date:      14-Apr-2017
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.VersionHistory1Click(Sender: TObject);
 var
 _showagain:boolean;
@@ -716,11 +714,27 @@ begin
   ShowStartUpDlg(_showagain);
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: stgFilesClick
+  Author:    sam
+  Date:      14-Apr-2017
+  Arguments: Sender: TObject
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.stgFilesClick(Sender: TObject);
 begin
   if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: stgFilesContextPopup
+  Author:    sam
+  Date:      14-Apr-2017
+  Arguments: Sender: TObject; MousePos: TPoint; var Handled: Boolean
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.stgFilesContextPopup(Sender: TObject;
                                         MousePos: TPoint;
                                         var Handled: Boolean);
@@ -736,11 +750,17 @@ begin
       if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
     end;
   end
-  else begin
-    Handled := True;
-  end;
+  else Handled := True;
 end;
 
+{*-----------------------------------------------------------------------------
+  Procedure: FormKeyPress
+  Author:    sam
+  Date:      14-Apr-2017
+  Arguments: Sender: TObject; var Key: Char
+  Result:    None
+  Description:
+-----------------------------------------------------------------------------}
 procedure TFrmMain.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if key=chr(vk_return) then DMMain.actExecuteApp.execute;
@@ -979,7 +999,6 @@ begin
   try
     _FrmProjectOptions.showmodal;
     gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch');
-    FFullTrace:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
   finally
     _FrmProjectOptions.free;
   end;
@@ -1700,7 +1719,8 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const);
 begin
-  if FFullTrace or (_level<=3) then mmoTrace.Lines.insert(0,datetimetostr(now)+': '+format(_msg,_params))
+  if (DMMain.ApplicationSettings.BoolValue('Application/Trace')) or
+     (_level<=3) then mmoTrace.Lines.insert(0,datetimetostr(now)+': '+format(_msg,_params))
 end;
 
 {*-----------------------------------------------------------------------------

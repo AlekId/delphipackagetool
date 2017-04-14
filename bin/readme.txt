@@ -71,6 +71,14 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.42  ( 14.04.2017 )
+-SH: Show Options-Dialog on first Startup to let the user setup the Source-Editor and the Diff-Tool.
+
+1.9.2.41  ( 10.04.2017 )
+-SH: Breaking-Changes: The edit fields on the main form are now used to define the output-path for exe,dll and bpl. The location for dcp-files can not be modified anymore
+                       and will always be the same folder as the bpl-files.
+-SH: fixes,re-factoring clean-up.
+
 1.9.2.32  ( 18.03.2017 )
 -SH: instead of modifying the global environments-path, the delphi IDE Environment-Path is now used. (this was a  mis-conecption for a long time which is now corrected).
 -SH: Removed setting "Allow modifiy Environment Path".
