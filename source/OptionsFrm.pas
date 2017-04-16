@@ -61,6 +61,7 @@ implementation
 
 uses
   uDPTDelphiPackage,
+  uDPTPathFilenameConvert,
   MainDM;
 
 {$R *.dfm}
@@ -116,7 +117,7 @@ procedure TFrmOptions.btnSelectCodeEditorClick(Sender: TObject);
 begin
   OpenDialog1.DefaultExt:='.exe';
   if not OpenDialog1.execute then exit;
-  edtCodeEditor.Text:=OpenDialog1.FileName;
+  edtCodeEditor.Text:=RelativeFilename(extractfilepath(application.exename),OpenDialog1.FileName,DMMain.DelphiVersion);
 end;
 
 {-----------------------------------------------------------------------------
@@ -183,18 +184,21 @@ end;
   Description: check the settings if they are still valid.
 -----------------------------------------------------------------------------}
 function TFrmOptions.VerifySettings:boolean;
+var
+_filename:string;
 begin
   result:=false;
+  _filename:=AbsoluteFilename(extractfilepath(application.exename),edtCodeEditor.Text);
   if (trim(edtCodeEditor.Text)<>'') and
-     (not FileExists(edtCodeEditor.Text)) then begin
-    ShowMessage(format('Please check if the File <%s> really exists.', [edtCodeEditor.Text]));
+     (not FileExists(_filename)) then begin
+    ShowMessage(format('Please check if the File <%s> really exists.', [_filename]));
     edtCodeEditor.SetFocus;
     exit;
   end;
-
+  _filename:=AbsoluteFilename(extractfilepath(application.exename),edtDiffTool.Text);
   if (trim(edtDiffTool.Text)<>'') and
-     (not FileExists(edtDiffTool.Text)) then begin
-    ShowMessage(format('Please check if the File <%s> really exists.', [edtDiffTool.Text]));
+     (not FileExists(_filename)) then begin
+    ShowMessage(format('Please check if the File <%s> really exists.', [_filename]));
     edtDiffTool.SetFocus;
     exit;
   end;
@@ -270,7 +274,7 @@ procedure TFrmOptions.btnDiffToolClick(Sender: TObject);
 begin
   OpenDialog1.DefaultExt:='.exe';
   if not OpenDialog1.execute then exit;
-  edtDiffTool.Text:=OpenDialog1.FileName;
+  edtDiffTool.Text:=RelativeFilename(extractfilepath(application.exename),OpenDialog1.FileName,DMMain.DelphiVersion);
 end;
 
 end.

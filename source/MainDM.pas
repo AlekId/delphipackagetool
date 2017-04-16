@@ -22,7 +22,8 @@ uses
 {$ifndef NoZipSupport}
   Zip,
 {$endif}
-  ActnList;
+  ActnList,
+  System.Actions;
 
 type
 
@@ -168,7 +169,7 @@ type
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
     function  GetCurrentPackageVersion:string;
-    procedure ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;const _ShowQuestions:boolean=false); // present the changed files in the diff-tool and ask the user if he want to save the changes.
+    procedure ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;var ShowQuestions:boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
     procedure UpdateProjectFiles(const _ForceWrite: Boolean = False);
     function  RemoveProjectFromProjectGroup:boolean;
@@ -230,7 +231,9 @@ implementation
 uses
   Forms,
   Windows,
+  Dialogs,
   Controls,
+  UITypes,
   StrUtils,
   uDPTJclFuncs,
   uDPTMisc,
@@ -288,7 +291,7 @@ begin
     trace(1,'Problem in TDMMain.CompareFiles: Could not find file <%s>.',[_filename2]);
     exit;
   end;
-  _DiffToolEXEName:=ApplicationSettings.StringValue('Application/DiffTool');
+  _DiffToolEXEName:=AbsoluteFilename(extractfilepath(application.exename),ApplicationSettings.StringValue('Application/DiffTool'));
   if not IsSilentMode then begin
     if _DiffToolEXEName='' then begin
       Application.MessageBox(pChar(cSetupDiffTool),pchar(cInformation),MB_ICONWARNING or MB_OK);
@@ -344,7 +347,7 @@ begin
       _lstFiles.free;
     end;
   end;
-  _SourceCodeEditorEXEName:=ApplicationSettings.StringValue('Application/SourceCodeEditor');
+  _SourceCodeEditorEXEName:=AbsoluteFilename(extractfilepath(application.exename), ApplicationSettings.StringValue('Application/SourceCodeEditor'));
   if _SourceCodeEditorEXEName='' then begin
     Application.MessageBox(pChar(cSetupSourceCodeEditor),pchar(cInformation),MB_ICONWARNING or MB_OK);
     exit;
@@ -1075,16 +1078,15 @@ begin
   ApplicationSettings.GetIntegerValue('Compiler/DelphiVersion',LatestIDEVersion, 'Delphi Version', true,false,false);
   ApplicationSettings.GetFileValue('Application/ProjectGroupFile', '', 'The name of Borland Package Group File', true,false,false);
   ApplicationSettings.GetBoolValue('Application/SilentMode', False, 'If this settings is true, then no dialog boxes will be shown.', true,false,false);
-  ApplicationSettings.GetBoolValue('Application/StopOnFailure', false, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
+  ApplicationSettings.GetBoolValue('Application/StopOnFailure', true, 'If a failure occures during a batch process like <rebuild all>, then the applications stops.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/StartDelphiOnClose', False, 'Start Delphi when this application terminates.', true,false,false);
   ApplicationSettings.GetStringValue('Application/PathNameFile', 'DelphiPackageToolPathD'+inttostr(FDelphiVersion)+'.txt', 'The file containing the search path for the compiler.', true,false,false);
   ApplicationSettings.GetStringValue('Application/SourceCodeEditor','..\Notepad++\notepad++.exe','Define the Source code Editor (e.g. Notepad++).',true,false,false);
   ApplicationSettings.GetBoolValue('Application/ShowStartUpWarning', true, 'If true then the startup information screen is shown.', true,false,false);
   ApplicationSettings.GetStringValue('Application/CompilerSwitches','-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',3,'Select the trace level of the Log-file. 1-5.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/ChangeFiles',false,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/ChangeFiles',true,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath','C:\','Specifies the last used search path.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/UseSkins', True, 'If true then the application will be skinned.', true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile','','Last used project name.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/trace',false,'The application will trace all steps.',true,false,false);
@@ -1267,7 +1269,7 @@ resourcestring
 begin
   if not isDelphiStarted(FDelphiVersion) then exit;
   if IsSilentMode then   // if silent mode then just close it.
-    ShutDownDelphi(FDelphiVersion, false)
+    ShutDownDelphi(FDelphiVersion)
   else
   begin
     Application.MessageBox(pchar(cPleaseCloseDelphiFirst),pchar(cInformation),MB_ICONINFORMATION or MB_OK);  // if not silent mode, then ask the user to close delphi IDE.
@@ -1530,7 +1532,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actShutDownDelphiExecute(Sender: TObject);
 begin
-  ShutDownDelphi(FDelphiVersion, True);
+  ShutDownDelphi(FDelphiVersion);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2001,7 +2003,7 @@ end;
 ----------------------------------------------------------------------------}
 function TDMMain.ReplaceTag(_filename: string): string;
 begin
-  result := uDPTDelphiPackage.ReplaceTag(_filename, FDelphiVersion,FPlatformToCompile, FConfigToCompile);
+  result := uDPTPathFilenameConvert.ReplaceTag(_filename, FDelphiVersion,FPlatformToCompile, FConfigToCompile);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -2127,7 +2129,9 @@ var
 i:integer;
 _ChangedFiles:TStringList;
 _NewFilename:string;
+_askUser:boolean;
 begin
+  _askUser:=true;
   if not _ForceWrite then begin
     if not ApplicationSettings.BoolValue('Application/ChangeFiles') then Exit;    // if DPT is allowed to change the files
   end;
@@ -2148,7 +2152,7 @@ begin
                                FConfigToCompile,
                                _ChangedFiles);
 
-  for i:=0 to _ChangedFiles.count-1 do ConfirmChanges(_ChangedFiles[i], False, True);
+  for i:=0 to _ChangedFiles.count-1 do ConfirmChanges(_ChangedFiles[i], False, _askUser);
 
 // try to update dpk/dproj files.
   if FProjectType = tp_bpl then begin // it is a package
@@ -2157,7 +2161,7 @@ begin
                      FPackageSuffix,
                      IsSilentMode,
                      _NewFilename); // then prepare a new file.
-    ConfirmChanges(_NewFilename, False);
+    ConfirmChanges(_NewFilename, False,_askUser);
   end;
 end;
 
@@ -2170,7 +2174,7 @@ end;
   Description: present the changed file in the diff-tool and ask the user
                if he want's to save the changes.
 -----------------------------------------------------------------------------}
-procedure TDMMain.ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;const _ShowQuestions:boolean=false);
+procedure TDMMain.ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;var ShowQuestions:boolean);
 resourcestring
 cSaveChanges='Save changes to file <%s> ?';
 cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
@@ -2178,6 +2182,7 @@ cDPTFoundOldVersionOfFile='DelphiPackageTool could undo the latest changes. Do y
 var
 _OldFilename:string;
 _msg:string;
+_answer:integer;
 begin
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
@@ -2186,20 +2191,25 @@ begin
   if _revert then _msg:=cDPTFoundOldVersionOfFile
              else _msg:=cDPTSuggestsSomeChanges;
 
-  if not IsSilentMode then
-    if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes then begin
-      if _Revert then CompareFiles(_ChangedFile,_OldFilename)
-                 else CompareFiles(_OldFilename,_ChangedFile);
+  if ShowQuestions then begin
+    _answer:=MessageDlg(_msg, mtConfirmation, [mbYes, mbNo, mbCancel, mbNoToAll, mbYesToAll], 0);
+    case _answer of
+      mryes,mrYesToAll:begin
+        if _Revert then CompareFiles(_ChangedFile,_OldFilename)
+                   else CompareFiles(_OldFilename,_ChangedFile);
+      end;
+      mrNoToAll:ShowQuestions:=false;
     end;
-
-  if IsSilentMode or
-     ( not _ShowQuestions) or
-     ((not IsSilentMode and
-       _ShowQuestions) and (Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=ID_yes)) then begin
-    if not RemoveReadOnlyFlag(_OldFilename,IsSilentMode) then exit;
-    if not CopyFile(pchar(_ChangedFile),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
-                                                                   else WriteLog('Changed the file ''%s''',[_OldFilename]);
   end;
+
+  if ShowQuestions then begin
+    _answer:=Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO);
+    if _answer<>IDYes then exit;
+  end;
+
+  if not RemoveReadOnlyFlag(_OldFilename,IsSilentMode) then exit;
+  if not CopyFile(pchar(_ChangedFile),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
+                                                                 else WriteLog('Changed the file ''%s''',[_OldFilename]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -2650,8 +2660,11 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 procedure TDMMain.actRevertChangesExecute(Sender: TObject);
+var
+_AskUser:boolean;
 begin
-  ConfirmChanges(cModifiedFileExtentions,true);
+  _AskUser:=not IsSilentMode;
+  ConfirmChanges(cModifiedFileExtentions,true,_AskUser);
 end;
 
 {-----------------------------------------------------------------------------

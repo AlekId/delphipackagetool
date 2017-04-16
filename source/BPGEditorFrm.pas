@@ -68,12 +68,14 @@ function ShowBPGEditor(const _ProjectGroupFilename: string):string;
 
 implementation
 
-uses FileCtrl,
-     uDPTDefinitions,
-     uDPTDelphiPackage,
-     uDPTCreateProjectGroup,
-     uDPTMisc,
-     MainDM;
+uses
+  FileCtrl,
+  uDPTDefinitions,
+  uDPTDelphiPackage,
+  uDPTCreateProjectGroup,
+  uDPTMisc,
+  MainDM;
+
 {$R *.dfm}
 
 {-----------------------------------------------------------------------------
