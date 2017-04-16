@@ -31,7 +31,7 @@ procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload
 function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
 function  WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;Var Output:String): LongWord;
 function  IsDelphiStarted(const _DelphiVersion:Integer): Boolean;
-procedure ShutDownDelphi(const _DelphiVersion:Integer;_Blocking : Boolean);
+procedure ShutDownDelphi(const _DelphiVersion:Integer);
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
 function  ReadProjectFilenameFromDProj(const _Filename:String):string; // the real project filename is now hidden in the dproj-file.
 function  ReadSupportedConfigsOfProject(const _filename: string; var _Configs: TStringList): Boolean;
@@ -45,7 +45,6 @@ function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and
 procedure InitBatchFile(const _filename:string); // reset batch file
 function  SaveBatchFile:string; // save the batch file.
 function  GetPackageVersion(const _PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):string;
-function  ReplaceTag(_filename:string;_DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string):string;
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType; // find out if the source file contains a application or library or package.
 function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;const _libsuffix:string=''):string; // input is a source code filename, output is the name of the compiled target.
 function  GetPackageSize(_PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):Int64; // read the filesize of the package.
@@ -61,7 +60,7 @@ function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _Compiler
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
 function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;  // write libsuffix into the dpk-file.
 function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean; // write libsuffix into the dproj-file.
-function  DeleteFile(const _Filename:String):boolean;  // delete the file <_filename>.
+function  DeleteFile(const _Filename:String;const _toTrashBin:boolean=true):boolean;  // delete the file <_filename>.
 function  RemoveProjectFromProjectGroup(const _GroupFilename,_ProjectFilename:string;const _ProjectType:TProjectType):boolean;
 function  ReadBDSCommonDir(const _DelphiVersion:integer):string; // reads the path to the BDSCOMMONDIR.
 function  ReadBDSProjectsDir(const _DelphiVersion:integer):string; // reads the path to the BDSPROJECTSDIR.
@@ -1476,51 +1475,6 @@ begin
   if (lowercase(ExtractFileext(_projectfilename))='.bdsgoup')  then result:=DetermProjectTypeBDS(_projectfilename,_projectGroupfilename)
   else
   if (lowercase(ExtractFileext(_projectfilename))='.groupproj')then result:=DetermProjectTypeGroupProj(_projectfilename,_projectGroupfilename);
-end;
-
-{-----------------------------------------------------------------------------
-  Procedure: ReplaceTag
-  Author:    Sam
-  Date:      07-Sep-2003
-  Arguments: _filename: string
-  Result:    string
-  Description: replaces the Tag <$(DELPHI)> with the real delphi path.
-               replaces the Tag <$(BDS)> with the real delphi path.
-               replaces the Tag <$(PROGRAMFILES)> with the real program files path.
-               replaces the Tag <$(DELPHIVERSION)> with the real delphi version.
-               replaces the Tag <$(BDSCOMMONDIR)> with the real bds common path.
-               replaces the Tag <$(BDSPROJECTSDIR)> with the real bds projects path.
-               replaces the Tag <$(public)> with windows public path.
-----------------------------------------------------------------------------}
-function ReplaceTag(_filename: string; _DelphiVersion: Integer;const _CurrentPlatform, _CurrentConfig: string): string;
-begin
-  _filename := StringReplace(_filename, cDelphiVersionTag, DelphiVersions[_DelphiVersion].ShortName, [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cPackageVersionTag, DelphiVersions[_DelphiVersion].PackageVersion, [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cDelphiTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cBDSTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cBDSBINTag, ExcludeTrailingPathDelimiter(GetDelphiStdPackagesDir(_DelphiVersion, _CurrentPlatform)), [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cProgramFilesTag, ExcludeTrailingPathDelimiter(GetSystemPath(spProgFiles)), [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cBDSCommonDirTag, ExcludeTrailingPathDelimiter(ReadBDSCommonDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cBDSProjectsDirTag, ExcludeTrailingPathDelimiter(ReadBDSProjectsDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cPlatformTag, _CurrentPlatform, [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cConfigTag, _CurrentConfig, [rfReplaceAll, rfIgnoreCase]);
-
-  _filename := StringReplace(_filename, cUsersPublicTag, ExcludeTrailingPathDelimiter(GetSystemPath(spPublic)), [rfReplaceAll, rfIgnoreCase]);
-
-
-  if pos(UpperCase(cBDSUserDirTag), UpperCase(_fileName)) > 0 then
-    _filename := StringReplace(_filename, cBDSUserDirTag, ReadBDSUserDir(_DelphiVersion), [rfReplaceAll, rfIgnoreCase]);
-
-  Result := _filename;
 end;
 
 {-----------------------------------------------------------------------------
@@ -4092,9 +4046,23 @@ end;
   Result:    None
   Description: delete the  file if exists.
 -----------------------------------------------------------------------------}
-function DeleteFile(const _Filename:String):boolean;  // delete the bpl file.
+function DeleteFile(const _Filename:String;const _toTrashBin:boolean=true):boolean;  // delete the bpl file.
 resourcestring
 cCouldNotDeleteFile='Could not delete file <%s>. Error <%s>.';
+
+function DeleteFileWithUndo(sFileName: string): Boolean;
+var
+  fos: TSHFileOpStruct;
+begin
+  FillChar(fos, SizeOf(fos), 0);
+  with fos do begin
+    wFunc  := FO_DELETE;
+    pFrom  := PChar(sFileName);
+    fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_SILENT;
+  end;
+  Result := (0 = ShFileOperation(fos));
+end;
+
 begin
   result:=false;
   if _Filename='' then exit;
@@ -4103,9 +4071,17 @@ begin
     exit;
   end;
   try
-    if not SysUtils.DeleteFile(_Filename) then begin
-      trace(1,'Error when deleting file <%s>. The file may be in use.',[_Filename]);
-      exit;
+    if _toTrashBin then begin
+      if not DeleteFileWithUndo(_Filename) then begin
+        trace(1,'Error when deleting file <%s> to trash. The file may be in use.',[_Filename]);
+        exit;
+      end;
+    end
+    else begin
+      if not SysUtils.DeleteFile(_Filename) then begin
+        trace(1,'Error when deleting file <%s>. The file may be in use.',[_Filename]);
+        exit;
+      end;
     end;
     FBatchFile.add('del "'+_Filename+'"');
     trace(3,'Deleted file <%s>.',[_Filename]);
@@ -4151,14 +4127,14 @@ begin
 end;
 
 {-----------------------------------------------------------------------------
-  Procedure: DelphiStarted
+  Procedure: IsDelphiStarted
   Author:
   Date:      30-Aug-2002
   Arguments: None
   Result:    Boolean
   Description:
 -----------------------------------------------------------------------------}
-function isDelphiStarted(const _DelphiVersion:Integer): Boolean;
+function IsDelphiStarted(const _DelphiVersion:Integer): Boolean;
 begin
   result := GetProcessID(GetDelphiApplication(_DelphiVersion))>0;
 end;
@@ -4167,11 +4143,11 @@ end;
   Procedure: ShutDownDelphi
   Author:
   Date:      30-Aug-2002
-  Arguments: Blocking : Boolean
+  Arguments: _DelphiVersion:Integer
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure ShutDownDelphi(const _DelphiVersion:Integer;_Blocking : Boolean);
+procedure ShutDownDelphi(const _DelphiVersion:Integer);
 var
   PrID: Integer; // processidentifier
   Ph: THandle;   // processhandle
