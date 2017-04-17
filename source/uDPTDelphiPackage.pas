@@ -4052,15 +4052,16 @@ cCouldNotDeleteFile='Could not delete file <%s>. Error <%s>.';
 
 function DeleteFileWithUndo(sFileName: string): Boolean;
 var
-  fos: TSHFileOpStruct;
+_returnvalue:integer;
+_fos: TSHFileOpStruct;
 begin
-  FillChar(fos, SizeOf(fos), 0);
-  with fos do begin
-    wFunc  := FO_DELETE;
-    pFrom  := PChar(sFileName);
-    fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_SILENT;
-  end;
-  Result := (0 = ShFileOperation(fos));
+  FillChar(_fos, SizeOf(_fos), 0);
+  _fos.wFunc  := FO_DELETE;
+  _fos.pFrom  := PChar(sFileName+#0);
+  _fos.fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_SILENT;
+  _returnvalue:=ShFileOperation(_fos);
+  result :=(0 =_returnvalue);
+  if not result then  trace(1,'Error in DeleteFileWithUndo: Deletion of file <%s> did not work. Return value <%d>.',[sFileName,_returnvalue]);
 end;
 
 begin
