@@ -71,6 +71,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.43  ( 17.04.2017 )
+-SH: Improvements for external Source-Editor and Diff-Tool Setup.
+-SH: Instead of deleting files, move them to recycle bin.
+-SH: started to add options "Yes to all" and "No to all" to some Dialog-Boxes.
+
 1.9.2.42  ( 14.04.2017 )
 -SH: Show Options-Dialog on first Startup to let the user setup the Source-Editor and the Diff-Tool.
 
@@ -81,7 +86,7 @@ History:
 
 1.9.2.32  ( 18.03.2017 )
 -SH: instead of modifying the global environments-path, the delphi IDE Environment-Path is now used. (this was a  mis-conecption for a long time which is now corrected).
--SH: Removed setting "Allow modifiy Environment Path".
+-SH: Removed setting "Allow modify Environment Path".
 
 1.9.2.31  ( 13.03.2017 )
 -SH: fix in relation with package-suffix and "Allow to change files". 
