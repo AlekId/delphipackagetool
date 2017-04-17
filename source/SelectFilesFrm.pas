@@ -141,6 +141,7 @@ i:integer;
 _filename:string;
 _path:string;
 begin
+  if lbxFiles.ItemIndex=-1 then exit;
   _filename:=lbxFiles.items[lbxFiles.ItemIndex];
   _path:=extractFilePath(_filename);
   for i:=0 to lbxFiles.count-1 do begin
