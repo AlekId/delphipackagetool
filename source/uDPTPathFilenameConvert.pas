@@ -41,32 +41,33 @@ uses
                replaces the Tag <$(public)> with windows public path.
 ----------------------------------------------------------------------------}
 function ReplaceTag(_filename: string; _DelphiVersion: Integer=0;const _CurrentPlatform:string='';const _CurrentConfig:string=''): string;
+var
+_UpperCaseFilename:string;
 begin
-  _filename := StringReplace(_filename, cDelphiVersionTag, DelphiVersions[_DelphiVersion].ShortName, [rfReplaceAll, rfIgnoreCase]);
+  _UpperCaseFilename:=Uppercase(_filename);
+  if pos(cDelphiVersionTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cDelphiVersionTag, DelphiVersions[_DelphiVersion].ShortName, [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cPackageVersionTag, DelphiVersions[_DelphiVersion].PackageVersion, [rfReplaceAll, rfIgnoreCase]);
+  if pos(cPackageVersionTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cPackageVersionTag, DelphiVersions[_DelphiVersion].PackageVersion, [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cDelphiTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cDelphiTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cDelphiTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cBDSTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cBDSTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cBDSTag, ExcludeTrailingPathDelimiter(GetDelphiRootDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cBDSBINTag, ExcludeTrailingPathDelimiter(GetDelphiStdPackagesDir(_DelphiVersion, _CurrentPlatform)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cBDSBINTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cBDSBINTag, ExcludeTrailingPathDelimiter(GetDelphiStdPackagesDir(_DelphiVersion, _CurrentPlatform)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cProgramFilesTag, ExcludeTrailingPathDelimiter(GetSystemPath(spProgFiles)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cProgramFilesTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cProgramFilesTag, ExcludeTrailingPathDelimiter(GetSystemPath(spProgFiles)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cBDSCommonDirTag, ExcludeTrailingPathDelimiter(ReadBDSCommonDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cBDSCommonDirTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cBDSCommonDirTag, ExcludeTrailingPathDelimiter(ReadBDSCommonDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cBDSProjectsDirTag, ExcludeTrailingPathDelimiter(ReadBDSProjectsDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cBDSProjectsDirTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cBDSProjectsDirTag, ExcludeTrailingPathDelimiter(ReadBDSProjectsDir(_DelphiVersion)), [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cPlatformTag, _CurrentPlatform, [rfReplaceAll, rfIgnoreCase]);
+  if pos(cPlatformTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cPlatformTag, _CurrentPlatform, [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cConfigTag, _CurrentConfig, [rfReplaceAll, rfIgnoreCase]);
+  if pos(cConfigTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cConfigTag, _CurrentConfig, [rfReplaceAll, rfIgnoreCase]);
 
-  _filename := StringReplace(_filename, cUsersPublicTag, ExcludeTrailingPathDelimiter(GetSystemPath(spPublic)), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cUsersPublicTag,_UpperCaseFilename)>0 then _filename := StringReplace(_filename, cUsersPublicTag, ExcludeTrailingPathDelimiter(GetSystemPath(spPublic)), [rfReplaceAll, rfIgnoreCase]);
 
-
-  if pos(UpperCase(cBDSUserDirTag), UpperCase(_fileName)) > 0 then
-    _filename := StringReplace(_filename, cBDSUserDirTag, ReadBDSUserDir(_DelphiVersion), [rfReplaceAll, rfIgnoreCase]);
+  if pos(cBDSUserDirTag, _UpperCaseFilename)>0 then _filename := StringReplace(_filename, cBDSUserDirTag, ReadBDSUserDir(_DelphiVersion), [rfReplaceAll, rfIgnoreCase]);
 
   Result := _filename;
 end;
