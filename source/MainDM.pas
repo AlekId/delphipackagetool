@@ -22,8 +22,7 @@ uses
 {$ifndef NoZipSupport}
   Zip,
 {$endif}
-  ActnList,
-  System.Actions;
+  ActnList, System.Actions;
 
 type
 
@@ -159,6 +158,7 @@ type
     procedure InitProjectSettings;
     procedure SetDPTSearchPath(const Value: string);
     procedure LoadCurrentProject;
+    function  IsDiffToolAvailable:boolean; // returns true if a external Diff-Tool is setup
   public
 {$ifdef withTrace}
     NVBTraceFile: TNVBTraceFile;
@@ -169,7 +169,7 @@ type
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
     function  GetCurrentPackageVersion:string;
-    procedure ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;var ShowQuestions:boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
+    procedure ConfirmChanges(_ChangedFile:string;const _Revert:Boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
     procedure UpdateProjectFiles(const _ForceWrite: Boolean = False);
     function  RemoveProjectFromProjectGroup:boolean;
@@ -233,7 +233,6 @@ uses
   Windows,
   Dialogs,
   Controls,
-  UITypes,
   StrUtils,
   uDPTJclFuncs,
   uDPTMisc,
@@ -1086,6 +1085,7 @@ begin
   ApplicationSettings.GetStringValue('Application/CompilerSwitches','-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',3,'Select the trace level of the Log-file. 1-5.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/ChangeFiles',true,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/DisplayFilesInDiffTool',true,'If set to true, the DelphiPackageTool does show the changed files in the external Diff-Tool.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath','C:\','Specifies the last used search path.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile','','Last used project name.',true,false,false);
@@ -2129,11 +2129,9 @@ var
 i:integer;
 _ChangedFiles:TStringList;
 _NewFilename:string;
-_askUser:boolean;
 begin
-  _askUser:=true;
   if not _ForceWrite then begin
-    if not ApplicationSettings.BoolValue('Application/ChangeFiles') then Exit;    // if DPT is allowed to change the files
+    if not ApplicationSettings.BoolValue('Application/ChangeFiles') then exit;    // if DPT is allowed to change the files
   end;
 
 // try to update cfg/dproj/bdsproj files.
@@ -2152,7 +2150,7 @@ begin
                                FConfigToCompile,
                                _ChangedFiles);
 
-  for i:=0 to _ChangedFiles.count-1 do ConfirmChanges(_ChangedFiles[i], False, _askUser);
+  for i:=0 to _ChangedFiles.count-1 do ConfirmChanges(_ChangedFiles[i], False);
 
 // try to update dpk/dproj files.
   if FProjectType = tp_bpl then begin // it is a package
@@ -2161,7 +2159,7 @@ begin
                      FPackageSuffix,
                      IsSilentMode,
                      _NewFilename); // then prepare a new file.
-    ConfirmChanges(_NewFilename, False,_askUser);
+    ConfirmChanges(_NewFilename, False);
   end;
 end;
 
@@ -2174,7 +2172,7 @@ end;
   Description: present the changed file in the diff-tool and ask the user
                if he want's to save the changes.
 -----------------------------------------------------------------------------}
-procedure TDMMain.ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;var ShowQuestions:boolean);
+procedure TDMMain.ConfirmChanges(_ChangedFile:string;const _Revert:Boolean);
 resourcestring
 cSaveChanges='Save changes to file <%s> ?';
 cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
@@ -2182,7 +2180,6 @@ cDPTFoundOldVersionOfFile='DelphiPackageTool could undo the latest changes. Do y
 var
 _OldFilename:string;
 _msg:string;
-_answer:integer;
 begin
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
@@ -2191,20 +2188,16 @@ begin
   if _revert then _msg:=cDPTFoundOldVersionOfFile
              else _msg:=cDPTSuggestsSomeChanges;
 
-  if ShowQuestions then begin
-    _answer:=MessageDlg(_msg, mtConfirmation, [mbYes, mbNo, mbCancel, mbNoToAll, mbYesToAll], 0);
-    case _answer of
-      mryes,mrYesToAll:begin
-        if _Revert then CompareFiles(_ChangedFile,_OldFilename)
-                   else CompareFiles(_OldFilename,_ChangedFile);
-      end;
-      mrNoToAll:ShowQuestions:=false;
+  if ApplicationSettings.BoolValue('Application/DisplayFilesInDiffTool') and
+     IsDiffToolAvailable  then begin
+    if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then begin
+      if _Revert then CompareFiles(_ChangedFile,_OldFilename)
+                 else CompareFiles(_OldFilename,_ChangedFile);
     end;
   end;
 
-  if ShowQuestions then begin
-    _answer:=Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO);
-    if _answer<>IDYes then exit;
+  if not IsSilentMode then begin
+    if Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)<>IDYes then exit;
   end;
 
   if not RemoveReadOnlyFlag(_OldFilename,IsSilentMode) then exit;
@@ -2660,11 +2653,8 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 procedure TDMMain.actRevertChangesExecute(Sender: TObject);
-var
-_AskUser:boolean;
 begin
-  _AskUser:=not IsSilentMode;
-  ConfirmChanges(cModifiedFileExtentions,true,_AskUser);
+  ConfirmChanges(cModifiedFileExtentions,true);
 end;
 
 {-----------------------------------------------------------------------------
@@ -2738,6 +2728,23 @@ procedure TDMMain.SetDPTSearchPath(const Value: string);
 begin
   FDPTSearchPath := Value;
   InitProjectDataForHint;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: IsDiffToolAvailable
+  Author:    sam
+  Date:      18-Apr-2017
+  Arguments: None
+  Result:    boolean
+  Description: returns true if a external Diff-Tool is setup
+               and the file exists.
+-----------------------------------------------------------------------------}
+function TDMMain.IsDiffToolAvailable: boolean;
+var
+_DiffToolEXEName:string;
+begin
+  _DiffToolEXEName:=AbsoluteFilename(extractfilepath(application.exename),ApplicationSettings.StringValue('Application/DiffTool'));
+  result:=fileexists(_DiffToolEXEName);
 end;
 
 end.
