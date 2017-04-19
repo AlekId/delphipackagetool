@@ -4410,31 +4410,36 @@ _NewPathValue:string;
 begin
   DeletedPathEntries:=0;
   _PathList:=GetIDEEnvironmentPathList(_DelphiVersion);
-  for i:=0 to _PathList.Count-1 do begin
-    _path:=ReplaceTag(_PathList[i],_DelphiVersion,'',''); // try to expand place-holders.
-    if pos('%',_path)>0 then begin // if there is still a placeholder in the path-name, then don't touch it.
-      _NewPathValue:=_NewPathValue+_PathList[i]+';';
-      continue;
-    end;
-    if DirectoryExists(_path) or                 // if the path still exists
-       (lowercase(_path)='$(path)') then begin    // or it is the entry $(path)
-      _NewPathValue:=_NewPathValue+_PathList[i]+';';  // then keep it
-      continue;
-    end;
-    if not _silent then begin
-      if Application.MessageBox(pchar(format(cAskToCleanUPEnvrionmentPath,[_path])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then begin
-        _NewPathValue:=_NewPathValue+_PathList[i]+';';  // or if the user wants to keept it
+  try
+    for i:=0 to _PathList.Count-1 do begin
+      _path:=ReplaceTag(_PathList[i],_DelphiVersion,'',''); // try to expand place-holders.
+      if pos('%',_path)>0 then begin // if there is still a placeholder in the path-name, then don't touch it.
+        _NewPathValue:=_NewPathValue+_PathList[i]+';';
         continue;
       end;
+      if DirectoryExists(_path) or                 // if the path still exists
+         (lowercase(_path)='$(path)') then begin    // or it is the entry $(path)
+        _NewPathValue:=_NewPathValue+_PathList[i]+';';  // then keep it
+        continue;
+      end;
+      if not _silent then begin
+        if Application.MessageBox(pchar(format(cAskToCleanUPEnvrionmentPath,[_path])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then begin
+          _NewPathValue:=_NewPathValue+_PathList[i]+';';  // or if the user wants to keept it
+          continue;
+        end;
+      end;
+      trace(2,'VerifyIDEEnvrionmentsPath: Remove path <%s>.',[_path]);
+      inc(DeletedPathEntries);
     end;
-    trace(2,'VerifyIDEEnvrionmentsPath: Remove path <%s>.',[_path]);
-    inc(DeletedPathEntries);
+    if DeletedPathEntries=0 then begin  // nothing changed, so we can leave method here.
+      result:=true;
+      exit;
+    end;
+    result:=SetIDEEnvironmentPath(_DelphiVersion,_NewPathValue,_silent);
+    if result then trace(3,'VerifyIDEEnvrionmentsPath: Changed IDE Environment Settings from <%s> to <%s>.',[_PathList.text,_NewPathValue]);
+  finally
+    _PathList.free;
   end;
-  if DeletedPathEntries=0 then begin  // nothing changed, so we can leave method here.
-    result:=true;
-    exit;
-  end;
-  result:=SetIDEEnvironmentPath(_DelphiVersion,_NewPathValue,false);
 end;
 
 initialization

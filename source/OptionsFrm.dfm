@@ -1,6 +1,6 @@
 object FrmOptions: TFrmOptions
-  Left = 651
-  Top = 26
+  Left = 447
+  Top = 343
   BorderStyle = bsDialog
   Caption = 'Options'
   ClientHeight = 280
@@ -105,14 +105,14 @@ object FrmOptions: TFrmOptions
       State = cbChecked
       TabOrder = 5
     end
-    object cbxChangeFiles: TCheckBox
+    object cbxAllowToChangeFiles: TCheckBox
       Left = 8
       Top = 160
       Width = 233
       Height = 17
       Hint = 
-        'WARNING: If this box is checked, then the Delphi Package Tool wi' +
-        'll change your cfg and dof-files.'
+        'INFO: If this box is checked, then the Delphi Package Tool will ' +
+        'change your cfg,dof,dproj-files.'
       Caption = 'Allow DelphiPackageTool to change files'
       ParentShowHint = False
       ShowHint = True
@@ -154,7 +154,7 @@ object FrmOptions: TFrmOptions
     end
     object cbxBackupSourceOnly: TCheckBox
       Left = 8
-      Top = 192
+      Top = 208
       Width = 185
       Height = 17
       Hint = 'Only backup source files. No compiled stuff.'
@@ -164,6 +164,19 @@ object FrmOptions: TFrmOptions
       ShowHint = True
       State = cbChecked
       TabOrder = 7
+    end
+    object cbxShowChangedFileInDiffTool: TCheckBox
+      Left = 8
+      Top = 184
+      Width = 233
+      Height = 17
+      Hint = 
+        'INFO: If this box is checked, then the changed files will be dis' +
+        'played in the external Diff-Tool.'
+      Caption = 'Show changed files in Diff-Tool.'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 8
     end
   end
   object pnlBottom: TPanel
