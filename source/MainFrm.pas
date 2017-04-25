@@ -30,7 +30,8 @@ uses
   uDPTDelphiPackage,
   uDPTDefinitions,
   ComCtrls,
-  CheckLst;
+  CheckLst, 
+  System.Actions;
 
 type
 
@@ -385,22 +386,12 @@ end;
            06.05.2005 - do not write a <.log> file if filename is empty.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-_filename:string;
 begin
   GUItoApplicationSettings;
+  DMMain.SaveLogToFile(mmoLogFile.lines);
   CloseProjectGroup;
   DMMain.OnWriteLog:=nil;
   DMMain.OnDelphiVersionChange:=nil;
-  if not SysUtils.DirectoryExists(DMMain.BPGPath) then exit;
-  _filename:=ChangeFileExt(DMMain.BPGFilename, '.log');
-  try
-    if ExtractFilenameOnly(DMMain.BPGFilename)='' then exit;
-    mmoLogFile.Lines.SaveToFile(_filename);
-    trace(5,'Wrote Logfile <%s>.',[_filename]);
-  except
-    trace(1,'Problem in FormClose: Could not write Logfile <%s>.',[_filename]);
-  end;
 end;
 
 {-----------------------------------------------------------------------------

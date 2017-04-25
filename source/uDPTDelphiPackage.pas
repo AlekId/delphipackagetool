@@ -25,11 +25,11 @@ function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;co
 function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; out msg: string): Boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName, _PackageDirectory, _PackageLibSuffix: string; _DelphiVersion: Integer): Boolean;  // remove package from regeistry.
 function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType; var Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
-function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
+function  VerifyRegistry(const _DelphiVersion:integer;out NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
-function  ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the information from the dpk file.
-function  WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;Var Output:String): LongWord;
+function  ReadPackageInfo(const _PackageName:string;out Description:string;out LibSuffix:string):boolean; // get the information from the dpk file.
+function  WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;out Output:String): LongWord;
 function  IsDelphiStarted(const _DelphiVersion:Integer): Boolean;
 procedure ShutDownDelphi(const _DelphiVersion:Integer);
 procedure StartUpDelphi(const _DelphiVersion:Integer;_ProjectName:string);
@@ -55,7 +55,7 @@ function  CleanUpPackagesByRegistry(const _ROOTKEY:DWORD;const _DelphiVersion:in
 function  CleanUpPackagesByPath(const _DelphiVersion:integer;_BPLPath:string;_DCPPath:string;const _deletefiles:boolean; const _CurrentPlatform,_CurrentConfig: string):boolean; // this method delete's the packages located in ($DELPHI)\Projects\Bpl and removes the key's from the registery.
 function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // find registry-entries without the packages
 function  CleanUpPackageByEnvPaths(const _DelphiVersion:integer;const _silent:boolean):boolean;
-function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
+function  ReadLibraryPath(const _DelphiVersion:integer;out DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
 function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;  // write libsuffix into the dpk-file.
@@ -68,7 +68,7 @@ function  ReadBDSUserDir(const _DelphiVersion:integer):string; // reads the path
 function  isIDEInstalled(const _Version:Integer):boolean; // find out if the ide version e.g. 11.0 is installed.
 function  OldestIDEVersion:integer; // returns the VersionNo of the oldest IDE installed.
 function  LatestIDEVersion:integer; // returns the VersionNo of the newest IDE installed.
-function  GetIDERootKey(const _version:integer;var RootKey:string):boolean;
+function  GetIDERootKey(const _version:integer;out RootKey:string):boolean;
 function  RemoveDoublePathEntries(_Path:string):string; // verify the string <_Path> and remove double entries.
 function  RemoveTrailingSemikolon(const _path:string):string;
 function  AddTag(_filename: string;_DelphiVersion:integer): string;
@@ -470,7 +470,7 @@ end;
   Result:    boolean
   Description: this method returns true if an invalid key from the registry gets deleted.
 -----------------------------------------------------------------------------}
-function  VerifyRegistry(const _DelphiVersion:integer;var NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
+function  VerifyRegistry(const _DelphiVersion:integer;out NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 begin
   result:=true;
   NoOfRemovedKeys:=0;
@@ -892,10 +892,11 @@ end;
   Result:    string
   Description: returns the registry root key according to the passed version number.
 -----------------------------------------------------------------------------}
-function GetIDERootKey(const _version:integer;var RootKey:string):boolean;
+function GetIDERootKey(const _version:integer;out RootKey:string):boolean;
 var
 _sDelphiVersion:string;
 begin
+  RootKey:='';
 //  trace(5,'Enter GetIDERootKey with value <%d>.',[_version]);
   if _version<=7 then begin // for delphi version 1-7
     _sDelphiVersion:=inttostr(_version)+'.0\';
@@ -932,7 +933,7 @@ end;
   Result:    boolean
   Description: read the library setting from the registry.
 -----------------------------------------------------------------------------}
-function  ReadLibraryPath(const _DelphiVersion:integer;var DelphiLibraryPath:TDelphiLibraryPath):boolean;
+function  ReadLibraryPath(const _DelphiVersion:integer;out DelphiLibraryPath:TDelphiLibraryPath):boolean;
 var
 _Key:string;
 
@@ -2049,11 +2050,11 @@ end;
   Procedure: ReadBDSProjSettings
   Author:    sam
   Date:      27-Mai-2008
-  Arguments: const _bdsprojFilename:String;var Conditions:string;var SearchPath:String;var ProjectOutputPath:string;var BPLOutputPath:string;var DCUOutputPath:string
+  Arguments: const _bdsprojFilename:String;out ProjectName:string;out Conditions:string;out SearchPath:String;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function ReadBDSProjSettings(const _bdsprojFilename:String;var ProjectName:string;out Conditions:string;out SearchPath:String;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string):boolean; // get informations from the cfg-file.
+function ReadBDSProjSettings(const _bdsprojFilename:String;out ProjectName:string;out Conditions:string;out SearchPath:String;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string):boolean; // get informations from the cfg-file.
 var
 _msg:string;
 _stmt:string;
@@ -2064,6 +2065,7 @@ begin
   BPLOutputPath:='';
   DCUOutputPath:='';
   Conditions:='';
+  ProjectName:='';
   if not fileExists(_bdsprojFilename) then begin
     trace(5,'ReadBDSProjSettings: Could not find the file <%s>.',[_bdsprojFilename]);
     exit;
@@ -3494,7 +3496,7 @@ end;
   Result:    boolean
   Description: read information from package file.
 -----------------------------------------------------------------------------}
-function ReadPackageInfo(const _PackageName:string;var Description:string;var LibSuffix:string):boolean; // get the description text
+function ReadPackageInfo(const _PackageName:string;out Description:string;out LibSuffix:string):boolean; // get the description text
 begin
   result:=ReadPackageInfoDelphi(_PackageName,Description,LibSuffix)
 end;
@@ -3510,7 +3512,7 @@ end;
   Description:
   Changes: -SH 05.06.2003 Bugfix for deadlock of the external app.
 -----------------------------------------------------------------------------}
-function WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;var Output:String): LongWord;
+function WinExecAndWait(FileName,CommandLine,WorkPath,Environment: string; Visibility: Integer;out Output:String): LongWord;
 const
   BufSize = 1024;
 var

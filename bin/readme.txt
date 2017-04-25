@@ -71,6 +71,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.48  ( 25.04.2017 )
+-SH: - changes for log-file.
+-SH: - changes for silentmode and display of diff-tool.
+-SH: - DPT is now built/compiled with Delphi 10.1 Berlin.
+
 1.9.2.43  ( 17.04.2017 )
 -SH: Improvements for external Source-Editor and Diff-Tool Setup.
 -SH: Instead of deleting files, move them to recycle bin.

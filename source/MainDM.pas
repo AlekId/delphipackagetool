@@ -136,7 +136,7 @@ type
     procedure FireDelphiVersionChanged;
     procedure FireCurrentProjectChanged;
     procedure SetApplicationState(const _newState:TApplicationState);
-    procedure SetDelphiVersion(const Value: Integer);
+    procedure SetDelphiVersion(const _Value: Integer);
     function  InitializeAppSettings:boolean;
     procedure SearchFileCompilerOutput(_compilerOutput:string);
     procedure SearchFile(_filename:string;_compilerOutput:string);
@@ -144,8 +144,8 @@ type
     procedure ExecuteApp;
     function  PrepareEXEParams(_filename:string;_lineNo:integer;_SourceCodeEditorParams:string):string;
     procedure AdaptSearchPath; // replace $(DELPHI) with $(BDS) when the user switches delphi version
-    function  SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer):boolean;
-    function  GetProjectVersionOfFile(_filename:string;var Major,Minor,Release,Build:integer):boolean;
+    function  SetProjectVersionOfFile(_filename:string;_Major,_Minor,_Release,_Build:integer):boolean;
+    function  GetProjectVersionOfFile(_filename:string;out Major,Minor,Release,Build:integer):boolean;
     function  OldFilesExist(_ChangedFiles:string):boolean;
     procedure GetAllPlatformsAndConfigsOfBPG;
     function  CompileCurrentPackageWithDcc: Boolean;
@@ -194,6 +194,7 @@ type
     function  SearchPath:string;
     procedure SetLastUsedBPGFile(_BPGfilename: string);
     function  IsSilentMode:boolean;
+    function  SaveLogToFile(_Log:TStrings):boolean;
     property  Compiler:string read FDelphiCompilerFile;
     property  CurrentProjectFilename: string  read FProjectFilename;
     property  CurrentBPLOutputPath:string read FBPLOutputPath;
@@ -291,15 +292,13 @@ begin
     exit;
   end;
   _DiffToolEXEName:=AbsoluteFilename(extractfilepath(application.exename),ApplicationSettings.StringValue('Application/DiffTool'));
-  if not IsSilentMode then begin
-    if _DiffToolEXEName='' then begin
-      Application.MessageBox(pChar(cSetupDiffTool),pchar(cInformation),MB_ICONWARNING or MB_OK);
-      exit;
-    end;
-    if not fileexists(_DiffToolEXEName) then begin
-      Application.MessageBox(pchar(format(cCouldNotFindDiffTool,[_DiffToolEXEName])),pchar(cWarning),MB_ICONWARNING or MB_OK);
-      exit;
-    end;
+  if _DiffToolEXEName='' then begin
+    if not IsSilentMode then Application.MessageBox(pChar(cSetupDiffTool),pchar(cInformation),MB_ICONWARNING or MB_OK);
+    exit;
+  end;
+  if not fileexists(_DiffToolEXEName) then begin
+    if not IsSilentMode then Application.MessageBox(pchar(format(cCouldNotFindDiffTool,[_DiffToolEXEName])),pchar(cWarning),MB_ICONWARNING or MB_OK);
+    exit;
   end;
   _DiffToolParams:='"'+_filename1+'" "'+_filename2+'"';
   NVBAppExec1.Wait:=true;
@@ -973,6 +972,25 @@ begin
   end;
 end;
 
+function TDMMain.SaveLogToFile(_Log: TStrings): boolean;
+var
+_filename:string;
+begin
+  result:=false;
+  if not assigned(_Log) then exit;
+  if FBPGFilename='' then exit;
+  if not ApplicationSettings.BoolValue('Application/SaveLogToFile') then exit;
+  if not SysUtils.DirectoryExists(FBPGPath) then exit;
+  _filename:=ChangeFileExt(FBPGFilename, '.log');
+  try
+    _Log.SaveToFile(_filename);
+    trace(5,'Saved log to file <%s>.',[_filename]);
+    result:=true;
+  except
+    on e:exception do trace(1,'Error in TDMMain.SaveLogToFile: Could not write Logfile <%s>. <%s>.',[_filename,e.message]);
+  end;
+end;
+
 procedure TDMMain.WriteLog(_msg: string;const _params: array of const);
 begin
   if not assigned(FOnWriteLog) then exit;
@@ -1033,15 +1051,15 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-procedure TDMMain.SetDelphiVersion(const Value: Integer);
+procedure TDMMain.SetDelphiVersion(const _Value: Integer);
 resourcestring
 cAskForIDE='The IDE <%s> you used last time for this project is not installed on this computer! Do you want to open this project with IDE <%s>?';
 begin
-  if not isIDEInstalled(Value) then begin
-    if Application.MessageBox(pchar(format(cAskForIDE,[VersionNoToIDEName(Value),VersionNoToIDEName(LatestIDEVersion)])),pchar(cConfirm),MB_ICONQUESTION or MB_YesNo)<>IdYes then Application.terminate;
+  if not IsIDEInstalled(_Value) then begin
+    if Application.MessageBox(pchar(format(cAskForIDE,[VersionNoToIDEName(_Value),VersionNoToIDEName(LatestIDEVersion)])),pchar(cConfirm),MB_ICONQUESTION or MB_YesNo)<>IdYes then Application.terminate;
     FDelphiVersion:=LatestIDEVersion;
   end
-  else FDelphiVersion := Value;
+  else FDelphiVersion := _Value;
   ApplicationSettings.SetString('Application/PathNameFile', 'DelphiPackageToolPathD' + inttostr(FDelphiVersion) + '.txt');
   trace(3,'Set current delphi version to <%d>.',[FDelphiVersion]);
   FDelphiRootDirectory:=GetDelphiRootDir(FDelphiVersion);
@@ -1087,8 +1105,9 @@ begin
   ApplicationSettings.GetBoolValue('Application/ChangeFiles',true,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/DisplayFilesInDiffTool',true,'If set to true, the DelphiPackageTool does show the changed files in the external Diff-Tool.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath','C:\','Specifies the last used search path.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', True, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
+  ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', true, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedInputFile','','Last used project name.',true,false,false);
+  ApplicationSettings.GetBoolValue('Application/SaveLogToFile',false,'If set to true, the log output will be save to a file.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/trace',false,'The application will trace all steps.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastLogOutputPath','','Last used path to store the log file.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastZipOutputPath','','Last used path to store the zip file.',true,false,false);
@@ -1873,7 +1892,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.FireCurrentProjectChanged;
 begin
- if assigned(FOnCurrentProjectChanged) then FOnCurrentProjectChanged(self,FProjectFilename,FCurrentProjectNo);
+  if assigned(FOnCurrentProjectChanged) then FOnCurrentProjectChanged(self,FProjectFilename,FCurrentProjectNo);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1912,6 +1931,7 @@ begin
      (Pos('not found',_compilerOutput)>0) then ShowSelectPathDialog(SearchPath,_filename,true) else
   if (Pos('.dpr',_filename)>0) or
      (Pos('.dpk',_filename)>0) or
+     (Pos('.inc',_filename)>0) or
      (Pos('.pas',_filename)>0) then begin
     if Pos('<',_filename)=1 then Delete(_filename,1,1);
     if Pos('>.',_filename)=length(_filename)-1 then Delete(_filename,length(_filename)-1,2);
@@ -2180,20 +2200,26 @@ cDPTFoundOldVersionOfFile='DelphiPackageTool could undo the latest changes. Do y
 var
 _OldFilename:string;
 _msg:string;
+_answer:integer;
 begin
+  _answer:=0;
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
+  if not ApplicationSettings.BoolValue('Application/ChangeFiles') then exit;
+
   _OldFilename:=copy(_ChangedFile,1,length(_ChangedFile)-4);
 
   if _revert then _msg:=cDPTFoundOldVersionOfFile
              else _msg:=cDPTSuggestsSomeChanges;
 
-  if ApplicationSettings.BoolValue('Application/DisplayFilesInDiffTool') and
-     IsDiffToolAvailable  then begin
-    if Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then begin
-      if _Revert then CompareFiles(_ChangedFile,_OldFilename)
-                 else CompareFiles(_OldFilename,_ChangedFile);
-    end;
+  if not IsSilentMode and
+     ApplicationSettings.BoolValue('Application/DisplayFilesInDiffTool') and
+     IsDiffToolAvailable  then _answer:=Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO);
+
+  if (_answer=ID_Yes)
+    or IsSilentMode then begin
+    if _Revert then CompareFiles(_ChangedFile,_OldFilename)
+               else CompareFiles(_OldFilename,_ChangedFile);
   end;
 
   if not IsSilentMode then begin
@@ -2254,7 +2280,7 @@ end;
   Result:    boolean
   Description: set the project version.
 -----------------------------------------------------------------------------}
-function TDMMain.SetProjectVersionOfFile(_filename:string;Major,Minor,Release,Build:integer): boolean;
+function TDMMain.SetProjectVersionOfFile(_filename:string;_Major,_Minor,_Release,_Build:integer): boolean;
 begin
   result:=false;
   if not fileexists(extractfilepath(application.exename)+cSetVersionApplicationName) then begin
@@ -2268,7 +2294,7 @@ begin
   BackupFile(changefileext(_filename,'.res'),'.res_old','',false);
   NVBAppExec1.ExeName:=cSetVersionApplicationName;
   NVBAppExec1.ExePath:=extractfilepath(application.exename);
-  NVBAppExec1.ExeParams:=format('-v%d.%d.%d.%d -s "%s"',[Major,Minor,Release,Build,_filename]);
+  NVBAppExec1.ExeParams:=format('-v%d.%d.%d.%d -s "%s"',[_Major,_Minor,_Release,_Build,_filename]);
   if not NVBAppExec1.Execute then exit;
   result:=true;
 end;
@@ -2601,7 +2627,7 @@ end;
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
-function TDMMain.GetProjectVersionOfFile(_filename: string; var Major,Minor, Release, Build: integer): boolean;
+function TDMMain.GetProjectVersionOfFile(_filename: string; out Major,Minor, Release, Build: integer): boolean;
 const
 cResTag='.res:';
 var
@@ -2611,6 +2637,11 @@ _Pos:integer;
 _sMajor,_sMinor,_sRelease,_sBuild:string;
 begin
   result:=false;
+  Major:=0;
+  Minor:=0;
+  Release:=0;
+  Build:=0;
+
   if not fileexists(changefileext(_filename,'.res')) then begin
     trace(2,'Problem in TDMMain.GetProjectVersionOfFile: File <%s> not found.',[changefileext(_filename,'.res')]);
     exit;
