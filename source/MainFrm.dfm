@@ -1,9 +1,9 @@
 object FrmMain: TFrmMain
   Left = 262
   Top = 247
-  Width = 1200
-  Height = 593
   Caption = 'Package Group Rebuilder/Installer'
+  ClientHeight = 547
+  ClientWidth = 1192
   Color = clBtnFace
   Constraints.MinHeight = 450
   Constraints.MinWidth = 572
@@ -58,6 +58,9 @@ object FrmMain: TFrmMain
       118
       81
       499)
+    RowHeights = (
+      24
+      24)
   end
   object pnlTop: TPanel
     Left = 0
@@ -153,10 +156,9 @@ object FrmMain: TFrmMain
     object cbxDelphiVersions: TComboBox
       Left = 872
       Top = 16
-      Width = 201
+      Width = 313
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       TabOrder = 4
       OnChange = cbxDelphiVersionsChange
     end
@@ -303,7 +305,7 @@ object FrmMain: TFrmMain
       object mmoTrace: TMemo
         Left = 0
         Top = 0
-        Width = 1358
+        Width = 1184
         Height = 165
         Align = alClient
         Ctl3D = False

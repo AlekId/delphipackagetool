@@ -142,8 +142,8 @@ object FrmOptions: TFrmOptions
       TabOrder = 3
     end
     object cbxTrace: TCheckBox
-      Left = 544
-      Top = 184
+      Left = 272
+      Top = 183
       Width = 120
       Height = 17
       Hint = 'Disable/Enable Trace'
@@ -191,8 +191,9 @@ object FrmOptions: TFrmOptions
       Top = 6
       Width = 90
       Height = 25
-      TabOrder = 0
       Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 0
     end
     object btnCancel: TBitBtn
       Left = 608
@@ -201,8 +202,6 @@ object FrmOptions: TFrmOptions
       Height = 25
       Cancel = True
       Caption = 'Cancel'
-      ModalResult = 2
-      TabOrder = 1
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -220,7 +219,9 @@ object FrmOptions: TFrmOptions
         38F338F300003333333333333919333333388333338FFF830000333333333333
         3333333333333333333888330000333333333333333333333333333333333333
         0000}
+      ModalResult = 2
       NumGlyphs = 2
+      TabOrder = 1
     end
   end
   object OpenDialog1: TOpenDialog
