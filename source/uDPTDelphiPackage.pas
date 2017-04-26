@@ -4222,15 +4222,35 @@ begin
   try
     _Reg.rootkey := HKEY_CURRENT_USER;
     _IDERootKey:=_IDERootKey+'Environment Variables';
+
+    if not _Reg.KeyExists(_IDERootKey) then begin   // if the key does not exist, then try to create it.
+      trace(2,'Warning in GetIDEEnvironmentPath: Could not find key <%s> in <HKEY_CURRENT_USER>. Try now to create it...',[_IDERootKey]);
+      try
+        _Reg.CreateKey(_IDERootKey)
+      except
+        on e:exception do begin
+          trace(1,'Error in GetIDEEnvironmentPath: Could not create key <%s> in <HKEY_CURRENT_USER>. <%s>.',[_IDERootKey,e.message]);
+          exit;
+        end;
+      end;
+    end;
+
     if not _Reg.OpenKeyReadOnly(_IDERootKey) then begin
-      trace(1,'Error in GetIDEEnvironmentPath: Could not open <HKEY_LOCAL_MACHINE,%s>. Check user rights.',[_IDERootKey]);
+      trace(1,'Error in GetIDEEnvironmentPath: Could not open <HKEY_CURRENT_USER,%s>. Check user rights.',[_IDERootKey]);
       exit;
     end;
     if not _Reg.ValueExists(cEnvironmentsValueName) then begin
-      trace(1,'Error in GetIDEEnvironmentPath: Could not find variable <%s>. Check user rights.',[cEnvironmentsValueName]);
-      exit;
+      trace(2,'Warning in GetIDEEnvironmentPath: Could not find value <%s>. Try now to create it....',[cEnvironmentsValueName]);
+      try
+        _Reg.WriteString(cEnvironmentsValueName,'');
+      except
+        on e:exception do begin
+           trace(1,'Error in GetIDEEnvironmentPath: Could not create value <%s>. <%s>.',[cEnvironmentsValueName,e.message]);
+          exit;
+        end;
+      end;
     end;
-    Result := _Reg.ReadString(cEnvironmentsValueName);
+    result := _Reg.ReadString(cEnvironmentsValueName);
     trace(5,'GetIDEEnvironmentPath: Read value <%s> from registry.',[result]);
   finally
     _Reg.CloseKey;
