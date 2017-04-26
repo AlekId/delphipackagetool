@@ -1407,8 +1407,13 @@ begin
   TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).IDEInstall:=_message;
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FProjectFilename,_message,FCurrentProjectNo);
   if IsPathInIDEEnvironmentPath(FDelphiVersion,FProjectOutputPath) then exit;
-  if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then begin
-    if not AddIDEEnvironmentPath(FDelphiVersion,FProjectOutputPath) then Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FProjectOutputPath])),pchar(cInformation),MB_OK);
+
+  if not IsSilentMode then begin
+    if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)<>IDYes then exit;
+  end;
+  if not AddIDEEnvironmentPath(FDelphiVersion,FProjectOutputPath) then begin
+    Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FProjectOutputPath])),pchar(cInformation),MB_OK);
+    exit;
   end;
   result:=true;
 end;
@@ -2216,8 +2221,7 @@ begin
      ApplicationSettings.BoolValue('Application/DisplayFilesInDiffTool') and
      IsDiffToolAvailable  then _answer:=Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO);
 
-  if (_answer=ID_Yes)
-    or IsSilentMode then begin
+  if _answer=ID_Yes then begin
     if _Revert then CompareFiles(_ChangedFile,_OldFilename)
                else CompareFiles(_OldFilename,_ChangedFile);
   end;

@@ -71,6 +71,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.50  ( 26.04.2017 )
+-SH: - create EnvironmentVar in Registry if not exists.
+-SH: - don't show some message-boxes if SilentMode is selected.
+
+
 1.9.2.48  ( 25.04.2017 )
 -SH: - changes for log-file.
 -SH: - changes for silentmode and display of diff-tool.
