@@ -1056,7 +1056,9 @@ resourcestring
 cAskForIDE='The IDE <%s> you used last time for this project is not installed on this computer! Do you want to open this project with IDE <%s>?';
 begin
   if not IsIDEInstalled(_Value) then begin
-    if Application.MessageBox(pchar(format(cAskForIDE,[VersionNoToIDEName(_Value),VersionNoToIDEName(LatestIDEVersion)])),pchar(cConfirm),MB_ICONQUESTION or MB_YesNo)<>IdYes then Application.terminate;
+    if not IsSilentMode then begin
+      if Application.MessageBox(pchar(format(cAskForIDE,[VersionNoToIDEName(_Value),VersionNoToIDEName(LatestIDEVersion)])),pchar(cConfirm),MB_ICONQUESTION or MB_YesNo)<>IdYes then Application.terminate;
+    end;
     FDelphiVersion:=LatestIDEVersion;
   end
   else FDelphiVersion := _Value;
