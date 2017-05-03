@@ -307,8 +307,12 @@ begin
       if not RemoveReadOnlyFlag(_filename,true) then exit;
     end;
   end;
-  FSearchPaths.SaveToFile(_filename);
-  result:=true;
+  try
+    FSearchPaths.SaveToFile(_filename);
+    result:=true;
+  except
+    on e:exception do trace(1,'Error in TFrmProjectOptions.SaveSearchPathData: Could not save file <%s>. <%s>.',[_filename,e.message]);
+  end;
 end;
 
 {-----------------------------------------------------------------------------

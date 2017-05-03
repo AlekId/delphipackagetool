@@ -3203,15 +3203,11 @@ _NewFilename:string;
 begin
   result:=false;
   ChangedFiles:=TStringList.create;
-  case _DelphiVersion of
-    5,6,7,8:begin
-              if WriteCFGSettings(_bpgPath,changefileext(_Filename,'.cfg'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_ProjectType,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
-              if WriteDOFFile(_bpgPath,changefileext(_Filename,'.dof'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
-            end;
-    else begin
-      if WriteBDSProjSettings(_bpgPath,changefileext(_Filename,'.bdsproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
-      if WriteDProjSettings(_bpgPath,changefileext(_Filename,'.dproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_DCPOutputPath,_silent,_DelphiVersion,_CurrentPlatform, _CurrentConfig,_NewFilename) then ChangedFiles.add(_NewFilename);
-    end;
+  if WriteCFGSettings(_bpgPath,changefileext(_Filename,'.cfg'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_ProjectType,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
+  if WriteDOFFile(_bpgPath,changefileext(_Filename,'.dof'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
+  if _DelphiVersion>8 then begin
+    if WriteBDSProjSettings(_bpgPath,changefileext(_Filename,'.bdsproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_silent,_DelphiVersion,_NewFilename) then ChangedFiles.add(_NewFilename);
+    if WriteDProjSettings(_bpgPath,changefileext(_Filename,'.dproj'),_Conditions,_SearchPath,_ProjectOutputPath,_BPLOutputPath,_DCUOutputPath,_DCPOutputPath,_silent,_DelphiVersion,_CurrentPlatform, _CurrentConfig,_NewFilename) then ChangedFiles.add(_NewFilename);
   end;
 end;
 

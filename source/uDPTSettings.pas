@@ -69,7 +69,7 @@ type
     function SetInteger(const _Name: string; _value: Integer): boolean;
     function SetBoolean(const _Name: string; _value: Boolean): boolean;
     function SetPath(const _Name: string; _value: string): boolean;
-    function FindStringValueName(Group: string; Value: string): string; // returns the item name.
+    function FindStringValueName(const _Group: string; _value: string): string; // returns the item name.
     function SaveConfig: Boolean; // save all the settings to the file
     function LoadConfig: Boolean;
     constructor Create(AOwner: TComponent); override;
@@ -186,13 +186,11 @@ begin
   result:=false;
   _SettingData:=GetSetting(_Name);
   if not assigned(_SettingData) then exit;
-  if _value then
-  begin
+  if _value then begin
     _SettingData.StrValue := 'YES';
     _SettingData.IntValue := 1;
   end
-  else
-  begin
+  else begin
     _SettingData.StrValue := 'NO';
     _SettingData.IntValue := 0;
   end;
@@ -209,22 +207,19 @@ end;
   Result:    string
   Description: returns the setting name of value <Value> in group <Group>.
 -----------------------------------------------------------------------------}
-function TNVBSettings.FindStringValueName(Group: string; Value: string): string;
+function TNVBSettings.FindStringValueName(const _Group: string; _Value: string): string;
 var
-  _SettingData: TNVBSettingData;
-  Index: integer;
+_SettingData: TNVBSettingData;
+i: integer;
 begin
   result := '';
-  for Index := 0 to FSettingList.Count - 1 do // go through all settings
-  begin
-    _SettingData := TNVBSettingData(FSettingList.Objects[Index]);
+  for i := 0 to FSettingList.Count - 1 do begin// go through all settings
+    _SettingData := TNVBSettingData(FSettingList.Objects[i]);
     if _SettingData.SettingType <> nvbString then continue; // check if type string
-    if (lowercase(_SettingData.StrValue) = lowercase(Value)) and
-      (Pos(Group, _SettingData.Name) > 0) then
-    begin
-      result := _SettingData.Name;
-      break;
-    end;
+    if not SameText(_SettingData.StrValue,_Value) then continue;
+    if Pos(_Group, _SettingData.Name) = 0 then continue;
+    result := _SettingData.Name;
+    exit;
   end;
 end;
 
@@ -345,12 +340,10 @@ end;
 //============================================================
 procedure TNVBSettings.Close;
 var
-  i1: integer;
-  _SettingData: TNVBSettingData;
+_SettingData: TNVBSettingData;
 begin
   if FAutoSave then SaveConfig; // if FAutoSave is true, then save the configuration.
-  for i1 := 0 to FSettingList.Count - 1 do // free the SettingList with all its records
-  begin
+  while FSettingList.Count>0 do begin// free the SettingList with all its records
     _SettingData := TNVBSettingData(FSettingList.Objects[0]);
     if assigned(_SettingData) then FreeAndNil(_SettingData);
     FSettingList.Delete(0);
@@ -619,7 +612,6 @@ begin
   result := GetIntegerValue(_Name, 0, '', true,false,false);
 end;
 
-
 function TNVBSettings.BoolValue(const _Name: string): boolean;
 begin
   result := GetBoolValue(_Name, false, '', true,false,false);
@@ -723,10 +715,8 @@ end;
 -----------------------------------------------------------------------------}
 procedure TNVBSettings.DoError(_ErrorMsg: string; _ID: Integer);
 begin
-  if Assigned(FOnError) then
-    FOnError(Self, _ErrorMsg, _ID)
-  else
-    MessageDlg(format('Error: <%s> on setting <%d>.', [_ErrorMsg, _ID]), mtError, [mbOK], 0);
+  if assigned(FOnError) then FOnError(Self, _ErrorMsg, _ID)
+                        else MessageDlg(format('Error: <%s> on setting <%d>.', [_ErrorMsg, _ID]), mtError, [mbOK], 0);
 end;
 
 {-----------------------------------------------------------------------------

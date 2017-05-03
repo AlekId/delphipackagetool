@@ -71,15 +71,18 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
-1.9.2.50  ( 26.04.2017 )
--SH: - create EnvironmentVar in Registry if not exists.
--SH: - don't show some message-boxes if SilentMode is selected.
+1.9.2.52  ( 03.05.2017 )
+-SH: write to all config files found.
+-SH: clean-up.    
 
+1.9.2.50  ( 26.04.2017 )
+-SH: create EnvironmentVar in Registry if not exists.
+-SH: don't show some message-boxes if SilentMode is selected.
 
 1.9.2.48  ( 25.04.2017 )
--SH: - changes for log-file.
--SH: - changes for silentmode and display of diff-tool.
--SH: - DPT is now built/compiled with Delphi 10.1 Berlin.
+-SH: changes for log-file.
+-SH: changes for silentmode and display of diff-tool.
+-SH: DPT is now built/compiled with Delphi 10.1 Berlin.
 
 1.9.2.43  ( 17.04.2017 )
 -SH: Improvements for external Source-Editor and Diff-Tool Setup.
