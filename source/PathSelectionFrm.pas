@@ -17,7 +17,7 @@ uses
   Buttons,
   ExtCtrls,
   ActnList,
-  Menus;
+  Menus, System.Actions;
 
 type
   TFrmPathSelection = class(TForm)
@@ -104,13 +104,12 @@ begin
 
     _FrmPathSelection.edtSearchMask.Text := _searchcriteria;
     _FrmPathSelection.btnFind.Caption:=format('Search <%s>',[_searchcriteria]);
-    _FrmPathSelection.showmodal;
+    if _FrmPathSelection.showmodal<>mrOk then exit;
     if _FrmPathSelection.lstFiles.itemindex > -1 then result := _FrmPathSelection.lstFiles.Items[_FrmPathSelection.lstFiles.itemindex];
   finally
     _FrmPathSelection.free;
   end;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: TFrmPathSelection.btnFindClick
