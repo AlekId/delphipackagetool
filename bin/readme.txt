@@ -71,6 +71,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.53  ( 10.05.2017 )
+-SH: removed ifdef NoZipSupport.
+-SH: removed some old trace stuff.
+-SH: DPT is now built/compiled with Delphi 10.2 Tokyo.
+
 1.9.2.52  ( 03.05.2017 )
 -SH: write to all config files found.
 -SH: clean-up.    

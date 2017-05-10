@@ -284,7 +284,6 @@ var
 begin
   Result := false;
   _SettingCount := 0;
-  gIsVersion107orOlder:=false;
   if FIsLoaded then Close;
   VerifyFilePath;
   if not FileExists(FFilePath + FFileName) then begin // check if file exists

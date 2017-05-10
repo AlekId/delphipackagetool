@@ -114,26 +114,25 @@ function StrtoType(_TypeStr:string):TNVBSettingType;
 function BooleanToStr(Value: boolean): string;
 procedure FillEnumList(_EnumStr: string;var EnumList:TStrings);
 
-var
-gIsVersion107orOlder:Boolean; // is set to true if the file loaded was produced with version 1.07 or older.
 
 implementation
 
-uses SysUtils,
-     uDPTMisc;
+uses
+  SysUtils,
+  uDPTMisc;
 
 {$ifdef NoCryptSupport}
 procedure ParseTokens(var SettingData: TNVBSettingData; LineStr: string);
 var
-  _NameStr: string;
-  _IDStr: string;
-  _TypeStr: string;
-  _ValueStr: string;
-  _DescrStr: string;
-  _isVisibleStr: string;
-  _isCryptedStr: string;
-  _isReadOnlyStr: string;
-  _TmpStr: string;
+_NameStr: string;
+_IDStr: string;
+_TypeStr: string;
+_ValueStr: string;
+_DescrStr: string;
+_isVisibleStr: string;
+_isCryptedStr: string;
+_isReadOnlyStr: string;
+_TmpStr: string;
 begin
   // initialize the temporary variables
   _NameStr:='';
@@ -153,15 +152,9 @@ begin
     else if Pos('Type=',_TmpStr)=1  then _TypeStr :=_TmpStr
     else if Pos('Value=',_TmpStr)=1 then _ValueStr:=_TmpStr
     else if Pos('Descr=',_TmpStr)=1 then _DescrStr:=_TmpStr
-    else if Pos('Flags=',_TmpStr)=1 then begin    // to be backward compatible with older ini-files.
-      gIsVersion107orOlder:=true;
-      if _TmpStr='Flags=1' then _isCryptedStr :='isCrypted=1';
-      _isVisibleStr :='isVisible=1';
-      _isReadOnlyStr:='isReadOnly=0';
-    end
     else if Pos('isVisible=',_TmpStr)=1 then _isVisibleStr :=_TmpStr
     else if Pos('isCrypted=',_TmpStr)=1 then _isCryptedStr :=_TmpStr
-    else if Pos('isReadOnly',_TmpStr)=1 then _isReadOnlyStr:=_TmpStr
+    else if Pos('isReadOnly',_TmpStr)=1 then _isReadOnlyStr:=_TmpStr;
   end;
   // set up the setting record
   SettingData.Name:=_NameStr;
@@ -200,18 +193,13 @@ begin
   result := result + 'Type=' + TypeToStr(_SettingData) + cDelimiterChar;
   result := result + 'Value=' + _SettingData.StrValue + cDelimiterChar;
   result := result + 'Descr=' + _SettingData.Descr + cDelimiterChar;
-  if gIsVersion107orOlder then begin
-    if _SettingData.isVisible then result := result + 'Flags=0'+ cDelimiterChar;
-    if _SettingData.isCrypted then result := result + 'Flags=1'+ cDelimiterChar;
-  end
-  else begin
-    if _SettingData.isVisible then result := result + 'isVisible=1' + cDelimiterChar
-                              else result := result + 'isVisible=0' + cDelimiterChar;
-    if _SettingData.isCrypted then result := result + 'isCrypted=1' +  cDelimiterChar
-                              else result := result + 'isCrypted=0' +  cDelimiterChar;
-    if _SettingData.isReadOnly then result := result + 'isReadOnly=1' +  cDelimiterChar
-                              else result := result + 'isReadOnly=0' +  cDelimiterChar
-  end;
+
+  if _SettingData.isVisible then result := result + 'isVisible=1' + cDelimiterChar
+                            else result := result + 'isVisible=0' + cDelimiterChar;
+  if _SettingData.isCrypted then result := result + 'isCrypted=1' +  cDelimiterChar
+                            else result := result + 'isCrypted=0' +  cDelimiterChar;
+  if _SettingData.isReadOnly then result := result + 'isReadOnly=1' +  cDelimiterChar
+                             else result := result + 'isReadOnly=0' +  cDelimiterChar
 end;
 {$else}
 {-----------------------------------------------------------------------------
@@ -546,8 +534,5 @@ begin
   end;
   inherited;
 end;
-
-initialization
-gIsVersion107orOlder:=false;
 
 end.

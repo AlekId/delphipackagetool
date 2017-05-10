@@ -15,14 +15,9 @@ uses
   uDPTDelphiPackage,
   uDPTSettings,
   uDPTAppExec,
-{$ifdef withTrace}
-  cNVBTraceFile,
-{$endif}
   uDPTDefinitions,
-{$ifndef NoZipSupport}
-  Zip,
-{$endif}
-  ActnList, System.Actions;
+  ActnList,
+  System.Actions;
 
 type
 
@@ -160,9 +155,6 @@ type
     procedure LoadCurrentProject;
     function  IsDiffToolAvailable:boolean; // returns true if a external Diff-Tool is setup
   public
-{$ifdef withTrace}
-    NVBTraceFile: TNVBTraceFile;
-{$endif}
     ApplicationSettings: TNVBSettings;
     ProjectSettings: TNVBSettings;
     NVBAppExec1: TNVBAppExec;
@@ -720,19 +712,6 @@ begin
   FConfigToCompile := '';
   FPlatformToCompile := '';
 // prepare trace file
-{$ifdef withTrace}
-  NVBTraceFile := TNVBTraceFile.Create(Self);
-  NVBTraceFile.Name := 'NVBTraceFile';
-  NVBTraceFile.FileName := 'DelphiPackageTool.trc';
-  NVBTraceFile.MaxLines := 100000;
-  NVBTraceFile.Level := 5;
-  NVBTraceFile.UseNameExt := False;
-  NVBTraceFile.Subject := 'DelphiPackageTool trace';
-  NVBTraceFile.EMailAdress := 'sam_herzog@yahoo.com';
-  NVBTraceFile.FilePath:=ExtractFilePath(Application.exename);
-  NVBTraceFile.OpenFile(false);
-  FWriteMsg := NVBTraceFile.writeMsg;
-{$endif}
   trace(3,'Started application <%s> with version <%s>.',[application.exename,GetVersion]);
 // prepare project settings component.
   ProjectSettings := TNVBSettings.Create(Self);
@@ -878,97 +857,70 @@ _FileList:TStringList;
 _BackupFileList:string;
 _batchFilename:string;
 _backupPath:string;
-{$ifndef NoZipSupport}
-_BackupZip :TZip;
-{$endif}
 begin
-{$ifndef NoZipSupport}
-  _BackupZip := TZip.Create(nil);
-{$else}
   if Get7zAppName='' then begin
     Application.MessageBox(pchar(cNo7zipFound),pchar(cWarning),MB_OK);
     exit;
   end;
-{$endif}
+  ProjectSettings.SetPath('Application/LastUsedBackupPath',extractFilePath(_backupfilename));
+  writeLog('Searching for files to backup. Please wait...',[]);
+  _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines,ApplicationSettings.BoolValue('Application/BackupSourceOnly'));
+  for i:=0 to FBPGProjectList.count-1 do begin
+    _filename:=lowercase(trim(FBPGProjectList[i]));
+    _filename:=AbsoluteFilename(FBPGPath,_filename);
+    if _FileList.IndexOf(_filename)=-1 then begin
+      if fileexists(_filename) then _FileList.add(_filename);
+      _filename:=changefileext(_filename,'.res');
+      if fileexists(_filename) then _FileList.add(_filename);
+      _filename:=changefileext(_filename,'.cfg');
+      if fileexists(_filename) then _FileList.add(_filename);
+      _filename:=changefileext(_filename,'.dof');
+      if fileexists(_filename) then _FileList.add(_filename);
+    end;
+  end;
+
   try
-{$ifndef NoZipSupport}
-    _BackupZip.Name := 'BackupZip';
-    _BackupZip.ShowProgressDialog := True;
-    ProjectSettings.SetPath('Application/LastUsedBackupPath',11,extractFilePath(_BackupZip.Filename));
-{$endif}
-    writeLog('Searching for files to backup. Please wait...',[]);
-    _FileList:=ExtractFilenamesFromDCC32Output(BPGPath,_Lines,ApplicationSettings.BoolValue('Application/BackupSourceOnly'));
-    for i:=0 to FBPGProjectList.count-1 do begin
-      _filename:=lowercase(trim(FBPGProjectList[i]));
-      _filename:=AbsoluteFilename(FBPGPath,_filename);
-      if _FileList.IndexOf(_filename)=-1 then begin
-        if fileexists(_filename) then _FileList.add(_filename);
-        _filename:=changefileext(_filename,'.res');
-        if fileexists(_filename) then _FileList.add(_filename);
-        _filename:=changefileext(_filename,'.cfg');
-        if fileexists(_filename) then _FileList.add(_filename);
-        _filename:=changefileext(_filename,'.dof');
-        if fileexists(_filename) then _FileList.add(_filename);
+    writeLog('Found <%d> files. Creating zip-file...',[_FileList.Count]);
+    if _FileList.Count=0 then exit;
+    if fileexists(_backupfilename) then BackupFile(_backupfilename);
+    _backupPath:=extractfilepath(_backupfilename);
+    _backupFilename:=extractfilename(changefileext(_backupfilename,'.7z'));
+    _BackupFileList:='FileList_to_Backup.txt';
+    _FileList.SaveToFile(_backupPath+_BackupFileList);
+    writelog('Saved filelist to <%s>.',[_backupPath+_BackupFileList]);
+    _batchFilename:=_backupPath+'backup_template.bat';
+    _BatchZipFile:=TStringList.create;
+    try
+      _BatchZipFile.add(Get7zAppName+' a -t7z "ARCHIVENAME" @"FILELIST" -spf');  // needs 7zip 9.25 or higher.
+      _BatchZipFile.add('pause');
+      _BatchZipFile.SaveToFile(_batchFilename);
+    finally
+      _BatchZipFile.free;
+    end;
+    if not IsSilentMode then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
+    _BatchZipFile:=TStringList.create;
+    try
+      _BatchZipFile.LoadFromFile(_batchFilename);
+      for i:=0 to _BatchZipFile.Count-1 do begin
+        _line:=_BatchZipFile[i];
+        _line:=stringreplace(_line,'ARCHIVENAME',_backupfilename,[rfReplaceAll, rfIgnoreCase]);
+        _line:=stringreplace(_line,'FILELIST',_BackupFileList,[rfReplaceAll, rfIgnoreCase]);
+        _BatchZipFile[i]:=_line;
       end;
+      _batchFilename:=_backupPath+'backup.bat';
+      _BatchZipFile.SaveToFile(_batchFilename);
+    finally
+      _BatchZipFile.free;
     end;
 
-    try
-      writeLog('Found <%d> files. Creating zip-file...',[_FileList.Count]);
-      if _FileList.Count=0 then exit;
-      if fileexists(_backupfilename) then BackupFile(_backupfilename);
-{$ifndef NoZipSupport}
-      _BackupZip.FileSpecList.Clear;
-      _BackupZip.FileSpecList.Assign(_FileList);
-      _BackupZip.AddOptions:=_BackupZip.AddOptions+[aoUpdate, aoWithFullPath];
-      _BackupZip.Filename:=_backupfilename;
-      _BackupZip.ProgressCaption:='Creating zip-file...';
-      _BackupZip.add;
-      writelog('Saved zip-file to <%s>.',[_BackupZip.Filename]);
-{$else}
-      _backupPath:=extractfilepath(_backupfilename);
-      _backupFilename:=extractfilename(changefileext(_backupfilename,'.7z'));
-      _BackupFileList:='FileList_to_Backup.txt';
-      _FileList.SaveToFile(_backupPath+_BackupFileList);
-      writelog('Saved filelist to <%s>.',[_backupPath+_BackupFileList]);
-      _batchFilename:=_backupPath+'backup_template.bat';
-      _BatchZipFile:=TStringList.create;
-      try
-        _BatchZipFile.add(Get7zAppName+' a -t7z "ARCHIVENAME" @"FILELIST" -spf');  // needs 7zip 9.25 or higher.
-        _BatchZipFile.add('pause');
-        _BatchZipFile.SaveToFile(_batchFilename);
-      finally
-        _BatchZipFile.free;
-      end;
-      if not IsSilentMode then Application.MessageBox(pchar(format(cCreateBackup,[_batchFilename])),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
-      _BatchZipFile:=TStringList.create;
-      try
-        _BatchZipFile.LoadFromFile(_batchFilename);
-        for i:=0 to _BatchZipFile.Count-1 do begin
-          _line:=_BatchZipFile[i];
-          _line:=stringreplace(_line,'ARCHIVENAME',_backupfilename,[rfReplaceAll, rfIgnoreCase]);
-          _line:=stringreplace(_line,'FILELIST',_BackupFileList,[rfReplaceAll, rfIgnoreCase]);
-          _BatchZipFile[i]:=_line;
-        end;
-        _batchFilename:=_backupPath+'backup.bat';
-        _BatchZipFile.SaveToFile(_batchFilename);
-      finally
-        _BatchZipFile.free;
-      end;
-
-      NVBAppExec1.ExePath:=_backupPath;
-      NVBAppExec1.ExeName:=_batchFilename;
-      NVBAppExec1.Execute;
-{$endif}
-      if not IsSilentMode then begin
-        if Application.MessageBox(pchar(cOpenBackupFolder),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then ShowFolder(_backupPath);
-      end;
-    finally
-      _FileList.free;
+    NVBAppExec1.ExePath:=_backupPath;
+    NVBAppExec1.ExeName:=_batchFilename;
+    NVBAppExec1.Execute;
+    if not IsSilentMode then begin
+      if Application.MessageBox(pchar(cOpenBackupFolder),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDYes then ShowFolder(_backupPath);
     end;
   finally
-{$ifndef NoZipSupport}
-    _BackupZip.free;
-{$endif}
+    _FileList.free;
   end;
 end;
 
@@ -1026,9 +978,6 @@ begin
   if not assigned(CommandLineAction) then ApplicationSettings.SaveConfig;
   ApplicationSettings.Close;
   FWriteMsg:=nil;
-{$ifdef withTrace}
-  NVBTraceFile.CloseFile;
-{$endif}
   FInstalledDelphiVersionList.free;
   FPlatformsToCompileList.Free;
   FConfigsToCompileList.Free;
@@ -1123,11 +1072,8 @@ begin
   ApplicationSettings.GetBoolValue('Application/BackupSourceOnly',false,'Only sourcefiles will be taken into the zip-file.',true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/FileHistory/Item%d',[i]),'',format('Recently used File <%d>.',[i]), true,false,false);
   for i:=1 to 10 do ApplicationSettings.GetStringValue(format('Application/SearchPathHistory/Item%d',[i]),'',format('Recently used File <%d>.',[i]), true,false,false);
-  ApplicationSettings.Open;
-{$ifdef withTrace}
-  NVBTraceFile.Level:=ApplicationSettings.IntegerValue('Application/Tracelevel');
-{$endif}
-  trace(3,'Loaded application settings from file <%s>.',[FApplicationIniFilename]);
+  if ApplicationSettings.Open then trace(3,'Loaded application settings from file <%s>.',[FApplicationIniFilename])
+                              else trace(3,'Starting application with default settings.',[]);
   DelphiVersion:=ApplicationSettings.IntegerValue('Compiler/DelphiVersion');
   result:=true;
 end;
