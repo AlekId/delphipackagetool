@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.54  ( 12.05.2017 )
+-SH: remove "{$R *.otares}" from dpk-file (if exists) when delphi version is lower than XE2.
+
 1.9.2.53  ( 10.05.2017 )
 -SH: removed ifdef NoZipSupport.
 -SH: removed some old trace stuff.

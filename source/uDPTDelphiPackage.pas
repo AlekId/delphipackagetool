@@ -585,7 +585,19 @@ _FileChanged:boolean;
       _FileChanged:=true;
       exit;
     end;
+  end;
 
+  procedure UpdateOtares;
+  begin
+    _index:=FindLine(_File,'{$R *.otares}',_OldText);
+    if (_index>-1) and
+       (_DelphiVersion<=15) then begin    // in versions before XE2 this statement shall no be in the .dpk-file.
+      _NewText:=_File[_index];
+      _newText:=stringreplace(_NewText,'{$R *.otares}','',[rfIgnoreCase]);
+      _File[_index]:=_newText;
+      _FileChanged:=true;
+      exit;
+    end;
   end;
 begin
   result:=false;
@@ -600,6 +612,7 @@ begin
     _File.LoadFromFile(_filename);
     UpdateLibSuffix;
     UpdateImageLib;
+    UpdateOtares;
     if not _FileChanged then exit;
     if not BackupFile(_filename,'.dpk_old','',false) then exit;
     _filename:=changefileext(_filename,'.dpk_new');
