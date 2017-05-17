@@ -180,7 +180,6 @@ type
     procedure actSelectOutputDirExecute(Sender: TObject);
     procedure actApplicationUpdateExecute(Sender: TObject);
     procedure VersionHistory1Click(Sender: TObject);
-    procedure stgFilesClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure actShowBPGEditorExecute(Sender: TObject);
     procedure actNewBPGFileExecute(Sender: TObject);
@@ -220,6 +219,8 @@ type
     function  OpenProjectGroup(_filename:string):boolean;
     procedure CloseProjectGroup;
     procedure edtPackageBPLDirectoryExit(Sender: TObject);
+    procedure stgFilesMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -476,7 +477,14 @@ end;
 
 procedure TFrmMain.stgFilesMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-  StgFilesShowCellHint(X, Y);
+  StgFilesShowCellHint(X,Y);
+end;
+
+procedure TFrmMain.stgFilesMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button<>mbLeft then exit;
+  if DMMain.ApplicationState<>tas_open then exit;
+  DMMain.SetCurrentProject(stgFiles.cells[1,stgFiles.row]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -705,18 +713,6 @@ begin
   ShowStartUpDlg(_showagain);
 end;
 
-{*-----------------------------------------------------------------------------
-  Procedure: stgFilesClick
-  Author:    sam
-  Date:      14-Apr-2017
-  Arguments: Sender: TObject
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-procedure TFrmMain.stgFilesClick(Sender: TObject);
-begin
-  if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
-end;
 
 {*-----------------------------------------------------------------------------
   Procedure: stgFilesContextPopup
@@ -729,19 +725,19 @@ end;
 procedure TFrmMain.stgFilesContextPopup(Sender: TObject;
                                         MousePos: TPoint;
                                         var Handled: Boolean);
-var
-  ACol,
-  ARow: Integer;
+//var
+//  ACol,
+//  ARow: Integer;
 begin
-  stgFiles.MouseToCell(MousePos.X, MousePos.Y, ACol, ARow);
-  if (ARow > 0) and (ARow < stgFiles.RowCount) then begin
-    if ARow <= DMMain.BPGProjectList.Count  then begin
-      stgFiles.Col := ACol;
-      stgFiles.Row := ARow;
-      if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
-    end;
-  end
-  else Handled := True;
+//  stgFiles.MouseToCell(MousePos.X, MousePos.Y, ACol, ARow);
+//  if (ARow > 0) and (ARow < stgFiles.RowCount) then begin
+//    if ARow <= DMMain.BPGProjectList.Count  then begin
+//      stgFiles.Col := ACol;
+//      stgFiles.Row := ARow;
+//      if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
+//    end;
+//  end
+//  else Handled := True;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -824,7 +820,7 @@ begin
   DMMain.ApplicationSettings.SetBoolean('Application/StopOnFailure', cbxStopOnFailure.checked);
   DMMain.ApplicationSettings.SetBoolean('Application/StartDelphiOnClose', cbxStartDelphi.checked);
 {$ifdef withTrace}
-  DMMain.ApplicationSettings.SetInteger('Application/Tracelevel',12,DMMain.NVBTraceFile.Level);
+  DMMain.ApplicationSettings.SetInteger('Application/Tracelevel',DMMain.NVBTraceFile.Level);
 {$endif}
   DMMain.ApplicationSettings.SetInteger('Application/Position/Left',left);
   DMMain.ApplicationSettings.SetInteger('Application/Position/Top',top);

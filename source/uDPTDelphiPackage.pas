@@ -513,10 +513,15 @@ end;
   Description:
 -----------------------------------------------------------------------------}
 function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
+var
+_DProjFilename:string;
 begin
   result:=false;
-  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_DelphiVersion,_filename,_libsuffix,_silent,NewFilename) else
-  if lowercase(ExtractFileExt(_filename))='.dproj' then result:=WriteDprojFile(_filename,_libsuffix,_silent,NewFilename);
+  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_DelphiVersion,_filename,_libsuffix,_silent,NewFilename);
+  if _DelphiVersion>=11 then begin
+    _DProjFilename:=ChangeFileExt(_filename,'.dproj');
+    if fileexists(_DProjFilename) then result:=WriteDprojFile(_DProjFilename,_libsuffix,_silent,NewFilename);
+  end;
 end;
 
 {-----------------------------------------------------------------------------
@@ -642,33 +647,54 @@ resourcestring
 cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
 _File:TStrings;
-_index:integer;
-_OldText:string;
-_NewText:string;
 _FileChanged:boolean;
 _LibSuffixAlreadyInFile:boolean;
 
-  procedure UpdateLibSuffix;
+  procedure UpdateDllSuffix;
+  var
+   i:integer;
+   _OldText:string;
+   _NewText:string;
+   _SuffixInFile:string;
+   _pos:integer;
   begin
-    _index:=FindLine(_File,'<Package_Options Name="LibSuffix">',_OldText);
-    if _index=-1 then begin
-      _index:=FindLine(_File,'</Package_Options>',_OldText);
-      if _index=-1 then begin
-        trace(1,'Error in WriteDProjFile: Could not find section <Package_Options> in file <%s>.',[_filename]);
-        exit;
+    for i := 0 to _File.Count-1 do begin
+      _OldText:=_File[i];
+      _pos:=pos('<DllSuffix>',_OldText);
+      if _pos>0 then begin
+        _NewText:=copy(_OldText,1,_pos-1);
+        _NewText:=_NewText+format('<DllSuffix>%s</DllSuffix>',[_LibSuffix]);
+        if trim(_NewText)<>trim(_OldText) then begin
+          if not _silent then begin
+            if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+          end;
+          _File.Delete(i);
+          _File.Insert(i,_NewText);
+          _FileChanged:=true;
+          trace(3,'Succsessfully written <%s> into file <%s>.',[_NewText,_filename]);
+        end;
       end;
-    end else _LibSuffixAlreadyInFile:=true;
-    _NewText:=format('       <Package_Options Name="LibSuffix">%s</Package_Options>',[_LibSuffix]);
-    if trim(_NewText)<>trim(_OldText) then begin
-      if not _silent then begin
-        if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
-      end;
-      if _LibSuffixAlreadyInFile then _File.Delete(_index);
-      _File.Insert(_index,_NewText);
-      _FileChanged:=true;
-      trace(3,'Succsessfully written <%s> into file <%s>.',[_NewText,_filename]);
     end;
-  end;
+ end;
+//    _index:=FindLine(_File,'<Package_Options Name="LibSuffix">',_OldText);
+//    if _index=-1 then begin
+//      _index:=FindLine(_File,'</Package_Options>',_OldText);
+//      if _index=-1 then begin
+//        trace(1,'Error in WriteDProjFile: Could not find section <Package_Options> in file <%s>.',[_filename]);
+//        exit;
+//      end;
+//    end else _LibSuffixAlreadyInFile:=true;
+//    _NewText:=format('       <Package_Options Name="LibSuffix">%s</Package_Options>',[_LibSuffix]);
+//    if trim(_NewText)<>trim(_OldText) then begin
+//      if not _silent then begin
+//        if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+//      end;
+//      if _LibSuffixAlreadyInFile then _File.Delete(_index);
+//      _File.Insert(_index,_NewText);
+//      _FileChanged:=true;
+//      trace(3,'Succsessfully written <%s> into file <%s>.',[_NewText,_filename]);
+//    end;
+//  end;
 
 begin
   result:=false;
@@ -682,7 +708,7 @@ begin
   _File:=TStringList.create;
   try
     _File.LoadFromFile(_filename);
-    UpdateLibSuffix;
+    UpdateDllSuffix;
     if not _FileChanged then exit;
     if not BackupFile(_filename,'.dproj_old','',false) then exit;
     _filename:=changefileext(_filename,'.dproj_new');
