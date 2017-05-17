@@ -71,6 +71,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.55  ( 17.05.2017 )
+-SH: make multi-select work again.
+-SH: write DllSuffix into .dproj file if available.
+
 1.9.2.54  ( 12.05.2017 )
 -SH: remove "{$R *.otares}" from dpk-file (if exists) when delphi version is lower than XE2.
 
