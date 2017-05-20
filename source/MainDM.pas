@@ -2102,6 +2102,7 @@ var
 i:integer;
 _ChangedFiles:TStringList;
 _NewFilename:string;
+_DProjFilename:string;
 begin
   if not _ForceWrite then begin
     if not ApplicationSettings.BoolValue('Application/ChangeFiles') then exit;    // if DPT is allowed to change the files
@@ -2127,12 +2128,21 @@ begin
 
 // try to update dpk/dproj files.
   if FProjectType = tp_bpl then begin // it is a package
-    WritePackageFile(FDelphiVersion,
-                     FProjectFilename,
-                     FPackageSuffix,
-                     IsSilentMode,
-                     _NewFilename); // then prepare a new file.
-    ConfirmChanges(_NewFilename, False);
+    if lowercase(ExtractFileExt(FProjectFilename))='.dpk' then begin
+      WriteDPKFile(FDelphiVersion,
+                   FProjectFilename,
+                   FPackageSuffix,
+                   IsSilentMode,
+                   _NewFilename); // then prepare a new file.
+      ConfirmChanges(_NewFilename, False);
+    end;
+
+
+    if FDelphiVersion>=11 then begin
+      _DProjFilename:=ChangeFileExt(FProjectFilename,'.dproj');
+      if fileexists(_DProjFilename) then WriteDprojFile(_DProjFilename,FPackageSuffix,IsSilentMode,_NewFilename);
+      ConfirmChanges(_NewFilename, False);
+    end;
   end;
 end;
 
