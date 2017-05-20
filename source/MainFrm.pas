@@ -484,7 +484,7 @@ procedure TFrmMain.stgFilesMouseUp(Sender: TObject; Button: TMouseButton; Shift:
 begin
   if Button<>mbLeft then exit;
   if DMMain.ApplicationState<>tas_open then exit;
-  DMMain.SetCurrentProject(stgFiles.cells[1,stgFiles.row]);
+  SetCurrentProject(stgFiles.cells[1, stgFiles.row]);
 end;
 
 {-----------------------------------------------------------------------------
@@ -838,7 +838,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.GUItoProjectSettings;
 begin
-  if not DMMain.ProjectSettings.isLoaded then exit;
+  if not DMMain.ProjectSettings.IsLoaded then exit;
   DMMain.ProjectSettings.SetInteger('Application/DelphiVersion', DMMain.DelphiVersion);
   DMMain.ProjectSettings.SetString('Application/Platform', DMMain.CurrentBPGPlatformList.Commatext);
   DMMain.ProjectSettings.SetString('Application/Config', DMMain.CurrentBPGConfigList.Commatext);

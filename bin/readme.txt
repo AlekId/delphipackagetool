@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.56  ( 20.05.2017 )
+-SH: if a .dproj file exists and user chooses "Open in IDE', then use the .dproj file.
+
 1.9.2.55  ( 17.05.2017 )
 -SH: make multi-select work again.
 -SH: write DllSuffix into .dproj file if available.

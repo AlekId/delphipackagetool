@@ -57,7 +57,7 @@ function  CleanupByRegistry(const _ROOTKEY:DWORD;const _DelphiSubKey:string;cons
 function  CleanUpPackageByEnvPaths(const _DelphiVersion:integer;const _silent:boolean):boolean;
 function  ReadLibraryPath(const _DelphiVersion:integer;out DelphiLibraryPath:TDelphiLibraryPath):boolean; //read the library setting from the registry.
 function  ExtractFilenamesFromDCC32Output(const _BasePath:string;const _CompilerOutput:TStrings;_SourceCodeOnly:boolean):THashedStringList; // extract filenames from the dcc32.exe output.
-function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
+//function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
 function  WriteDPKFile(const _DelphiVersion:integer;_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;  // write libsuffix into the dpk-file.
 function  WriteDprojFile(_filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean; // write libsuffix into the dproj-file.
 function  DeleteFile(const _Filename:String;const _toTrashBin:boolean=true):boolean;  // delete the file <_filename>.
@@ -504,26 +504,6 @@ begin
   end;
 end;
 
-{*-----------------------------------------------------------------------------
-  Procedure: WritePackageFile
-  Author:    sam
-  Date:      22-Sep-2009
-  Arguments: const _filename:string;const _LibSuffix:string;const _silent:boolean
-  Result:    boolean
-  Description:
------------------------------------------------------------------------------}
-function  WritePackageFile(const _DelphiVersion:integer;const _filename:string;const _LibSuffix:string;const _silent:boolean;out NewFilename:string):boolean;
-var
-_DProjFilename:string;
-begin
-  result:=false;
-  if lowercase(ExtractFileExt(_filename))='.dpk'   then result:=WriteDPKFile(_DelphiVersion,_filename,_libsuffix,_silent,NewFilename);
-  if _DelphiVersion>=11 then begin
-    _DProjFilename:=ChangeFileExt(_filename,'.dproj');
-    if fileexists(_DProjFilename) then result:=WriteDprojFile(_DProjFilename,_libsuffix,_silent,NewFilename);
-  end;
-end;
-
 {-----------------------------------------------------------------------------
   Procedure: WriteDPKFile
   Author:    sam
@@ -648,14 +628,12 @@ cAskToReplaceLibSuffix='Do you want to replace <%s> with <%s>?';
 var
 _File:TStrings;
 _FileChanged:boolean;
-_LibSuffixAlreadyInFile:boolean;
 
   procedure UpdateDllSuffix;
   var
    i:integer;
    _OldText:string;
    _NewText:string;
-   _SuffixInFile:string;
    _pos:integer;
   begin
     for i := 0 to _File.Count-1 do begin
@@ -676,31 +654,11 @@ _LibSuffixAlreadyInFile:boolean;
       end;
     end;
  end;
-//    _index:=FindLine(_File,'<Package_Options Name="LibSuffix">',_OldText);
-//    if _index=-1 then begin
-//      _index:=FindLine(_File,'</Package_Options>',_OldText);
-//      if _index=-1 then begin
-//        trace(1,'Error in WriteDProjFile: Could not find section <Package_Options> in file <%s>.',[_filename]);
-//        exit;
-//      end;
-//    end else _LibSuffixAlreadyInFile:=true;
-//    _NewText:=format('       <Package_Options Name="LibSuffix">%s</Package_Options>',[_LibSuffix]);
-//    if trim(_NewText)<>trim(_OldText) then begin
-//      if not _silent then begin
-//        if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
-//      end;
-//      if _LibSuffixAlreadyInFile then _File.Delete(_index);
-//      _File.Insert(_index,_NewText);
-//      _FileChanged:=true;
-//      trace(3,'Succsessfully written <%s> into file <%s>.',[_NewText,_filename]);
-//    end;
-//  end;
 
 begin
   result:=false;
   NewFilename:='';
   _FileChanged:=false;
-  _LibSuffixAlreadyInFile:=false;
   if not fileexists(_filename) then begin
     trace(1,'Problem in WriteDprojFile: Could not find the file <%s>. Nothing to do.',[_filename]);
     exit;
@@ -724,7 +682,6 @@ begin
     _File.free;
   end;
 end;
-
 
 {-----------------------------------------------------------------------------
   Procedure: ExtractFilenamesFromDCC32Output
@@ -4215,6 +4172,10 @@ begin
   if not FileExists(_FileName) then exit;
   VerifyRegistry(_DelphiVersion,_NoOfDeletedKeys,'','');
   trace(5,'StartUpDelphi:Try to start Delphi from <%s>.',[_FileName]);
+  if _DelphiVersion>=11 then begin  // if it is Delphi 2007 or newer
+    if fileexists(changefileext(_ProjectName,'.dproj'))  then _ProjectName:=changefileext(_ProjectName,'.dproj'); // and a .dproj file exists, then load the .dproj file.
+  end;
+
 {$IF CompilerVersion < 20.0}
   ShellExecute(0, 'open', PChar(_FileName), PChar(' /ns "'+_ProjectName+'"'), nil, SW_SHOWNORMAL);
 {$ELSE}
