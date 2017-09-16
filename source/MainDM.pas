@@ -522,7 +522,7 @@ function TDMMain.GetLibSuffix(_ProjectType:TProjectType;_libsuffix:string): stri
 begin
   result:=_libsuffix;
   if _ProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
-  if not ApplicationSettings.BoolValue('Application/ChangeFiles') then exit;  // if changing of files is not allowed, then we can not change the suffix.
+  if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;  // if changing of files is not allowed, then we can not change the suffix.
   if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FDelphiVersion].PackageVersion
   else if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBNoneTag) then result:=''
   else result:=ProjectSettings.StringValue('Application/LibSuffix');
@@ -538,6 +538,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.InitProjectSettings;
 begin
+  ProjectSettings.GetBoolValue('Application/ChangeFiles',true,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
   ProjectSettings.GetStringValue('Application/Events/OnBeforeInstallAll','','The name of the batch file which will be executed when user presses "Install All".', true,false,false);
   ProjectSettings.GetStringValue('Application/Events/OnAfterInstallAll','','The name of the batch file which will be executed after all projects have been compiled successfully.', true,false,false);
   ProjectSettings.GetStringValue('Application/CompilerSwitches','-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
@@ -1053,7 +1054,6 @@ begin
   ApplicationSettings.GetBoolValue('Application/ShowStartUpWarning', true, 'If true then the startup information screen is shown.', true,false,false);
   ApplicationSettings.GetStringValue('Application/CompilerSwitches','-B -Q -W -H','This settings contains the compiler switches.',true,false,false);
   ApplicationSettings.GetIntegerValue('Application/Tracelevel',3,'Select the trace level of the Log-file. 1-5.',true,false,false);
-  ApplicationSettings.GetBoolValue('Application/ChangeFiles',true,'If set to true, the DelphiPackageTool does change your files.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/DisplayFilesInDiffTool',true,'If set to true, the DelphiPackageTool does show the changed files in the external Diff-Tool.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath','C:\','Specifies the last used search path.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', true, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
@@ -2105,7 +2105,7 @@ _NewFilename:string;
 _DProjFilename:string;
 begin
   if not _ForceWrite then begin
-    if not ApplicationSettings.BoolValue('Application/ChangeFiles') then exit;    // if DPT is allowed to change the files
+    if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;    // if DPT is allowed to change the files
   end;
 
 // try to update cfg/dproj/bdsproj files.
@@ -2168,7 +2168,7 @@ begin
   _answer:=0;
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
-  if not ApplicationSettings.BoolValue('Application/ChangeFiles') then exit;
+  if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;
 
   _OldFilename:=copy(_ChangedFile,1,length(_ChangedFile)-4);
 

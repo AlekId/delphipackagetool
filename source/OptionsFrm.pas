@@ -32,7 +32,6 @@ type
     edtCompilerSwitches: TEdit;
     lblCompilerSwitches: TLabel;
     cbxAutomaticShowAddPathDialog: TCheckBox;
-    cbxAllowToChangeFiles: TCheckBox;
     edtSourceEditorParams: TEdit;
     lblSourceEditorParams: TLabel;
     lblDiffTool: TLabel;
@@ -222,7 +221,6 @@ begin
   DMMain.ApplicationSettings.SetBoolean('Application/AutomaticSearchFiles',cbxAutomaticShowAddPathDialog.Checked);
   DMMain.ApplicationSettings.SetFile('Application/DiffTool',edtDiffTool.Text);
   DMMain.ApplicationSettings.SetString('Application/CompilerSwitches',edtCompilerSwitches.Text);
-  DMMain.ApplicationSettings.SetBoolean('Application/ChangeFiles',cbxAllowToChangeFiles.Checked);
   DMMain.ApplicationSettings.SetBoolean('Application/DisplayFilesInDiffTool',cbxShowChangedFileInDiffTool.checked);
   DMMain.ApplicationSettings.SetBoolean('Application/Trace',cbxTrace.checked);
   DMMain.ApplicationSettings.SetBoolean('Application/BackupSourceOnly',cbxBackupSourceOnly.Checked);
@@ -243,7 +241,6 @@ begin
   edtCompilerSwitches.Text:=DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches');
   edtDiffTool.Text:=DMMain.ApplicationSettings.FileValue('Application/DiffTool');
   cbxAutomaticShowAddPathDialog.Checked:=DMMain.ApplicationSettings.BoolValue('Application/AutomaticSearchFiles');
-  cbxAllowToChangeFiles.Checked:=DMMain.ApplicationSettings.BoolValue('Application/ChangeFiles');
   cbxShowChangedFileInDiffTool.checked:=DMMain.ApplicationSettings.BoolValue('Application/DisplayFilesInDiffTool');
   cbxTrace.checked:=DMMain.ApplicationSettings.BoolValue('Application/Trace');
   cbxBackupSourceOnly.Checked:=DMMain.ApplicationSettings.BoolValue('Application/BackupSourceOnly');

@@ -91,8 +91,8 @@ object FrmOptions: TFrmOptions
       Text = '-B -Q -W -H'
     end
     object cbxAutomaticShowAddPathDialog: TCheckBox
-      Left = 272
-      Top = 160
+      Left = 8
+      Top = 161
       Width = 185
       Height = 17
       Hint = 
@@ -103,19 +103,6 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 5
-    end
-    object cbxAllowToChangeFiles: TCheckBox
-      Left = 8
-      Top = 160
-      Width = 233
-      Height = 17
-      Hint = 
-        'INFO: If this box is checked, then the Delphi Package Tool will ' +
-        'change your cfg,dof,dproj-files.'
-      Caption = 'Allow DelphiPackageTool to change files'
-      ParentShowHint = False
-      ShowHint = True
       TabOrder = 4
     end
     object edtSourceEditorParams: TEdit
@@ -143,14 +130,14 @@ object FrmOptions: TFrmOptions
     end
     object cbxTrace: TCheckBox
       Left = 272
-      Top = 183
+      Top = 161
       Width = 120
       Height = 17
       Hint = 'Disable/Enable Trace'
       Caption = 'Trace'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 6
+      TabOrder = 5
     end
     object cbxBackupSourceOnly: TCheckBox
       Left = 8
@@ -163,7 +150,7 @@ object FrmOptions: TFrmOptions
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 7
+      TabOrder = 6
     end
     object cbxShowChangedFileInDiffTool: TCheckBox
       Left = 8
@@ -176,7 +163,7 @@ object FrmOptions: TFrmOptions
       Caption = 'Show changed files in Diff-Tool.'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 8
+      TabOrder = 7
     end
   end
   object pnlBottom: TPanel
