@@ -215,6 +215,29 @@ object FrmProjectOptions: TFrmProjectOptions
       TabOrder = 8
       OnExit = cbxAutoBackupExit
     end
+    object cbxAllowToChangeFiles: TCheckBox
+      Left = 8
+      Top = 160
+      Width = 233
+      Height = 17
+      Hint = 
+        'INFO: If this box is checked, then the Delphi Package Tool will ' +
+        'change your cfg,dof,dproj-files.'
+      Caption = 'Allow DelphiPackageTool to change files'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 9
+    end
+    object cbxChangeFiles: TCheckBox
+      Left = 440
+      Top = 304
+      Width = 162
+      Height = 17
+      Caption = 'Allow DPT to change files'
+      Checked = True
+      State = cbChecked
+      TabOrder = 10
+    end
   end
   object pnlBottom: TPanel
     Left = 0

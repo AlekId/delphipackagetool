@@ -1,9 +1,9 @@
 object FrmVersion: TFrmVersion
   Left = 506
   Top = 245
-  Width = 410
-  Height = 177
   Caption = 'Set Version'
+  ClientHeight = 150
+  ClientWidth = 402
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -111,16 +111,18 @@ object FrmVersion: TFrmVersion
       Top = 8
       Width = 89
       Height = 25
-      TabOrder = 0
       Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 0
     end
     object btnCancel: TBitBtn
       Left = 232
       Top = 8
       Width = 89
       Height = 25
-      TabOrder = 1
       Kind = bkCancel
+      NumGlyphs = 2
+      TabOrder = 1
     end
   end
 end

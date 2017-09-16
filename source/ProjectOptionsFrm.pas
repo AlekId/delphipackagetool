@@ -15,6 +15,8 @@
                            install batch-file and the install .reg-files shall be
                            created or not.
            31.01.2008 SH - removed dependency from FrmMain.
+           14.09.2017 SH - moved setting "ChangeFiles" from application-settings
+                           to project-settings.
 -----------------------------------------------------------------------------}
 unit ProjectOptionsFrm;
 
@@ -60,6 +62,8 @@ type
     edtReleaseCompilerSwitches: TEdit;
     cbxAutoBackup: TCheckBox;
     cbxCreateInstallBatch: TCheckBox;
+    cbxAllowToChangeFiles: TCheckBox;
+    cbxChangeFiles: TCheckBox;
     procedure btnAddPathClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -450,6 +454,7 @@ begin
   DMMain.ProjectSettings.SetString('Application/DebugCompilerSwitches',edtDebugCompilerSwitches.Text);
   DMMain.ProjectSettings.SetString('Application/ReleaseCompilerSwitches',edtReleaseCompilerSwitches.Text);
   DMMain.ProjectSettings.SetBoolean('Application/AutoBackup',cbxAutoBackup.Checked);
+  DMMain.ProjectSettings.SetBoolean('Application/ChangeFiles',cbxChangeFiles.Checked);
 end;
 
 {-----------------------------------------------------------------------------
@@ -477,6 +482,7 @@ begin
   edtReleaseCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/ReleaseCompilerSwitches');
   cbxAutoBackup.Checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup');
   cbxCreateInstallBatch.checked:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch');
+  cbxChangeFiles.Checked:= DMMain.ProjectSettings.BoolValue('Application/ChangeFiles');
 end;
 
 {-----------------------------------------------------------------------------
