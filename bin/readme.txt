@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.58  ( 25.09.2017 )
+-SH: if the app runs with command-line params, then do not change the files. (event if settings "ChangeFiles"is set to true).
+
 1.9.2.57  ( 14.09.2017 )
 -SH: Moved setting "Allow DPT to change files" from ApplicationSettings to ProjectSettings.
 

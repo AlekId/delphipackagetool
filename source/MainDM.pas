@@ -523,6 +523,7 @@ begin
   result:=_libsuffix;
   if _ProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
   if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;  // if changing of files is not allowed, then we can not change the suffix.
+  if assigned(CommandLineAction) then exit;    // the app runs with command-line params, then do not change files.
   if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FDelphiVersion].PackageVersion
   else if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBNoneTag) then result:=''
   else result:=ProjectSettings.StringValue('Application/LibSuffix');
@@ -2104,6 +2105,7 @@ _ChangedFiles:TStringList;
 _NewFilename:string;
 _DProjFilename:string;
 begin
+  if assigned(CommandLineAction) then exit;    // the app runs with command-line params, then do not change files.
   if not _ForceWrite then begin
     if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;    // if DPT is allowed to change the files
   end;
@@ -2169,7 +2171,7 @@ begin
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
   if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;
-
+  if assigned(CommandLineAction) then exit;    // the app runs with command-line params, then do not change files.
   _OldFilename:=copy(_ChangedFile,1,length(_ChangedFile)-4);
 
   if _revert then _msg:=cDPTFoundOldVersionOfFile
