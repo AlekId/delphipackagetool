@@ -125,7 +125,7 @@ type
     FCurrentBPGConfigList: TStringList;
     FPlatformsToCompileList: TStringList;
     FConfigsToCompileList: TStringList;
-    function  GetLibSuffix(_ProjectType:TProjectType;_LibSuffix:string): string;
+    function  GetLibSuffix: string;
     procedure WriteLog(_msg: string;const _params:array of const);
     procedure DeleteLog;
     procedure FireDelphiVersionChanged;
@@ -191,6 +191,7 @@ type
     property  CurrentProjectFilename: string  read FProjectFilename;
     property  CurrentBPLOutputPath:string read FBPLOutputPath;
     property  DelphiVersion:Integer read FDelphiVersion write SetDelphiVersion; // currently selected delphi version.
+    property  PackageSuffix:string read FPackageSuffix;
     property  BPGPath:string read FBPGPath;
     property  BPGFilename:string read FBPGFilename;
     property  DPTSearchPath:string read FDPTSearchPath write SetDPTSearchPath;
@@ -456,7 +457,7 @@ begin
   end;
 
   FProjectOutputPath := IncludeTrailingPathDelimiter(FProjectOutputPath);
-  FPackageSuffix := GetLibSuffix(FProjectType, FPackageSuffix);
+  FPackageSuffix := GetLibSuffix;
   FProjectOutputFilename := OutputFilename(FProjectFilename, FProjectType, FPackageSuffix);
   if FProjectType = tp_bpl then FBPLFilename := FBPLOutputPath + FProjectOutputFilename;
   trace(1, 'ProjectFileName=%s', [FProjectFilename]);
@@ -518,14 +519,12 @@ end;
   Result:    string
   Description: returns the current lib-suffix.
 -----------------------------------------------------------------------------}
-function TDMMain.GetLibSuffix(_ProjectType:TProjectType;_libsuffix:string): string;
+function TDMMain.GetLibSuffix: string;
 begin
-  result:=_libsuffix;
-  if _ProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
-  if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;  // if changing of files is not allowed, then we can not change the suffix.
-  if assigned(CommandLineAction) then exit;    // the app runs with command-line params, then do not change files.
-  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FDelphiVersion].PackageVersion
-  else if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBNoneTag) then result:=''
+  result:='';
+  if FProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
+  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FDelphiVersion].PackageVersion else
+  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBNoneTag) then result:=''
   else result:=ProjectSettings.StringValue('Application/LibSuffix');
 end;
 
@@ -632,7 +631,6 @@ begin
   FBPGPlatformList.Clear;
   FBPGConfigList.Clear;
   FProjectType := tp_unkown;
-  FDelphiVersion := LatestIDEVersion;
   FProjectFilename := '';
   FProjectOutputPath := '';
   FConfigFilename := '';

@@ -71,6 +71,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.59  ( 12.10.2017 )
+-SH: fix for package LibSuffix.
+-SH: change for filesearch. The file search-dialog did not find file with multible '.' in the filename.
+
 1.9.2.58  ( 25.09.2017 )
 -SH: if the app runs with command-line params, then do not change the files. (event if settings "ChangeFiles"is set to true).
 

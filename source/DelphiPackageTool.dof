@@ -105,39 +105,38 @@ HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0
 MajorVer=1
 MinorVer=9
 Release=2
-Build=41
+Build=47
 Debug=0
 PreRelease=0
 Special=0
 Private=0
 DLL=0
-Locale=2057
+Locale=1033
 CodePage=1252
 [Version Info Keys]
 CompanyName=
-FileDescription=Delphi Project/Package Compiler Tool
-FileVersion=1.9.2.41
+FileDescription=DelphiPackageTool
+FileVersion=1.9.2.47
 InternalName=
-LegalCopyright=Samuel Herzog
+LegalCopyright=
 LegalTrademarks=
 OriginalFilename=
-ProductName=
-ProductVersion=1.0.0.0
-Comments=
+ProductName=DelphiPackageTool
+ProductVersion=1.9.0.0
+ProgramID=com.embarcadero.DelphiPackageTool
 [Excluded Packages]
-C:\Programme\Borland\Delphi7\Bin\indy70.bpl=Internet Direct (Indy) für D7
-c:\programme\borland\delphi7\projects\bpl\dclfs7.bpl=FastScript 1.9 Components
-c:\programme\borland\delphi7\projects\bpl\dclfrx7.bpl=FastReport 4.0 Components
-c:\programme\borland\delphi7\projects\bpl\dclfrxe7.bpl=FastReport 4.0 Exports
-c:\programme\borland\delphi7\projects\bpl\dclfrxdb7.bpl=FastReport 4.0 DB Components
-c:\programme\borland\delphi7\projects\bpl\dclfrxtee7.bpl=FastReport 4.0 Tee Components
-c:\programme\borland\delphi7\projects\bpl\cuitoolbox_d7d.bpl=Roche CUI Toolbox V3.0 design-time library
+C:\Program Files (x86)\Borland\Delphi7\Bin\indy70.bpl=Internet Direct (Indy) for D7
+c:\program files (x86)\borland\delphi7\projects\bpl\qcsystemcomponents.bpl=Components used for the QCSystem
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=C:\Projects\Packages\Downloads\ExcMagic\source

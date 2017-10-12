@@ -12,7 +12,7 @@ interface
 uses
   stdctrls;
 
-procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
+procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer;const _LibSuffix:string);
 
 implementation
 
@@ -34,7 +34,7 @@ uses
   Result:    None
   Description: create a bpg-file with all the projects in the list <_lstProjectFiles>.
 -----------------------------------------------------------------------------}
-procedure CreateBPGFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
+procedure CreateBPGFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer;const _LibSuffix:string);
 resourcestring
 cDoFreshInstall='Could not find the file <%s>. Download the latest <setup.exe> of Delphi Package Tool and do fresh install.';
 const
@@ -61,7 +61,7 @@ begin
     for i:=0 to _lstProjectFiles.Items.count-1 do begin
       _ProjectFilename:=AbsoluteFilename(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
       _ProjectType:=DetermProjectType(_ProjectFilename,_projectGroupFilename,_DelphiVersion);
-      _Projects:=_Projects+OutputFilename(_ProjectFilename,_ProjectType,DelphiVersions[_DelphiVersion].PackageVersion);
+      _Projects:=_Projects+OutputFilename(_ProjectFilename,_ProjectType,_LibSuffix);
       if (length(_Projects)-LastPos(_Projects,'\'))>80 then _Projects:=_Projects+' \'+#$D+#$A+'  '
       else _Projects:=_Projects+' ';
     end;
@@ -74,7 +74,7 @@ begin
       _ProjectFilename:=AbsoluteFilename(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
       _ProjectType:=DetermProjectType(_ProjectFilename,_projectGroupFilename,_DelphiVersion);
 
-      _filename:=OutputFilename(_ProjectFilename,_ProjectType,DelphiVersions[_DelphiVersion].PackageVersion);
+      _filename:=OutputFilename(_ProjectFilename,_ProjectType,_LibSuffix);
       _line:=ExtractFilename(_filename)+': '+ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i]);
       if _files.IndexOf(_line)=-1 then begin // avoid doubles.
         _Files.Add(_line);
@@ -100,7 +100,7 @@ end;
   Result:    None
   Description: create a bdsgroup-file with all the projects in the list <_lstProjectFiles>.
 -----------------------------------------------------------------------------}
-procedure CreateBDSGroup(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
+procedure CreateBDSGroup(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer;_LibSuffix:string);
 resourcestring
 cDoFreshInstall='Could not find the file <%s>. Download the latest <setup.exe> of Delphi Package Tool and do fresh install.';
 cCouldNotCopy='Could not copy file <%s> to <%s>. Check User-Rights.';
@@ -118,7 +118,7 @@ _description:string;
 _packagefilename:string;
 _templateFilename:string;
 _projectType:TProjectType;
-_libsuffix:string;
+_LibsuffixFromPackageFile:string;
 begin
   if not fileexists(_projectGroupFilename) then begin // if the project file does not exists, then create it from the template.
     _templateFilename:=ExtractFilePath(Application.exename)+cBDSGroupTemplateFilename;
@@ -168,8 +168,9 @@ begin
                  end;
                end;
         tp_bpl:begin  // project is a package
-                 ReadpackageInfo(_packagefilename,_description,_libsuffix);
-                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+DelphiVersions[_DelphiVersion].ShortName+'.bpl',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
+                 ReadpackageInfo(_packagefilename,_description,_LibsuffixFromPackageFile);
+                 if _LibsuffixFromPackageFile<>'' then _Libsuffix:=_LibsuffixFromPackageFile;
+                 _lineToInsert:=format('      <Projects Name="%s">%s</Projects>',[extractfilenameonly(_filename)+_Libsuffix+'.bpl',ExtractRelativePath(ExtractFilePath(_projectGroupFilename),_lstProjectFiles.Items[i])]);
                  if _file.IndexOf(_lineToInsert)=-1 then begin
                    _file.Insert(j,_lineToInsert);
                    _TargetsLine:=_TargetsLine+extractfilenameonly(_filename)+DelphiVersions[_DelphiVersion].ShortName+'.bpl'+' ';
@@ -353,13 +354,13 @@ end;
   Result:    None
   Description: create a project group file (either .bpg or .bdsgroup or .groupproj).
 -----------------------------------------------------------------------------}
-procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer);
+procedure CreateProjectGroupFile(const _lstProjectFiles:TListBox;const _projectGroupFilename:string;const _DelphiVersion:integer;const _LibSuffix:string);
 var
 _fileExt:string;
 begin
   _fileExt:=lowercase(ExtractFileExt(_ProjectGroupFilename));
-  if _fileExt='.bpg'       then CreateBPGFile(_lstProjectFiles,_projectGroupFilename,_DelphiVersion)  else
-  if _fileExt='.bdsgroup'  then CreateBDSGroup(_lstProjectFiles,_projectGroupFilename,_DelphiVersion) else
+  if _fileExt='.bpg'       then CreateBPGFile(_lstProjectFiles,_projectGroupFilename,_DelphiVersion,_LibSuffix)  else
+  if _fileExt='.bdsgroup'  then CreateBDSGroup(_lstProjectFiles,_projectGroupFilename,_DelphiVersion,_LibSuffix) else
   if _fileExt='.groupproj' then CreateGroupProj(_lstProjectFiles,_projectGroupFilename,_DelphiVersion);
 end;
 

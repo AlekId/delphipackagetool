@@ -477,10 +477,10 @@ end;
 
 procedure TFrmMain.stgFilesMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-  StgFilesShowCellHint(X,Y);
+  StgFilesShowCellHint(X, Y);
 end;
 
-procedure TFrmMain.stgFilesMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TFrmMain.stgFilesMouseUp(Sender: TObject; Button: TMouseButton;Shift: TShiftState; X, Y: Integer);
 begin
   if Button<>mbLeft then exit;
   if DMMain.ApplicationState<>tas_open then exit;
@@ -725,16 +725,16 @@ end;
 procedure TFrmMain.stgFilesContextPopup(Sender: TObject;
                                         MousePos: TPoint;
                                         var Handled: Boolean);
-//var
-//  ACol,
-//  ARow: Integer;
+var
+  ACol,
+  ARow: Integer;
 begin
 //  stgFiles.MouseToCell(MousePos.X, MousePos.Y, ACol, ARow);
 //  if (ARow > 0) and (ARow < stgFiles.RowCount) then begin
 //    if ARow <= DMMain.BPGProjectList.Count  then begin
 //      stgFiles.Col := ACol;
 //      stgFiles.Row := ARow;
-//      if DMMain.ApplicationState<>tas_working then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
+//      if DMMain.ApplicationState=tas_open then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
 //    end;
 //  end
 //  else Handled := True;
@@ -1118,8 +1118,7 @@ resourcestring
 cFileNotFoundTagGerman='nicht gefunden';
 cFileNotFoundTagEnglish='not found';
 begin
-  _filename:=lowercase(_filename);
-  if ExtractFileExt(_filename)='' then _filename:=_filename+'*.*';
+  _filename:='*'+lowercase(_filename)+'*';
   if (Pos(cFileNotFoundTagGerman,_compilerOutput)>0) or  //TODO we need a better way to find out if the compilation was successfull.
      (Pos(cFileNotFoundTagEnglish,_compilerOutput)>0) then ShowSelectPathDialog(DMMain.SearchPath,_filename,true) else
   if (Pos('.dpr',_filename)>0) or
