@@ -752,17 +752,16 @@ begin
   GetInstalledIDEVersions(FInstalledDelphiVersionList);
   InitializeAppSettings; // load application settings.
   FDelphiWasStartedOnApplicationStart := isDelphiStarted(FDelphiVersion);
+
   case ParamCount of
-    0: begin
-         if not OpenBPG(ApplicationSettings.FileValue('Application/ProjectGroupFile')) then exit;
-       end;
+    0: OpenBPG(ApplicationSettings.FileValue('Application/ProjectGroupFile'));
 
     1:begin
         _tmp := lowercase(trim(Paramstr(1)));
         trace(3,'Parameter is <%s>.',[_tmp]);
         if Pos(cCleanupBplDir, _tmp) = 1 then CommandLineAction := actCleanUpProjectBPLDir else // command to be executed.
         if Pos(cCleanupAll, _tmp) = 1    then CommandLineAction := actCleanUpAll // command to be executed.
-        else if not OpenBPG(_tmp) then exit;
+        else OpenBPG(_tmp);
       end;
     else begin
       for i := 1 to ParamCount do begin
@@ -774,7 +773,7 @@ begin
           if pos('"',_tmp)>0 then _tmp:=copy(_tmp,1,pos('"',_tmp)); //copy until the occurence of the char <">.
           _filename := lowercase(_tmp);
           _filename := AbsoluteFilename(extractFilepath(application.ExeName),_filename);
-          if not OpenBPG(_filename) then exit;
+          OpenBPG(_filename);
         end;
         if Pos(cRebuild, _tmp) = 1 then begin // command to be executed.
           if (Pos('.bpg', _filename) > 0) or
@@ -817,7 +816,7 @@ begin
       CommandLineAction := actRecompileAllPackages;
     end;
 
-    if _tmp = cSilent then FCommandLineSilent := True;
+    FCommandLineSilent := (_tmp = cSilent);
   end;
 
   if _Config <> '' then CurrentBPGConfigList.CommaText := _Config;
@@ -829,6 +828,7 @@ begin
     if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName,'DelphiPackageTool File-Type BDSGroup');
     if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName,'DelphiPackageTool File-Type GROUPPROJ');
   end;
+
 end;
 
 {*-----------------------------------------------------------------------------
