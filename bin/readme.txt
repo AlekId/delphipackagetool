@@ -71,6 +71,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.60  ( 16.10.2017 )
+-SH: On the very first start to this application, the user shall be asked if he want's to assign the fileextensions .bpg,.grouproj,.bdsgroup
+     to this tool. (this feature did not work anymore ->regression). Fixed now.
+
 1.9.2.59  ( 12.10.2017 )
 -SH: fix for package LibSuffix.
 -SH: change for filesearch. The file search-dialog did not find file with multible '.' in the filename.
