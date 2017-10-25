@@ -43,7 +43,7 @@ function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns del
 function  GetDelphiStdPackagesDir(const _DelphiVersion: integer; const _PlatformToCompile: string): string;  // returns directory with platform dependent standard packages included in Delphi e.g. C:\Program files\Embarcadero\RAD Studio\9.0\<bin|bin64>
 function  GetInstalledIDEVersions(_list:TStrings):boolean; // returns delphi and bds versions.
 procedure InitBatchFile(const _filename:string); // reset batch file
-function  SaveBatchFile:string; // save the batch file.
+function  SaveBatchFile(_isSilentMode:Boolean):string; // save the batch file.
 function  GetPackageVersion(const _PackageName,_PackageOutputPath,_PackageLibSuffix:string;const _ProjectType:TProjectType):string;
 function  DetermProjectType(_projectfilename:string;const _projectGroupfilename:string;const _DelphiVersion:integer):TProjectType; // find out if the source file contains a application or library or package.
 function  OutputFilename(const _filename:string;const _ProjectType:TProjectType;const _libsuffix:string=''):string; // input is a source code filename, output is the name of the compiled target.
@@ -1553,7 +1553,7 @@ end;
   Result:    None
   Description:
 -----------------------------------------------------------------------------}
-function SaveBatchFile:string; // save the batch file to _filename
+function SaveBatchFile(_isSilentMode:Boolean):string; // save the batch file to _filename
 begin
   result:='';
   if not gCreateBatchFile then exit;
@@ -1561,7 +1561,7 @@ begin
     CheckDirectory(extractfilepath(FBatchFilename));
     FBatchFile.SaveToFile(FBatchFilename);
     result:=FBatchFilename;
-    ShowFolder(extractfilepath(FBatchFilename));
+    if not _IsSilentMode then ShowFolder(extractfilepath(FBatchFilename));
   except
     on e:exception do trace(1,'Error in SaveBatchFile: Could not save file <%s>. <%s>.',[FBatchFilename,e.message]);
   end;

@@ -2,7 +2,7 @@ object FrmMain: TFrmMain
   Left = 262
   Top = 247
   Caption = 'Package Group Rebuilder/Installer'
-  ClientHeight = 509
+  ClientHeight = 452
   ClientWidth = 1208
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -26,17 +26,18 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 304
+    Top = 247
     Width = 1208
     Height = 12
     Cursor = crVSplit
     Align = alBottom
+    ExplicitTop = 304
   end
   object stgFiles: TStringGrid
     Left = 0
     Top = 190
     Width = 1208
-    Height = 114
+    Height = 57
     Align = alClient
     ColCount = 7
     Ctl3D = False
@@ -110,7 +111,7 @@ object FrmMain: TFrmMain
       Top = 8
       Width = 209
       Height = 57
-      Action = DMMain.actRecompileAllPackages
+      Action = actRecompileAll
       Caption = 'Install All'
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -276,7 +277,7 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 316
+    Top = 259
     Width = 1208
     Height = 193
     ActivePage = tabInfo
@@ -297,6 +298,8 @@ object FrmMain: TFrmMain
         ScrollBars = ssBoth
         TabOrder = 0
         OnDblClick = mmoLogFileDblClick
+        ExplicitLeft = -104
+        ExplicitTop = -18
       end
     end
     object tabTrace: TTabSheet
@@ -602,8 +605,8 @@ object FrmMain: TFrmMain
     end
   end
   object pmnMessages: TPopupMenu
-    Left = 176
-    Top = 120
+    Left = 240
+    Top = 368
     object ClearLog1: TMenuItem
       Caption = 'Clear Log'
       OnClick = ClearLog1Click
@@ -622,8 +625,8 @@ object FrmMain: TFrmMain
     end
   end
   object ppmFilesGrid: TPopupMenu
-    Left = 208
-    Top = 280
+    Left = 192
+    Top = 232
     object OpenProjectinIDE1: TMenuItem
       Action = actOpenProjectWithDelphi
     end

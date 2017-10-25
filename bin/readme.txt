@@ -16,9 +16,9 @@ this Tool may save you a lot of time.
 
 Two disadvantages of the Delphi IDE can be avoided when using DelphiPackgeTool:
 
-1. Bug in the Delphi IDE.
-If you open a big project (.bpg) and Press <Rebuild All Projects> in the Delphi IDE, then for some reason
-not all memory is released by the IDE. This means you have to close Delphi and start again. This is not very nice.
+1. Bug in the Delphi IDE (Delphi7).
+If you open a big project (.bpg) and Press <Rebuild All Projects> in the Delphi7 IDE, then for some reason
+not all memory is released by the IDE. This means you have to close Delphi7 and start again.
 
 2. The Delphi IDE has no function to install all packages automatically.
 DelphiPackageTool compiles and installes all packages listed in the bpg-file.
@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.61  ( 24.10.2017 )
+-SH: Changes to make the featrue "Auto-Backup" work again. 
+
 1.9.2.60  ( 16.10.2017 )
 -SH: On the very first start to this application, the user shall be asked if he want's to assign the fileextensions .bpg,.grouproj,.bdsgroup
      to this tool. (this feature did not work anymore ->regression). Fixed now.
