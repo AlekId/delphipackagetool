@@ -1164,11 +1164,8 @@ begin
   ApplicationState := tas_working;
   try
     _CompiledProjects := CompileAndInstallProjects(FBPGProjectList);
-    _filename := SaveBatchFile;
-    if _filename <> '' then begin
-      WriteLog('Saved batch file <%s>.', [_filename]);
-      if not IsSilentMode then ShowFolder(ExtractFilePath(_filename));
-    end;
+    _filename := SaveBatchFile(IsSilentMode);
+    if _filename <> '' then WriteLog('Saved batch file <%s>.', [_filename]);
   finally
     ApplicationState := tas_open;
   end;
