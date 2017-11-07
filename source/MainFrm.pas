@@ -214,7 +214,6 @@ type
     procedure actSelectPackageOutputDirExecute(Sender: TObject);
     procedure actCompileProjectExecute(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure stgFilesContextPopup(Sender: TObject; MousePos: TPoint;var Handled: Boolean);
     procedure actShowProjectOptionsExecute(Sender: TObject);
     function  OpenProjectGroup(_filename:string):boolean;
     procedure CloseProjectGroup;
@@ -711,33 +710,6 @@ var
 _showagain:boolean;
 begin
   ShowStartUpDlg(_showagain);
-end;
-
-
-{*-----------------------------------------------------------------------------
-  Procedure: stgFilesContextPopup
-  Author:    sam
-  Date:      14-Apr-2017
-  Arguments: Sender: TObject; MousePos: TPoint; var Handled: Boolean
-  Result:    None
-  Description:
------------------------------------------------------------------------------}
-procedure TFrmMain.stgFilesContextPopup(Sender: TObject;
-                                        MousePos: TPoint;
-                                        var Handled: Boolean);
-var
-  ACol,
-  ARow: Integer;
-begin
-//  stgFiles.MouseToCell(MousePos.X, MousePos.Y, ACol, ARow);
-//  if (ARow > 0) and (ARow < stgFiles.RowCount) then begin
-//    if ARow <= DMMain.BPGProjectList.Count  then begin
-//      stgFiles.Col := ACol;
-//      stgFiles.Row := ARow;
-//      if DMMain.ApplicationState=tas_open then SetCurrentProject(stgFiles.cells[1, stgFiles.Row]);
-//    end;
-//  end
-//  else Handled := True;
 end;
 
 {*-----------------------------------------------------------------------------

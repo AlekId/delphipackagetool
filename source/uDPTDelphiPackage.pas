@@ -37,7 +37,7 @@ function  ReadProjectFilenameFromDProj(const _Filename:String):string; // the re
 function  ReadSupportedConfigsOfProject(const _filename: string; var _Configs: TStringList): Boolean;
 function  ReadSupportedPlatformsOfProject(const _filename: string; var _Platforms: TStringList): Boolean;
 function  ReadAllPlatformsOfProject(const _filename: string; var _Platforms: TStringList): Boolean;
-function  ReadConfigurationSettings(const _filename:string;out Config:string;out dPlatform:string;out CompilerSwitches: string;out Conditions:string;out SearchPath:string;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string;out DCPOutputPath:string;out NameSpaces:string):boolean;
+function  ReadConfigurationSettings(const _filename:string;out Config:string;out dPlatform:string;out CompilerSwitches: string;out Conditions:string;out SearchPath:string;out ProjectOutputPath:string;out BPLOutputPath:string;out DCUOutputPath:string;out DCPOutputPath:string;out NameSpaces:string;out UseMSBuild:boolean):boolean;
 function  WriteSettingsToDelphi(_bpgPath,_Filename:String;_Conditions:string;_SearchPath:String;_ProjectOutputPath:string;_BPLOutputPath,_DCUOutputPath,_DCPOutputPath:string;const _silent:boolean;const _ProjectType:TProjectType;const _DelphiVersion:integer;const _CurrentPlatform, _CurrentConfig: string;out ChangedFiles:TStringList):boolean;
 function  GetDelphiRootDir(const _DelphiVersion:integer):string;  // returns delphi root directory e.g. C:\Program files\Borland\Delphi7
 function  GetDelphiStdPackagesDir(const _DelphiVersion: integer; const _PlatformToCompile: string): string;  // returns directory with platform dependent standard packages included in Delphi e.g. C:\Program files\Embarcadero\RAD Studio\9.0\<bin|bin64>
@@ -2373,6 +2373,7 @@ end;
              out DCUOutputPath:string
              out DCPOutputPath:string
              out NameSpaces:string
+             out UseMSBuild:boolean
   Result:    boolean
   Description: read path information from a dproj file used by Delphi XE or newer.
 -----------------------------------------------------------------------------}
@@ -2386,7 +2387,8 @@ function ReadDPROJSettingsDXE_and_Newer(const _dprojFilename: string;
                                         out BPLOutputPath: string;
                                         out DCUOutputPath: string;
                                         out DCPOutputPath: string;
-                                        out NameSpaces: string):boolean;
+                                        out NameSpaces: string;
+                                        out UseMSBuild:boolean):boolean;
 var
   _xmlDOMfile: IXMLDOMDocument;
   _msg:string;
@@ -2520,6 +2522,11 @@ begin
       trace(5,'ReadDPROJSettingsDXE_and_Newer: DCC_ImageBase is <%s>.', [_Tmp]);
       if _Tmp <> '' then CompilerSwitches := CompilerSwitches + '-$K' + _TMP + ' ';
 
+      // Use external MSBuild
+      _Tmp := ReadInheritedAttribute(_xmlDOMfile, '//PropertyGroup[@Condition="''$(§Inheritance)''!=''''"]/§Attribute', _InheritanceList, 'DCC_UseMSBuildExternally');
+      trace(5,'ReadDPROJSettingsDXE_and_Newer: DCC_UseMSBuildExternally is <%s>.', [_Tmp]);
+      UseMSBuild:=sametext(_tmp,'true');
+
       Result:=true;
     end;
   finally
@@ -2533,17 +2540,18 @@ end;
   Author:    sam
   Date:      22-Mai-2008
   Arguments: const _dprojFilename: string      path + name of project file
-             var _Config: string               in: desired configuration ('' = use default configuration)
+             var Config: string                in: desired configuration ('' = use default configuration)
                                                out: found configuration  ('' = not found)
-             var _Platform: string             in: desired platform ('' = use default platform)
+             var dPlatform: string             in: desired platform ('' = use default platform)
                                                out: found platform  ('' = not found)
              out CompilerSwitches: string;
              out Conditions: string
-             var _SearchPath: string
-             var _ProjectOutputPath: string
-             var _BPLOutputPath: string
-             var _DCUOutputPath: string
-             var _NameSpaces: string
+             out SearchPath: string
+             out ProjectOutputPath: string
+             out BPLOutputPath: string
+             out DCUOutputPath: string
+             out NameSpaces: string
+             out UseMSBuild:boolean
   Result:    boolean
   Description: read settings from a dproj-file.
 -----------------------------------------------------------------------------}
@@ -2557,7 +2565,8 @@ function ReadDPROJSettings(const _dprojFilename: string;
                            out BPLOutputPath: string;
                            out DCUOutputPath: string;
                            out DCPOutputPath: string;
-                           out NameSpaces: string):boolean; // get informations from the dproj-file.
+                           out NameSpaces: string;
+                           out UseMSBuild:boolean):boolean; // get informations from the dproj-file.
 var
   _msg: string;
   _ProjectVersion: string;
@@ -2571,6 +2580,7 @@ begin
   DCUOutputPath := '';
   DCPOutputPath := '';
   _ProjectVersion := '';
+  UseMSBuild:=false;
   if not fileExists(_dprojFilename) then begin
     trace(5, 'ReadDPROJSettings: Could not find the file <%s>.', [_dprojFilename]);
     exit;
@@ -2612,7 +2622,8 @@ begin
                                              BPLOutputPath,
                                              DCUOutputPath,
                                              DCPOutputPath,
-                                             NameSpaces);
+                                             NameSpaces,
+                                             UseMSBuild);
   end;
 end;
 
@@ -2709,6 +2720,7 @@ end;
              out DCUOutputPath: string
              out DCPOutputPath: string
              out NameSpaces: string
+             out UseMSBuild:boolean
   Result:    boolean
   Description:
 -----------------------------------------------------------------------------}
@@ -2722,7 +2734,8 @@ function ReadConfigurationSettings(const _filename: string;
                                    out BPLOutputPath: string;
                                    out DCUOutputPath: string;
                                    out DCPOutputPath: string;
-                                   out NameSpaces: string): Boolean;
+                                   out NameSpaces: string;
+                                   out UseMSBuild:boolean): Boolean;
 var
 _fileext: string;
 _ProjectName: string;
@@ -2739,7 +2752,7 @@ begin
     DCPOutputPath := BPLOutputPath;
   end
   else if _fileext = '.dproj' then begin
-    result := ReadDProjSettings(_filename, Config, dPlatform, CompilerSwitches, Conditions, SearchPath, ProjectOutputPath, BPLOutputPath, DCUOutputPath, DCPOutputPath, NameSpaces);
+    result := ReadDProjSettings(_filename, Config, dPlatform, CompilerSwitches, Conditions, SearchPath, ProjectOutputPath, BPLOutputPath, DCUOutputPath, DCPOutputPath, NameSpaces, UseMSBuild);
     if DCPOutputPath = '' then DCPOutputPath:=BPLOutputPath;
   end
   else if _fileext = '.bdsproj' then begin

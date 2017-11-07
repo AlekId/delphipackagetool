@@ -336,6 +336,7 @@ end;
   Arguments: _ExtName:String;_AppName:String
   Result:    None
   Description: try to register the file extenstion <_ExtName> with application <_AppName>.
+               <_AppName> must be the full-path and filename!
 -----------------------------------------------------------------------------}
 function RegisterFileType(_ExtName:String;_AppName:String;_Description:string):boolean;
 resourcestring
@@ -348,14 +349,15 @@ begin
   result:=false;
   if Pos('.',_ExtName)=1 then delete(_extname,1,1);
   _BaseKeyName:= _ExtName + 'file';
-  _RegistryFileName:=ExtractFilenameOnly(_AppName)+'.'+_extname;
+  _RegistryFileName:=ExtractFilenameOnly(_AppName)+'.FileType'; //+_extname;
   _reg := TRegistry.Create(KEY_READ or KEY_WRITE or KEY_WOW64_32KEY);
   try
     try
       _reg.RootKey:=HKEY_CLASSES_ROOT;
       if _reg.OpenKey('.' + _ExtName, True)    then _reg.WriteString('',_RegistryFileName);
       _reg.CloseKey;
-      if not _reg.KeyExists(_RegistryFileName) then _reg.CreateKey(_RegistryFileName);
+      if _reg.KeyExists(_RegistryFileName) then _reg.DeleteKey(_RegistryFileName);
+      _reg.CreateKey(_RegistryFileName);
       if _reg.OpenKey(_RegistryFileName+'\', True) then _reg.WriteString('',_Description) ;
       _reg.CloseKey;
       if _reg.OpenKey(_RegistryFileName + '\DefaultIcon', True)        then _reg.WriteString('',_AppName +' 0') ;
