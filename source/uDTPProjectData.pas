@@ -30,6 +30,7 @@ type
     IDEInstall:string;
     Description:string;
     Version:string;
+    UseMSBuild:boolean;
     ProjectType:TProjectType;
     CompileResultsList: TStringList;
     VersionsList: TStringList;

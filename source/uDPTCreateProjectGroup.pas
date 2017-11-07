@@ -265,8 +265,11 @@ begin
     end;
     _EndTargetSection:=FindLine(_file,'<Import Condition="',_text);
     if _EndTargetSection=-1 then begin
-      trace(2,'Problem in CreateGroupProj: Could not find the end of target section in file <%s>. Something wrong here.',[_projectGroupFilename]);
-      exit;
+      _EndTargetSection:=FindLine(_file,'<Import Project="',_text);
+      if _EndTargetSection=-1 then begin
+        trace(2,'Problem in CreateGroupProj: Could not find the end of target section in file <%s>. Something wrong here.',[_projectGroupFilename]);
+        exit;
+      end;
     end;
 // remove the existing lines.
     for j:=_BeginTargetSection+1 to  _EndTargetSection-1 do _file.delete(_BeginTargetSection+1);

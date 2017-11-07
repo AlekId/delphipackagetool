@@ -88,6 +88,7 @@ type
     FDCPOutputPath: string;            // output path for the package files (dcp = delphi component package).
     FDCUOutputPath: string;            // output path for the dcu-files.
     FNameSpaces: string;               // namespaces introduced in Delphi 2010 (or before?)
+    FUseMSBuild:boolean;               // if true, then msbuild will be used to compile.
     FCompilerSwitches: string;         // compiler switches of the current project.
     FConditions: string;               // the conditions of the current project.
     FSearchPath: string;               // search path of the current project.
@@ -406,7 +407,8 @@ begin
                                               FBPLOutputPath,
                                               FDCUOutputPath,
                                               FDCPOutputPath,
-                                              FNameSpaces);
+                                              FNameSpaces,
+                                              FUseMSBuild);
   uDPTDelphiPackage.ReadPackageInfo(FProjectFilename, FPackageDescription, FPackageSuffix);
 
 // setup the dcu output-path
@@ -711,6 +713,7 @@ begin
   FApplicationIniFilename := changefileext(application.ExeName, '.ini');
   FConfigToCompile := '';
   FPlatformToCompile := '';
+  FUseMSBuild:=false;
 // prepare trace file
   trace(3,'Started application <%s> with version <%s>.',[application.exename,GetVersion]);
 // prepare project settings component.
@@ -1725,11 +1728,13 @@ begin
 
 
   _commandLine := '"' + FProjectFilename + '" /t:build' +
-                                           ' /p:config=' + FConfigToCompile +
-                                           ' /p:platform=' + FPlatformToCompile;
+                                           ' /p:config="' + FConfigToCompile +'"'+
+                                           ' /p:platform="' + FPlatformToCompile+'"';
+   if SameText(FConfigToCompile,'release') then _commandLine :=_commandLine+' /p:target="Deploy"';
+
   if _SearchPath <> '' then begin
     _commandLine := _commandLine + ' /p:UnitSearchPath=' + _SearchPath +
-                                   ' /p:_ObjectPath=' + _SearchPath +
+                                   ' /p:ObjectPath=' + _SearchPath +
                                    ' /p:IncludePath=' + _SearchPath +
                                    ' /p:ResourcePath=' + _SearchPath;
   end;
@@ -1741,7 +1746,7 @@ begin
 
   Screen.Cursor := crHourGlass;
   try
-
+    trace(3, 'Command line is %s.', [_commandLine]);
     _returnValue := WinExecAndWait(FDelphiCompilerFile,
                                    _commandLine,
                                    ExtractFilePath(FProjectFilename),
@@ -1792,18 +1797,9 @@ end;
 -----------------------------------------------------------------------------}
 function TDMMain.CompileCurrentPackage: Boolean;
 begin
-  if (FDelphiVersion < 11) or  // older than Delphi 2007
-     (lowercase(ExtractFileExt(FProjectFilename))='.dpk') or
-     (lowercase(ExtractFileExt(FProjectFilename))='.dpr') then begin
-    // pre Delphi 2007 or .dpk or .dpr in project group: use dcc32
-    Result := CompileCurrentPackageWithDcc;
-  end
-  else begin
-    // Delphi 2007 and later: use msbuild
-    Result := CompileCurrentPackageWithMsBuild;
-  end;
+  if FUseMSBuild then result:=CompileCurrentPackageWithMsBuild
+                 else result:=CompileCurrentPackageWithDcc;
 end;
-
 
 {*-----------------------------------------------------------------------------
   Procedure: actExecuteAppExecute
@@ -2366,9 +2362,9 @@ begin
     if FProjectCompiled then begin
       Inc(Result);
       if TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Count = 1 then begin
-          _TmpStr := TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).VersionsList[0];
-          _DelimiterPos := Pos(ProjectDataDelimiter, _TmpStr);
-          _TmpStr := Copy(_TmpStr, _DelimiterPos + Length(ProjectDataDelimiter), Length(_TmpStr));
+        _TmpStr := TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).VersionsList[0];
+        _DelimiterPos := Pos(ProjectDataDelimiter, _TmpStr);
+        _TmpStr := Copy(_TmpStr, _DelimiterPos + Length(ProjectDataDelimiter), Length(_TmpStr));
       end
       else _TmpStr := 'See Hint';
       TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).CompileDate:=DateTimeToStr(Now);
@@ -2419,6 +2415,7 @@ begin
     TProjectData(FBPGProjectList.Objects[i]).Description    := FPackageDescription;
     TProjectData(FBPGProjectList.Objects[i]).DPTSearchPath  := FDPTSearchPath;
     TProjectData(FBPGProjectList.Objects[i]).ProjectType    := FProjectType;
+    TProjectData(FBPGProjectList.Objects[i]).UseMSBuild     := FUseMSBuild;
   end;
 end;
 
@@ -2447,6 +2444,7 @@ begin
   FDCUOutputPath := '';
   FDCPOutputPath := '';
   FNameSpaces := '';
+  FUseMSBuild:=false;
   FCurrentProjectNo:=0;
 
   if _ProjectName = '' then exit;

@@ -71,8 +71,14 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.62  ( 07.11.2017 )
+-SH: Until now, DPT took always msbuild if the fileextension was <.dproj>.
+     I have changed this behavoir. Now it will read "DCC_UseMSBuildExternally"
+     from .dproj and only use msbuild it this setting is set to <true>.	 
+
 1.9.2.61  ( 24.10.2017 )
 -SH: Changes to make the featrue "Auto-Backup" work again. 
+
 
 1.9.2.60  ( 16.10.2017 )
 -SH: On the very first start to this application, the user shall be asked if he want's to assign the fileextensions .bpg,.grouproj,.bdsgroup

@@ -2,7 +2,7 @@ object FrmMain: TFrmMain
   Left = 262
   Top = 247
   Caption = 'Package Group Rebuilder/Installer'
-  ClientHeight = 452
+  ClientHeight = 433
   ClientWidth = 1208
   Color = clBtnFace
   Constraints.MinHeight = 450
@@ -26,7 +26,7 @@ object FrmMain: TFrmMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 247
+    Top = 228
     Width = 1208
     Height = 12
     Cursor = crVSplit
@@ -37,7 +37,7 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 190
     Width = 1208
-    Height = 57
+    Height = 38
     Align = alClient
     ColCount = 7
     Ctl3D = False
@@ -47,7 +47,6 @@ object FrmMain: TFrmMain
     ParentCtl3D = False
     PopupMenu = ppmFilesGrid
     TabOrder = 0
-    OnContextPopup = stgFilesContextPopup
     OnDblClick = stgFilesDblClick
     OnMouseMove = stgFilesMouseMove
     OnMouseUp = stgFilesMouseUp
@@ -277,7 +276,7 @@ object FrmMain: TFrmMain
   end
   object pgcInfo: TPageControl
     Left = 0
-    Top = 259
+    Top = 240
     Width = 1208
     Height = 193
     ActivePage = tabInfo
@@ -298,8 +297,6 @@ object FrmMain: TFrmMain
         ScrollBars = ssBoth
         TabOrder = 0
         OnDblClick = mmoLogFileDblClick
-        ExplicitLeft = -104
-        ExplicitTop = -18
       end
     end
     object tabTrace: TTabSheet
