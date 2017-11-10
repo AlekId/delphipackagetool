@@ -3679,15 +3679,10 @@ begin
     trace(1, 'Problem in CompileProject: Problem, could not find the dcp path <%s>.', [_DCPPath]);
     Exit;
   end;
+  _TargetPath:=ExcludeTrailingPathDelimiter(_TargetPath);
+  _DCUPath   :=ExcludeTrailingPathDelimiter(_DCUPath);
+  _DCPPath   :=ExcludeTrailingPathDelimiter(_DCPPath);
 
-  if (LastPos(_TargetPath, '\') = Length(_TargetPath)) and
-     (Length(_TargetPath) > 2) then Delete(_TargetPath, Length(_TargetPath), 1);
-
-  if (LastPos(_DCUPath, '\') = Length(_DCUPath)) and
-     (Length(_DCUPath) > 2) then Delete(_DCUPath, Length(_DCUPath), 1);
-
-  if (LastPos(_DCPPath, '\') = Length(_DCPPath)) and
-     (Length(_DCPPath) > 2) then Delete(_DCPPath, Length(_DCPPath), 1);
 
   trace(5, '*************************************************************************************', []);
   trace(5, 'Compile Project <%s>.', [_ProjectName]);

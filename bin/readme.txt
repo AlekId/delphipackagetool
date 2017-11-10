@@ -71,6 +71,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.63  ( 10.11.2017 )
+-SH: The dcp-output-path will now be set to the same location as the dcp-files.
+     This means that the setting "Application/DCPOutputPath" from the project-ini-file
+     will be ignored. 
+
 1.9.2.62  ( 07.11.2017 )
 -SH: Until now, DPT took always msbuild if the fileextension was <.dproj>.
      I have changed this behavoir. Now it will read "DCC_UseMSBuildExternally"

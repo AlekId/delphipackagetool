@@ -242,7 +242,6 @@ uses
 
 const
 cModifiedFileExtentions='.cfg_old;.dof_old;.dproj_old;.bdsproj_old;.dpk_old;';
-cDefaultDCPPath='dcp\$(DELPHIVERSION)\';
 
 {-----------------------------------------------------------------------------
   Procedure: TDMMain.ShowFile
@@ -444,15 +443,7 @@ begin
       trace(5, 'BPLOutputPath=%s', [FBPLOutputPath]);
 
   // setup the dcp output-path
-      if ProjectSettings.PathValue('Application/DCPOutputPath') <> '' then FDCPOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/DCPOutputPath'), FDelphiVersion, FPlatformToCompile, FConfigToCompile) // then take it from the dpt
-                                                                      else FDCPOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FDCPOutputPath, FDelphiVersion, FPlatformToCompile, FConfigToCompile); // otherwise take the path from the cfg-file.
-      FDCPOutputPath := IncludeTrailingPathDelimiter(FDCPOutputPath);
-      if not IsSilentMode then begin
-        if (FDCPOutputPath <> '') and (not DirectoryExists(FDCPOutputPath)) then begin
-          if Application.MessageBox(pchar(Format(cCouldNotFindDCPOutputPath, [FDCPOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
-        end;
-        CheckDirectory(FDCPOutputPath);
-      end;
+      FDCPOutputPath:=FBPLOutputPath;
       trace(5, 'DCPOutputPath=%s', [FDCPOutputPath]);
       FProjectOutputPath:=FBPLOutputPath;
     end;
@@ -553,7 +544,6 @@ begin
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath','','Defines last used Backup Path.',true,false,false);
   ProjectSettings.GetStringValue('Application/Platform','','The platform used. e.g Win32,Win64.',true,false,false);
   ProjectSettings.GetStringValue('Application/Config','','The configuration used. e.g debug,release.',true,false,false);
-  ProjectSettings.GetPathValue('Application/DCPOutputPath', cDefaultDCPPath , 'Output Path for the dcp-files.', true,false,false);
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches','','Compiler switches used for debug config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetStringValue('Application/ReleaseCompilerSwitches','','Compiler switches used for release config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup',false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
@@ -592,11 +582,6 @@ begin
   CurrentBPGPlatformList.CommaText := ProjectSettings.StringValue('Application/Platform');
   CurrentBPGConfigList.CommaText := ProjectSettings.StringValue('Application/Config');
   gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch');
-// this will avoid breaking changes for version before D2010 for existing projects.
-  if (FDelphiVersion<=14) and
-     (ProjectSettings.PathValue('Application/DCPOutputPath')=cDefaultDCPPath)
-  then ProjectSettings.SetPath('Application/DCPOutputPath',ProjectSettings.PathValue('Application/PackageOutputPath'));
-
   ReadPackageListfromFile(FBPGFilename, FBPGProjectList);
   DPTSearchPath := GetGlobalSearchPath;
   GetAllPlatformsAndConfigsOfBPG;
