@@ -22,9 +22,9 @@ uses
 
 function  GetDelphiPackageDir(const _DelphiVersion:integer;const _PlatformToCompile: string):string; // get the delphi project\bpl path for Delphi Version <_DelphiVersion>.
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean;const _PlatformToCompile: string):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
-function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; out msg: string): Boolean; // add package into the regitstry.
+function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer;const _IsSilentMode:boolean; out msg: string): Boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName, _PackageDirectory, _PackageLibSuffix: string; _DelphiVersion: Integer): Boolean;  // remove package from regeistry.
-function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType; var Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
+function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType;const _IsSilent:boolean; out Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
 function  VerifyRegistry(const _DelphiVersion:integer;out NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
@@ -525,13 +525,13 @@ _FileChanged:boolean;
   procedure UpdateLibSuffix;
   begin
     _index:=FindLine(_File,'{$LIBSUFFIX',_OldText);
-    if _LibSuffix='' then begin
-      if _index>-1 then begin // no libsuffix to be set but there is one already in the file.
-        _File.Delete(_index); // delete it.
-        _FileChanged:=true;
-      end;
-    end
-    else begin
+    if (_index>-1) and
+       (_LibSuffix='') then begin // if there is already a libsuffix in the file
+      _File.Delete(_index); // then delete it.
+      _FileChanged:=true;
+      exit;
+    end;
+    if _LibSuffix<>'' then begin
       if _index=-1 then begin
         _index:=_File.IndexOf('requires');
         if _index>-1 then _index:=_index-2
@@ -542,7 +542,7 @@ _FileChanged:boolean;
         if not _silent then begin
           if Application.MessageBox(pchar(format(cAskToReplaceLibSuffix,[_OldText,_NewText])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
         end;
-        _File.Delete(_index);
+        _File.Delete(_index); // then delete it.
         _File.Insert(_index,_NewText);
         _FileChanged:=true;
       end;
@@ -575,14 +575,15 @@ _FileChanged:boolean;
   procedure UpdateOtares;
   begin
     _index:=FindLine(_File,'{$R *.otares}',_OldText);
-    if (_index>-1) and
-       (_DelphiVersion<=15) then begin    // in versions before XE2 this statement shall no be in the .dpk-file.
-      _NewText:=_File[_index];
-      _newText:=stringreplace(_NewText,'{$R *.otares}','',[rfIgnoreCase]);
-      _File[_index]:=_newText;
-      _FileChanged:=true;
-      exit;
-    end;
+//    if _DelphiVersion<=15 then begin   // in versions before XE2 this statement shall no be in the .dpk-file.
+      if _index>-1 then begin
+        _File.Delete(_index);
+        _FileChanged:=true;
+      end;
+//      exit;
+//    end;
+//    if _index<1 then _File.Insert(2,'{$R *.otares}');
+//    _FileChanged:=true;
   end;
 begin
   result:=false;
@@ -837,7 +838,7 @@ begin
   end;
 
 // make all paths relative
-  _searchPath       :=RelativePaths(ExtractFilePath(_dofFilename),_searchPath,_DelphiVersion,'$PLATFOPRM is not support','$CONFIG is not support');
+  _searchPath       :=RelativePaths(ExtractFilePath(_dofFilename),_searchPath,_DelphiVersion,'$PLATFORM is not support','$CONFIG is not support');
   _ProjectOutputPath:=RelativePath(ExtractFilePath(_dofFilename),_ProjectOutputPath,_DelphiVersion);
   _BPLOutputPath    :=RelativePath(ExtractFilePath(_dofFilename),_BPLOutputPath,_DelphiVersion);
   _DCUOutputPath    :=RelativePath(ExtractFilePath(_dofFilename),_DCUOutputPath,_DelphiVersion);
@@ -1558,7 +1559,7 @@ begin
   result:='';
   if not gCreateBatchFile then exit;
   try
-    CheckDirectory(extractfilepath(FBatchFilename));
+    CheckDirectory(extractfilepath(FBatchFilename),_isSilentMode);
     FBatchFile.SaveToFile(FBatchFilename);
     result:=FBatchFilename;
     if not _IsSilentMode then ShowFolder(extractfilepath(FBatchFilename));
@@ -1751,17 +1752,17 @@ begin
   try
     _Reg.RootKey := _RootKey;
     if not _Reg.OpenKeyReadOnly(_DelphiRootDirKey) then begin
-      trace(5,'Problem in _GetDelphiRootDir: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
+      trace(3,'Problem in _GetDelphiRootDir: The Key <%s> was not found in the registry.',[_DelphiRootDirKey]);
       exit;
     end;
     try
       _DelphiRootPath:=_Reg.ReadString('RootDir');
       if _DelphiRootPath='' then begin
-        trace(5,'Problem in _GetDelphiRootDir: Could not get root directory for delphi <%d>.',[_DelphiVersion]);
+        trace(3,'Problem in _GetDelphiRootDir: Could not get root directory for delphi <%d>.',[_DelphiVersion]);
         exit;
       end;
       result:=IncludeTrailingPathDelimiter(_DelphiRootPath);
-      trace(5,'_GetDelphiRootDir: Delphi root directory <%s> for delphi version <%d>.',[_DelphiRootPath,_DelphiVersion]);
+      trace(6,'_GetDelphiRootDir: Delphi root directory <%s> for delphi version <%d>.',[_DelphiRootPath,_DelphiVersion]);
     except
       on e:exception do trace(1,'Warning in _GetDelphiRootDir: Could not read the delphi root directory for delphi version <%s>.You need to have Admin rights for this computer. <%s>.',[_DelphiVersion,e.message]);
     end;
@@ -2037,6 +2038,7 @@ begin
       if BPLOutputPath<>'' then BPLOutputPath:=IncludeTrailingPathDelimiter(BPLOutputPath);
       trace(5,'ReadCFGSettings: BPL Output Path is <%s>.',[BPLOutputPath]);
     end;
+    result:=true;
   finally
     _CFGFile.free;
   end;
@@ -3094,16 +3096,14 @@ function  WriteDProjSettings(const _bpgPath:string;
                                    _CurrentConfig: string;
                                    out NewFilename:string):boolean;
 const
-cTagConfig1='<PropertyGroup Condition="''$(Cfg_1)';
-cTagConfig2='<PropertyGroup Condition="''$(Cfg_2)';
+cTagConfigBase='<PropertyGroup Condition="''$(Base)';
 var
 _DProjFile:TStrings;
 _FileChanged:boolean;
-_IndexConfig1:integer;
-_posConfig1:integer;
-_IndexConfig2:integer;
-_posConfig2:integer;
-  function FindText(const _s:string;var position:integer):integer;
+_IndexConfigBase:integer;
+_posConfigBase:integer;
+
+  function FindText(const _s:string;out position:integer):integer;
   var
   i:integer;
   begin
@@ -3117,7 +3117,18 @@ _posConfig2:integer;
     end;
   end;
 
-  procedure ChangeSetting(_tag:string;_value:string);
+  procedure RemoveSetting(_tag:string);  // delete all occurencies of an entry. e.g. <DCC_UnitSearchPath>
+  var
+  i:integer;
+  begin
+    i:=0;
+    while i<_DProjFile.Count do begin
+      if pos(_tag,trim(_DProjFile[i]))=1 then _DProjFile.Delete(i)
+                                         else inc(i);
+    end;
+  end;
+
+  procedure ChangeSetting(_tag:string;_value:string);  //change/insert the content of e.g. <DCC_UnitSearchPath>
   var
   i:integer;
   _index:integer;
@@ -3140,8 +3151,8 @@ _posConfig2:integer;
     else begin // if it does not exist, then insert it
       if _searchPath<>'' then begin
         _temp:='';
-        for i:=1 to _posConfig1 do _temp:=_temp+#9;
-        _DProjFile.insert(_IndexConfig1+2,_temp+_tag+_value+_CloseTag);
+        for i:=1 to _posConfigBase+3 do _temp:=_temp+' ';
+        _DProjFile.insert(_IndexConfigBase+2,_temp+_tag+_value+_CloseTag);
         trace(4,'WriteDProjSettings: Changed Setting <%s> to <%s> to file <%s>.',[_tag,_value,_dprojFilename]);
         _FileChanged:=true;
       end;
@@ -3169,10 +3180,22 @@ begin
   _DProjFile:=TStringList.Create;
   try
     _DProjFile.LoadFromFile(_dprojFilename);
-
-    _IndexConfig1:=FindText(cTagConfig1,_posConfig1);
-    _IndexConfig2:=FindText(cTagConfig2,_posConfig2);
-    if (_IndexConfig1=-1) and (_IndexConfig2=-1) then exit; // if the tag was not found, then leave.
+    _IndexConfigBase:=FindText(cTagConfigBase,_posConfigBase);  // try to find the base-configruation
+    if _IndexConfigBase=-1 then begin
+      trace(2,'Problem in WriteDProjSettings: Could not find section <%s>.',[cTagConfigBase]);
+      exit; // if the tag was not found, then leave.
+    end;
+// remove all occruencies of the these settings from the file.
+    RemoveSetting('<DCC_UnitSearchPath>');
+    RemoveSetting('<DCC_ResourcePath>');
+    RemoveSetting('<DCC_ObjPath>');
+    RemoveSetting('<DCC_ExeOutput>');
+    RemoveSetting('<DCC_BplOutput>');
+    RemoveSetting('<DCC_DcuOutput>');
+    RemoveSetting('<DCC_DcpOutput>');
+    RemoveSetting('<DCC_ObjOutput>');
+    RemoveSetting('<DCC_HppOutput>');
+// update/insert this entries for the base-configuration.
     ChangeSetting('<DCC_UnitSearchPath>',_searchPath);
     ChangeSetting('<DCC_ResourcePath>',_ProjectOutputPath);
     ChangeSetting('<DCC_ObjPath>',_DCUOutputPath);
@@ -3274,7 +3297,7 @@ var
 begin
   Result:=False;
   if not fileExists(_PackageName) then begin
-    trace(5,'CanInstallPackage: Could not find the file <%s>.',[_PackageName]);
+    trace(1,'CanInstallPackage: Could not find the file <%s>.',[_PackageName]);
     exit;
   end;
   _DPKFile:=TStringList.Create;
@@ -3297,7 +3320,7 @@ end;
                directory <_PackageDirectory> for delphi version <_DelphiVersion>.
                The parameter <_PackageDirectory> points to the location of the <.bpl> file.
 -----------------------------------------------------------------------------}
-function InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer; out msg: string): Boolean;
+function InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer;const _IsSilentMode:boolean; out msg: string): Boolean;
 var
   _PackageKey: string;
   _RegFile: TStringList;
@@ -3312,13 +3335,14 @@ begin
     msg := '-';
     Exit;
   end;
+
   if not GetIDERootKey(_DelphiVersion, _PackageKey) then begin
     trace(3, 'Problem in InstallPackage: Could not find key for Delphi Version <%d>.', [_DelphiVersion]);
     Exit;
   end;
 
   if not CanInstallPackage(_PackageName) then begin
-    trace(5, 'InstallPackage: The package <%s> is a runtime only package. It will not be installed into the IDE.', [_PackageName]);
+    trace(3, 'InstallPackage: The package <%s> is a runtime only package. It will not be installed into the IDE.', [_PackageName]);
     msg := '-';
     Exit;
   end;
@@ -3326,7 +3350,7 @@ begin
                              else _BplFilename := LowerCase(_PackageDirectory + ExtractFilenameOnly(_PackageName) + '.bpl');
 
   if not fileexists(_BplFilename) then begin
-    trace(5, 'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.', [_PackageName]);
+    trace(3, 'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.', [_PackageName]);
     Exit;
   end;
 
@@ -3357,7 +3381,7 @@ begin
         _RegFile.Add('');
         _RegFileName := 'Register_Package_' + ChangeFileExt(ExtractFilename(_PackageName), '.reg');
         if gCreateBatchFile then begin
-          CheckDirectory(extractfilepath(FBatchFilename));
+          CheckDirectory(extractfilepath(FBatchFilename),_isSilentMode);
           _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
         end;
         FBatchFile.Add(_RegFileName);
@@ -3637,15 +3661,26 @@ end;
   _WorkPath,                 --> working path for the compiler
   _NameSpaces: string        --> unit namespaces for the compiler
   _ProjectType: TProjectType --> (tp_dll, tp_exe, tp_bpl)
-  var Output: string         --> output text of the compiler.
+  out Output: string         --> output text of the compiler.
   _DelphiVersion: Integer    -->
   Result:    Boolean
   Description:
 -----------------------------------------------------------------------------}
-function CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType; var Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
+function CompileProject(_Compiler,
+                        _CompilerSwitches,
+                        _ProjectName,
+                        _TargetPath,
+                        _DCUPath,
+                        _DCPPath,
+                        _WorkPath,
+                        _NameSpaces:string;
+                        _ProjectType: TProjectType;
+                        const _IsSilent:boolean;
+                        out Output: string;
+                        const _DelphiVersion: Integer): Boolean; // compile the package
 var
-  _commandLine: string;
-  _returnValue: Cardinal;
+_commandLine: string;
+_returnValue: Cardinal;
 begin
   Result := False;
   if not fileexists(_Compiler) then begin
@@ -3660,22 +3695,22 @@ begin
     exit;
   end;
 
-  if not CheckDirectory(_WorkPath) then begin
+  if not CheckDirectory(_WorkPath,_IsSilent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the work path <%s>.', [_WorkPath]);
     Exit;
   end;
 
-  if not CheckDirectory(_TargetPath) then begin
+  if not CheckDirectory(_TargetPath,_IsSilent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the target path <%s>.', [_TargetPath]);
     Exit;
   end;
 
-  if not CheckDirectory(_DCUPath) then begin
+  if not CheckDirectory(_DCUPath,_IsSilent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the dcu path <%s>.', [_DCUPath]);
     Exit;
   end;
 
-  if not CheckDirectory(_DCPPath) then begin
+  if not CheckDirectory(_DCPPath,_IsSilent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the dcp path <%s>.', [_DCPPath]);
     Exit;
   end;

@@ -1,14 +1,14 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{62980A24-A2F5-4A67-869B-01FDF10152F3}</ProjectGuid>
-        <MainSource>DelphiPackageTool.dpr</MainSource>
+        <ProjectGuid>{7132AD2E-1455-4FB3-8D03-9643B4BF839C}</ProjectGuid>
+        <ProjectVersion>18.2</ProjectVersion>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>Project1.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Application</AppType>
-        <FrameworkType>VCL</FrameworkType>
-        <ProjectVersion>18.3</ProjectVersion>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -18,7 +18,7 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
@@ -29,7 +29,7 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
@@ -41,154 +41,92 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_S>false</DCC_S>
-        <DCC_N>true</DCC_N>
-        <DebugSourcePath>C:\Projects\Packages\Downloads\ExcMagic\source;$(DebugSourcePath)</DebugSourcePath>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Release>2</VerInfo_Release>
-        <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-        <DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
-        <VerInfo_Locale>2057</VerInfo_Locale>
-        <DCC_DebugInformation>1</DCC_DebugInformation>
-        <DCC_K>false</DCC_K>
-        <DCC_F>false</DCC_F>
-        <DCC_UnitSearchPath>$(DELPHI)\bin;$(DELPHI)\projects\bpl;$(DELPHI)\lib;..\..\packages\downloads\excmagic\source\;..\..\packages\library\;..\..\packages\downloads\cryptpack\ciphers\;..\..\packages\downloads\cryptpack\;..\..\packages\downloads\cryptpack\hashes\;..\..\packages\owncomp\settingscomponents\;..\..\packages\downloads\readmailaddress\;..\..\packages\owncomp\tracefile\;..\..\packages\downloads\tzip\;..\..\packages\owncomp\appexec\;..\..\packages\owncomp\dbllistcontrol\;..\..\packages\owncomp\splitter\;$(DELPHI)\ocx\servers;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <VerInfo_MinorVer>9</VerInfo_MinorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=Delphi Project/Package Compiler Tool;FileVersion=1.9.2.65;InternalName=;LegalCopyright=Samuel Herzog;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <DCC_DcuOutput>..\dcu\d7\</DCC_DcuOutput>
-        <DCC_ExeOutput>..\bin\</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
-        <DCC_ImageBase>00400000</DCC_ImageBase>
-        <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
-        <DCC_UsePackage>vcl;rtl;vclx;inet;xmlrtl;vclie;inetdbbde;inetdbxpress;dbrtl;dsnap;vcldb;soaprtl;dbexpress;inetdb;bdertl;vcldbx;webdsnap;websnap;adortl;ibxpress;teeui;teedb;tee;visualclx;visualdbclx;vclactnband;vclshlctrls;dclOfficeXP;FR7;JvCoreD7R;db330d7r;tb2k_d7;tbx_d7;WinSkinD7R;JvBandsD7R;JvStdCtrlsD7R;JvAppFrmD7R;JvCustomD7R;JvDlgsD7R;JvDockingD7R;JvEDID7R;JvCryptD7R;JvGlobusD7R;JvHMID7R;JvInterpreterD7R;JvJansD7R;JvManagedThreadsD7R;JvNetD7R;JvCmpD7R;JvPageCompsD7R;JvPluginD7R;JvPrintPreviewD7R;JvRuntimeDesignD7R;JvSystemD7R;JvTimeFrameworkD7R;JvUIBD7R;JvValidatorsD7R;JvCtrlsD7R;JvWizardD7R;dbxcds;db424d7r;dclaxserver;indy;frx7;vclFlexCompressd7;MultilizerDataD7;MultilizerBaseD7;dbisam426d7r;frxDB7;frxDBX7;frxe7;vclZipForged7;tb2kdsgn_d7;tbxdsgn_d7;VclSmp;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_Build>65</VerInfo_Build>
-        <SanitizedProjectName>DelphiPackageTool</SanitizedProjectName>
-        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_Define>NoCryptSupport;$(DCC_Define)</DCC_Define>
+        <DCC_HppOutput>..\dcu\XE10.2\</DCC_HppOutput>
+        <DCC_ObjOutput>..\dcu\XE10.2\</DCC_ObjOutput>
+        <DCC_DcpOutput></DCC_DcpOutput>
+        <DCC_DcuOutput>..\dcu\XE10.2\</DCC_DcuOutput>
+        <DCC_BplOutput></DCC_BplOutput>
+        <DCC_ExeOutput>..\bin\XE10.2\</DCC_ExeOutput>
+        <DCC_ObjPath>..\dcu\XE10.2\</DCC_ObjPath>
+        <DCC_ResourcePath>..\bin\XE10.2\</DCC_ResourcePath>
+        <DCC_UnitSearchPath>..\..\..\..\..;..\..\..\..\..\..\intel;..\..\..\..\..\..\lprojects;</DCC_UnitSearchPath>
+        <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <DCC_UsePackage>RESTComponents;emsclientfiredac;DataSnapFireDAC;FireDACIBDriver;emsclient;FireDACCommon;RESTBackendComponents;soapserver;CloudService;FireDACCommonDriver;inet;FireDAC;FireDACSqliteDriver;soaprtl;soapmidas;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <SanitizedProjectName>Project1</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <DCC_UsePackage>DBXSqliteDriver;fmxase;DBXDb2Driver;DBXInterBaseDriver;vclactnband;vclFireDAC;tethering;svnui;FireDACADSDriver;frxe25;DBXMSSQLDriver;DatasnapConnectorsFreePascal;FireDACMSSQLDriver;vcltouch;vcldb;bindcompfmx;svn;DBXOracleDriver;DbxDevartSQLServerDriver250;inetdb;RICSimpleTrace;FmxTeeUI;emsedge;fmx;fmxdae;frxDB25;frxTee25;FireDACDBXDriver;dbexpress;IndyCore;vclx;NamedPipe;dsnap;DataSnapCommon;DataSnapConnectors;VCLRESTComponents;vclie;fs25;bindengine;DBXMySQLDriver;FireDACOracleDriver;FireDACMySQLDriver;DBXFirebirdDriver;DbxDevartInterBaseDriver250;FireDACCommonODBC;WPTools8_DX12_Pack_RT;DataSnapClient;IndyIPCommon;bindcompdbx;vcl;IndyIPServer;DBXSybaseASEDriver;IndySystem;FireDACDb2Driver;dsnapcon;madExcept_;FireDACMSAccDriver;fmxFireDAC;FireDACInfxDriver;vclimg;madBasic_;TeeDB;CoolTrayIcon_plus;emshosting;FireDACPgDriver;FireDACASADriver;DBXOdbcDriver;FireDACTDataDriver;FMXTee;DbxCommonDriver;CUIToolboxD;Tee;DataSnapServer;xmlrtl;DataSnapNativeClient;fmxobj;vclwinx;FireDACDSDriver;rtl;madDisAsm_;DbxClientDriver;frx25;DBXSybaseASADriver;CUIToolbox;CustomIPTransport;vcldsnap;QCSystemComponents;RICSettings;bindcomp;appanalytics;DBXInformixDriver;IndyIPClient;bindcompvcl;SynEdit_R;dcctd;TeeUI;WPViewPDF3LIB;dbxcds;VclSmp;adortl;FireDACODBCDriver;DataSnapIndy10ServerTransport;dsnapxml;DataSnapProviderClient;dbrtl;IndyProtocols;inetdbxpress;FireDACMongoDBDriver;DataSnapServerMidas;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
-        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_MinorVer>0</VerInfo_MinorVer>
-        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <VerInfo_Release>0</VerInfo_Release>
-        <VerInfo_Build>0</VerInfo_Build>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-        <DCC_DebugInformation>0</DCC_DebugInformation>
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppEnableHighDPI>true</AppEnableHighDPI>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <Icon_MainIcon>..\artwork\DelphiPackageTool.ico</Icon_MainIcon>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.9.2.65;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
-        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <DCC_DcuOutput>..\dcu\250\</DCC_DcuOutput>
-        <Icon_MainIcon>..\artwork\DelphiPackageTool.ico</Icon_MainIcon>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
-        <VerInfo_Locale>1033</VerInfo_Locale>
         <AppEnableHighDPI>true</AppEnableHighDPI>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.9.2.67;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.9.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
-        <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
-        <VerInfo_Build>67</VerInfo_Build>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="MainFrm.pas">
-            <Form>FrmMain</Form>
+            <Form>Form3</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="OptionsFrm.pas">
-            <Form>FrmOptions</Form>
-        </DCCReference>
-        <DCCReference Include="StartUpInfoFrm.pas">
-            <Form>FrmStartUpInfo</Form>
-        </DCCReference>
-        <DCCReference Include="BPGEditorFrm.pas">
-            <Form>FrmBPGEditor</Form>
-        </DCCReference>
-        <DCCReference Include="BPLSearchFrm.pas">
-            <Form>FrmBPLSearch</Form>
-        </DCCReference>
-        <DCCReference Include="PathSelectionFrm.pas">
-            <Form>FrmPathSelection</Form>
-        </DCCReference>
-        <DCCReference Include="RemovePackagesQuestionFrm.pas">
-            <Form>FrmRemovePackage</Form>
-        </DCCReference>
-        <DCCReference Include="MainDM.pas">
-            <Form>DMMain</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="uDPTDefinitions.pas"/>
-        <DCCReference Include="AboutFrm.pas">
-            <Form>frmAbout</Form>
-        </DCCReference>
-        <DCCReference Include="uDPTJclFuncs.pas"/>
-        <DCCReference Include="uDPTSettings.pas"/>
-        <DCCReference Include="uDPTMisc.pas"/>
-        <DCCReference Include="VersionFrm.pas">
-            <Form>FrmVersion</Form>
-        </DCCReference>
-        <DCCReference Include="uDPTCreateProjectGroup.pas"/>
-        <DCCReference Include="uDPTPathFilenameConvert.pas"/>
-        <DCCReference Include="uDTPProjectData.pas"/>
-        <DCCReference Include="ProjectOptionsFrm.pas">
-            <Form>FrmProjectOptions</Form>
-        </DCCReference>
-        <DCCReference Include="uDPTDblList.pas"/>
-        <DCCReference Include="uDPTDelphiPackage.pas"/>
-        <DCCReference Include="SelectFilesFrm.pas">
-            <Form>FrmSelectFiles</Form>
-        </DCCReference>
-        <BuildConfiguration Include="Debug">
+        <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
-        <BuildConfiguration Include="Release">
+        <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Delphi.Personality.12</Borland.Personality>
-        <Borland.ProjectType/>
+        <Borland.ProjectType>Application</Borland.ProjectType>
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DelphiPackageTool.dpr</Source>
+                    <Source Name="MainSource">Project1.dpr</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
             </Delphi.Personality>
-            <Platforms>
-                <Platform value="Win32">True</Platform>
-            </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="..\bin\DelphiPackageTool.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\Project1.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>DelphiPackageTool.exe</RemoteName>
+                        <RemoteName>Project1.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -608,6 +546,9 @@
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
             </Deployment>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

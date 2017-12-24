@@ -71,6 +71,13 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.67  ( 24.12.2017 )
+-SH: reduced complexity. Only configurations "debug" and "release" will be supported by DPT.
+     added two new project-settings "DebugCompilerSwitches" and "ReleaseCompilerSwitches".
+     re-named var "FConfigToCompile" into "FBuildMode".
+     re-named var "FSearchPath" into "FProjectSearchPath".
+     Some changes for "SilentMode". Don't ask to create folders if SilentMode is "On".
+
 1.9.2.63  ( 10.11.2017 )
 -SH: The dcp-output-path will now be set to the same location as the dcp-files.
      This means that the setting "Application/DCPOutputPath" from the project-ini-file

@@ -160,7 +160,7 @@ begin
     insert(5,DMMain.CurrentBPLOutputPath+';');
     mmoSearchPath.Lines.Assign(FSearchPaths);
   end;
-  VerifyDirectories(DMMain.DelphiVersion,DMMain.PlatformToCompile, DMMain.ConfigToCompile);
+  VerifyDirectories(DMMain.DelphiVersion,DMMain.PlatformToCompile, DMMain.BuildMode);
   VerifySettings;
 end;
 
@@ -216,7 +216,7 @@ begin
         continue;
       end;
       _path:=RemoveTrailingSemikolon(_Path);
-      _path:=AbsolutePath(DMMain.BPGPath,_path,_DelphiVersion,DMMain.PlatformToCompile, DMMain.ConfigToCompile);
+      _path:=AbsolutePath(DMMain.BPGPath,_path,_DelphiVersion,DMMain.PlatformToCompile, DMMain.BuildMode);
       if not SysUtils.DirectoryExists(_path) then begin
         if Application.MessageBox(pchar(format(cDirectoryDoesNotExist, [_Path])),pchar(cWarning),MB_ICONWARNING or MB_YESNO)=IDYes then begin
           mmoSearchPath.Lines.delete(i);
@@ -239,7 +239,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmProjectOptions.btnVerifyDirectoriesClick(Sender: TObject);
 begin
-  if not VerifyDirectories(DMMain.DelphiVersion,DMMain.PlatformToCompile, DMMain.ConfigToCompile) then exit;
+  if not VerifyDirectories(DMMain.DelphiVersion,DMMain.PlatformToCompile, DMMain.BuildMode) then exit;
   ShowMessage('Path settings seems to be ok.');
 end;
 
@@ -467,19 +467,16 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmProjectOptions.SettingsToGUI;
 var
-_batchfilename:string;
 _compilerSwitches:string;
 begin
   _compilerSwitches:=DMMain.ProjectSettings.StringValue('Application/CompilerSwitches');
   if _compilerSwitches='' then DMMain.ApplicationSettings.StringValue('Application/CompilerSwitches');
   edtCompilerSwitches.Text:=_compilerSwitches;
   edtLibSuffix.Text:=DMMain.ProjectSettings.StringValue('Application/LibSuffix');
-  _batchfilename:=DMMain.ProjectSettings.StringValue('Application/Events/OnBeforeInstallAll');
-  edtBeforeInstallAll.Text:=_batchfilename;
-  _batchfilename:=DMMain.ProjectSettings.StringValue('Application/Events/OnAfterInstallAll');
-  edtAfterInstallAll.Text :=_batchfilename;
-  edtDebugCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/DebugCompilerSwitches');
-  edtReleaseCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Project/ReleaseCompilerSwitches');
+  edtBeforeInstallAll.Text:=DMMain.ProjectSettings.StringValue('Application/Events/OnBeforeInstallAll');
+  edtAfterInstallAll.Text :=DMMain.ProjectSettings.StringValue('Application/Events/OnAfterInstallAll');
+  edtDebugCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Application/DebugCompilerSwitches');
+  edtReleaseCompilerSwitches.Text:=DMMain.ProjectSettings.StringValue('Application/ReleaseCompilerSwitches');
   cbxAutoBackup.Checked:=DMMain.ProjectSettings.BoolValue('Application/AutoBackup');
   cbxCreateInstallBatch.checked:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch');
   cbxChangeFiles.Checked:= DMMain.ProjectSettings.BoolValue('Application/ChangeFiles');

@@ -62,7 +62,7 @@ function GetSystemPath(SystemPath: TSystemPath): string;
 function AllFilesOfDrive(_path,_mask:string;_FileList:TStrings;var AbortScan:Boolean):boolean; // search all file with mask <_mask> from Path <_path>
 function GetFileSize(const _filename: string; var filesize:Int64): boolean; // read the size of a file.
 function CreateDirectory(const _path:string):boolean;
-function CheckDirectory(const _path:string):boolean;
+function CheckDirectory(const _path:string;const _isSilent:boolean):boolean;
 function RemoveReadOnlyFlag(const _filename:string;const _silent:boolean):boolean;
 function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;Show: Word; bWait: Boolean; var ExitCode: LongWord): LongWord;
 procedure ShowFolder(strFolder: string);
@@ -276,7 +276,7 @@ end;
   Description: check if the directory with name <_name> exists. If not then
   it asks if the directory shall be created.
 -----------------------------------------------------------------------------}
-function  CheckDirectory(const _path:string):boolean;
+function  CheckDirectory(const _path:string;const _isSilent:boolean):boolean;
 resourcestring
 cConfirm='Confirm';
 cAskToCreateFolder='Could not find the directory <%s>. Create it ?';
@@ -730,9 +730,9 @@ begin
      exit;
   end;
   {$ifdef debug}
-  if SizeOf(_params)>0 then _s:=format(_msg,_params)
-                       else _s:=_msg;
-  OutputDebugString(PChar(_s));
+//  if SizeOf(_params)>0 then _s:=format(_msg,_params)
+//                       else _s:=_msg;
+//  OutputDebugString(PChar(_s));
   {$endif}
 end;
 

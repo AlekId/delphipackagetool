@@ -105,6 +105,13 @@ object FrmMain: TFrmMain
       Height = 13
       Caption = 'Output Path for Delphi Compiled Units (dcu files)'
     end
+    object lblBuildMode: TLabel
+      Left = 872
+      Top = 48
+      Width = 58
+      Height = 13
+      Caption = 'Build Modes'
+    end
     object btnStart: TBitBtn
       Left = 8
       Top = 8
@@ -231,29 +238,6 @@ object FrmMain: TFrmMain
         TabOrder = 0
       end
     end
-    object gbxConfig: TGroupBox
-      Left = 872
-      Top = 48
-      Width = 145
-      Height = 133
-      Caption = 'Config'
-      TabOrder = 11
-      DesignSize = (
-        145
-        133)
-      object clbConfig: TCheckListBox
-        Left = 13
-        Top = 21
-        Width = 121
-        Height = 100
-        OnClickCheck = clbConfigClickCheck
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        BorderStyle = bsNone
-        Color = clBtnFace
-        ItemHeight = 13
-        TabOrder = 0
-      end
-    end
     object edtDCUPath: TEdit
       Left = 240
       Top = 160
@@ -262,7 +246,7 @@ object FrmMain: TFrmMain
       Hint = 'Enter/select the Delphi DCU Path.'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 12
+      TabOrder = 11
       OnExit = edtPathExit
     end
     object btnSelectDcuPath: TButton
@@ -271,7 +255,16 @@ object FrmMain: TFrmMain
       Width = 17
       Height = 21
       Action = actSelectDcuPath
+      TabOrder = 12
+    end
+    object lbxAvailableBuildModes: TListBox
+      Left = 872
+      Top = 62
+      Width = 145
+      Height = 113
+      ItemHeight = 13
       TabOrder = 13
+      OnExit = lbxAvailableBuildModesExit
     end
   end
   object pgcInfo: TPageControl
@@ -279,11 +272,15 @@ object FrmMain: TFrmMain
     Top = 240
     Width = 1208
     Height = 193
-    ActivePage = tabInfo
+    ActivePage = tabTrace
     Align = alBottom
     TabOrder = 3
     object tabInfo: TTabSheet
       Caption = 'Information'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object mmoLogFile: TMemo
         Left = 0
         Top = 0
@@ -493,7 +490,7 @@ object FrmMain: TFrmMain
   end
   object MainMenu1: TMainMenu
     Left = 1088
-    Top = 16
+    Top = 8
     object F1: TMenuItem
       Caption = 'File'
       object NewPackageGroup1: TMenuItem
