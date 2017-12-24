@@ -91,7 +91,7 @@ type
     FUseMSBuild:boolean;               // if true, then msbuild will be used to compile.
     FCompilerSwitches: string;         // compiler switches of the current project.
     FConditions: string;               // the conditions of the current project.
-    FSearchPath: string;               // search path of the current project.
+    FProjectSearchPath: string;               // search path of the current project.
     FDPTSearchPath: string;                   // search path defined in DPT Options Dialog.
     FDelphiRootDirectory: string;             // e.g. <C:\Program files\Borland\Delphi7>
     FDelphiCompilerFile: string;              // e.g. <C:\Program files\Borland\Delphi7\bin\dcc32.exe>
@@ -105,6 +105,7 @@ type
     FBPGConfigList: TStringList;              // list with configs supported by all projects in FBPGProjectList
     FInstalledDelphiVersionList: TStringList; // list of installed delphi versions on the computer.
     FZipFilename: string;
+    FBuildMode:string;                        // build-mode for this project group. e.g. release or debug
     FCommandLineSilent:boolean;               // is set to true if the dpt is started from command line with parameter -s (Silent)
     FOnWriteLog: TOnWriteLogEvent;
     FOnBPGOpen: TNotifyEvent;
@@ -120,7 +121,6 @@ type
     FDelphiLibraryPath: TDelphiLibraryPath;
     FPackageSuffix: string;
     FOnDeleteLog: TNotifyEvent;
-    FConfigToCompile: string;
     FPlatformToCompile: string;                // information read from the registery.
     FCurrentBPGPlatformList: TStringList;
     FCurrentBPGConfigList: TStringList;
@@ -155,6 +155,7 @@ type
     procedure SetDPTSearchPath(const Value: string);
     procedure LoadCurrentProject;
     function  IsDiffToolAvailable:boolean; // returns true if a external Diff-Tool is setup
+    function PrepareConditions:string; // takes the conitions from the project-file and overrides the build mode
   public
     ApplicationSettings: TNVBSettings;
     ProjectSettings: TNVBSettings;
@@ -162,7 +163,7 @@ type
     NVBAppExecExternalCommand: TNVBAppExec;
     CommandLineAction: TAction;
     function  GetCurrentPackageVersion:string;
-    procedure ConfirmChanges(_ChangedFile:string;const _Revert:Boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
+    procedure ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;const _ForceWrite:Boolean); // present the changed files in the diff-tool and ask the user if he want to save the changes.
     procedure RevertChange(_filename:string);  // looks if a _old-file exists
     procedure UpdateProjectFiles(const _ForceWrite: Boolean = False);
     function  RemoveProjectFromProjectGroup:boolean;
@@ -199,8 +200,8 @@ type
     property  BPGProjectList:TStringList read FBPGProjectList;
     property  BPGPlatformList: TStringList read FBPGPlatformList;
     property  BPGConfigList: TStringList read FBPGConfigList;
-    property  ConfigToCompile: string read FConfigToCompile;
     property  PlatformToCompile: string read FPlatformToCompile;                // information read from the registry.
+    property  BuildMode:String read FBuildMode;
     property  CurrentBPGPlatformList: TStringList read FCurrentBPGPlatformList; // selected platforms for the current project group
     property  CurrentBPGConfigList: TStringList read FCurrentBPGConfigList;     // selected configs for the current project group
     property  ZipFilename:string read FZipFilename;
@@ -397,11 +398,11 @@ resourcestring
 begin
   FConfigFilename  :=GetConfigFilename(FProjectFilename, FDelphiVersion);
   uDPTDelphiPackage.ReadConfigurationSettings(FConfigFilename,              // read configuration file.
-                                              FConfigToCompile,
+                                              FBuildMode,
                                               FPlatformToCompile,
                                               FCompilerSwitches,
                                               FConditions,
-                                              FSearchPath,
+                                              FProjectSearchPath,
                                               FProjectOutputPath,
                                               FBPLOutputPath,
                                               FDCUOutputPath,
@@ -409,36 +410,37 @@ begin
                                               FNameSpaces,
                                               FUseMSBuild);
   uDPTDelphiPackage.ReadPackageInfo(FProjectFilename, FPackageDescription, FPackageSuffix);
-
+  FBuildMode:=Uppercase(ProjectSettings.StringValue('Application/BuildMode'));
+  FConditions:=PrepareConditions;
 // setup the dcu output-path
-  if ProjectSettings.PathValue('Application/DCUOutputPath') <> '' then FDCUOutputPath := AbsolutePath(FBPGPath,ProjectSettings.PathValue('Application/DCUOutputPath'), FDelphiVersion, FPlatformToCompile, FConfigToCompile) // then take it from the dpt
-                                                                  else FDCUOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FDCUOutputPath, FDelphiVersion, FPlatformToCompile, FConfigToCompile); // otherwise take the path from the cfg-file.
+  if ProjectSettings.PathValue('Application/DCUOutputPath') <> '' then FDCUOutputPath := AbsolutePath(FBPGPath,ProjectSettings.PathValue('Application/DCUOutputPath'), FDelphiVersion, FPlatformToCompile, FBuildMode) // then take it from the dpt
+                                                                  else FDCUOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FDCUOutputPath, FDelphiVersion, FPlatformToCompile, FBuildMode); // otherwise take the path from the cfg-file.
   FDCUOutputPath := IncludeTrailingPathDelimiter(FDCUOutputPath);
   if not IsSilentMode then begin
     if (FDCUOutputPath <> '') and (not DirectoryExists(FDCUOutputPath)) then begin
       if Application.MessageBox(pchar(Format(cCouldNotFindDCUOutputPath, [FDCUOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
     end;
-    CheckDirectory(FDCUOutputPath);
+    CheckDirectory(FDCUOutputPath,FCommandLineSilent);
   end;
   trace(5, 'DCUOutputPath=%s', [FDCUOutputPath]);
 
   FProjectType:=DetermProjectType(FProjectFilename,FBPGFilename,FDelphiVersion);
   case FProjectType of
     tp_exe,tp_dll: begin // setup the exe/dll output-path
-        if ProjectSettings.PathValue('Application/OutputPath')<>'' then FProjectOutputPath := AbsolutePath(FBPGPath,ProjectSettings.PathValue('Application/OutputPath'), FDelphiVersion, FPlatformToCompile, FConfigToCompile)
-                                                                   else FProjectOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FProjectOutputPath, FDelphiVersion, FPlatformToCompile, FConfigToCompile); // otherwise take the path from the cfg-file.
+        if ProjectSettings.PathValue('Application/OutputPath')<>'' then FProjectOutputPath := AbsolutePath(FBPGPath,ProjectSettings.PathValue('Application/OutputPath'), FDelphiVersion, FPlatformToCompile, FBuildMode)
+                                                                   else FProjectOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FProjectOutputPath, FDelphiVersion, FPlatformToCompile, FBuildMode); // otherwise take the path from the cfg-file.
 
     end;
 
     tp_bpl:begin  // setup the bpl output-path
-      if ProjectSettings.PathValue('Application/PackageOutputPath') <> '' then FBPLOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/PackageOutputPath'), FDelphiVersion, FPlatformToCompile, FConfigToCompile) // then take it from the dpt
-                                                                          else FBPLOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FBPLOutputPath, FDelphiVersion, FPlatformToCompile, FConfigToCompile); // otherwise take the path from the cfg-file.
+      if ProjectSettings.PathValue('Application/PackageOutputPath') <> '' then FBPLOutputPath := AbsolutePath(FBPGPath, ProjectSettings.PathValue('Application/PackageOutputPath'), FDelphiVersion, FPlatformToCompile, FBuildMode) // then take it from the dpt
+                                                                          else FBPLOutputPath := AbsolutePath(ExtractFilePath(FProjectFilename), FBPLOutputPath, FDelphiVersion, FPlatformToCompile, FBuildMode); // otherwise take the path from the cfg-file.
       FBPLOutputPath := IncludeTrailingPathDelimiter(FBPLOutputPath);
       if not IsSilentMode then begin
         if (FBPLOutputPath <> '') and (not DirectoryExists(FBPLOutputPath)) then begin
           if Application.MessageBox(pchar(Format(cCouldNotFindBPLOutputPath, [FBPLOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
         end;
-        CheckDirectory(FBPLOutputPath);
+        CheckDirectory(FBPLOutputPath,FCommandLineSilent);
       end;
       trace(5, 'BPLOutputPath=%s', [FBPLOutputPath]);
 
@@ -491,10 +493,10 @@ begin
       if LastPos(_currentPath, ';') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if LastPos(_currentPath, '\') = length(_currentPath) then Delete(_currentPath, length(_currentPath), 1);
       if _absolutePaths then begin
-        _currentPath:=AbsolutePath(FBPGPath,_currentPath,FDelphiVersion, FPlatformToCompile, FConfigToCompile);
+        _currentPath:=AbsolutePath(FBPGPath,_currentPath,FDelphiVersion, FPlatformToCompile, FBuildMode);
         if _currentPath='' then continue;
         result := Result + _currentPath + ';';
-        trace(5,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
+        trace(6,'GetGlobalSearchPath: Added <%s> to search path.',[_currentpath]);
         if not DirectoryExists(_currentPath) then trace(3, 'Possible problem in GetGlobalSearchPath: Could not find path <%s>.', [_currentPath]);
       end
       else if _currentPath<>'' then result := result + _currentPath + ';';
@@ -543,7 +545,8 @@ begin
   ProjectSettings.GetStringValue('Application/LibSuffix',cLIBNoneTag,'Defines the Lib-Suffix for the Package-Names.',true,false,false);
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath','','Defines last used Backup Path.',true,false,false);
   ProjectSettings.GetStringValue('Application/Platform','','The platform used. e.g Win32,Win64.',true,false,false);
-  ProjectSettings.GetStringValue('Application/Config','','The configuration used. e.g debug,release.',true,false,false);
+  ProjectSettings.GetStringValue('Application/AvailableBuildModes','DEBUG,RELEASE','The available build-modes used. e.g debug,release.',true,false,false);
+  ProjectSettings.GetStringValue('Application/BuildMode','DEBUG','The build-modes used for this project group.',true,false,false);
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches','','Compiler switches used for debug config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetStringValue('Application/ReleaseCompilerSwitches','','Compiler switches used for release config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup',false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
@@ -580,7 +583,9 @@ begin
   if ProjectSettings.Open then trace(3,'Load project settings from file <%s>.',[ProjectSettings.FilePath+ProjectSettings.FileName]);
   DelphiVersion := ProjectSettings.IntegerValue('Application/DelphiVersion');
   CurrentBPGPlatformList.CommaText := ProjectSettings.StringValue('Application/Platform');
-  CurrentBPGConfigList.CommaText := ProjectSettings.StringValue('Application/Config');
+  CurrentBPGConfigList.CommaText := ProjectSettings.StringValue('Application/AvailableBuildModes');
+  FBuildMode:=Uppercase(ProjectSettings.StringValue('Application/BuildMode'));
+
   gCreateBatchFile:=DMMain.ProjectSettings.BoolValue('Application/CreateInstallBatch');
   ReadPackageListfromFile(FBPGFilename, FBPGProjectList);
   DPTSearchPath := GetGlobalSearchPath;
@@ -627,7 +632,7 @@ begin
   FDCPOutputPath := '';
   FDCUOutputPath := '';
   FConditions := '';
-  FSearchPath := '';
+  FProjectSearchPath := '';
   FNameSpaces := '';
   FCompilerSwitches := '';
   FCurrentBPGPlatformList.Clear;
@@ -696,9 +701,9 @@ begin
   FBPLOutputPath := '';
   FDCUOutputPath := '';
   FApplicationIniFilename := changefileext(application.ExeName, '.ini');
-  FConfigToCompile := '';
   FPlatformToCompile := '';
   FUseMSBuild:=false;
+  FBuildMode:='DEBUG';
 // prepare trace file
   trace(3,'Started application <%s> with version <%s>.',[application.exename,GetVersion]);
 // prepare project settings component.
@@ -1088,7 +1093,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpProjectBPLDirExecute(Sender: TObject);
 begin
-  if CleanUpPackagesByPath(FDelphiVersion,FBPLOutputPath,FDCPOutputPath,true, FPlatformToCompile, FConfigToCompile) then
+  if CleanUpPackagesByPath(FDelphiVersion,FBPLOutputPath,FDCPOutputPath,true, FPlatformToCompile, FBuildMode) then
     ExitCode := 0
   else
     ExitCode := 1;
@@ -1104,10 +1109,10 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actCleanUpAllExecute(Sender: TObject);
 begin
-  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Known Packages'   ,true, FPlatformToCompile, FConfigToCompile);
-  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Known Packages'   ,true, FPlatformToCompile, FConfigToCompile);
-  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Disabled Packages',true, FPlatformToCompile, FConfigToCompile);
-  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Disabled Packages',true, FPlatformToCompile, FConfigToCompile);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Known Packages'   ,true, FPlatformToCompile, FBuildMode);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Known Packages'   ,true, FPlatformToCompile, FBuildMode);
+  CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Disabled Packages',true, FPlatformToCompile, FBuildMode);
+  CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Disabled Packages',true, FPlatformToCompile, FBuildMode);
 end;
 
 {-----------------------------------------------------------------------------
@@ -1334,7 +1339,7 @@ begin
     exit;
   end;
   UnInstallPackage(FProjectFilename, FProjectOutputPath,FPackageSuffix,FDelphiVersion);
-  InstallPackage(FProjectFilename, FProjectOutputPath,FPackageDescription,FPackageSuffix,FDelphiVersion,_message);
+  InstallPackage(FProjectFilename, FProjectOutputPath,FPackageDescription,FPackageSuffix,FDelphiVersion,FCommandLineSilent,_message);
   WriteLog('Installed Package <%s>.',[FProjectFilename]);
   TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).IDEInstall:=_message;
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FProjectFilename,_message,FCurrentProjectNo);
@@ -1401,14 +1406,14 @@ begin
   case _RemoveType of
     tpr_3rdparty:  begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesNotInBIN),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Known Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
-                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Known Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
-                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Disabled Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
-                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Disabled Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Known Packages',_DeleteBplAndDCPFiles, FPlatformToCompile,FBuildMode);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Known Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FBuildMode);
+                      CleanUpPackagesByRegistry(HKEY_LOCAL_MACHINE,FDelphiVersion,'Disabled Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FBuildMode);
+                      CleanUpPackagesByRegistry(HKEY_CURRENT_USER ,FDelphiVersion,'Disabled Packages',_DeleteBplAndDCPFiles, FPlatformToCompile, FBuildMode);
                    end;
     tpr_projectsbpl:begin
                       if Application.MessageBox(pchar(cDeleteAllPackagesInBPL),pchar(cWarning),MB_ICONWARNING or MB_YESNO)<>IDyes then exit;
-                      CleanUpPackagesByPath(FDelphiVersion,FBPLOutputPath,FDCPOutputPath,_DeleteBplAndDCPFiles, FPlatformToCompile, FConfigToCompile);
+                      CleanUpPackagesByPath(FDelphiVersion,FBPLOutputPath,FDCPOutputPath,_DeleteBplAndDCPFiles, FPlatformToCompile, FBuildMode);
                     end;
   end;
   CleanUpPackageByEnvPaths(FDelphiVersion,IsSilentMode);
@@ -1536,10 +1541,21 @@ begin
   end;
   _SearchPath := '';
   if FDPTSearchPath  <> ''    then _SearchPath := GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
-  if FSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
-    _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FProjectFilename), FSearchPath, FDelphiVersion, FPlatformToCompile, FConfigToCompile);
+  if FProjectSearchPath <> '' then begin // the search path settings defined in the .cfg/.dproj file of the current project.
+    _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FProjectFilename), FProjectSearchPath, FDelphiVersion, FPlatformToCompile, FBuildMode);
   end;
   if FConditions <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + FConditions + ' ';
+
+  if FDelphiVersion >= 12 then begin   // Delphi 2009
+    if ((lowercase(ExtractFileExt(FProjectFilename))='.dpk') or
+        (lowercase(ExtractFileExt(FProjectFilename))='.dpr')) then begin
+      if SameText(FBuildMode, sRelease) then _Conditionals:=ProjectSettings.StringValue('Application/ReleaseCompilerSwitches') else
+      if SameText (FBuildMode, sDebug) then _Conditionals:=ProjectSettings.StringValue('Application/DebugCompilerSwitches')
+      else _Conditionals:='';
+      if _Conditionals <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + _Conditionals;
+    end;
+  end;
+
   if _SearchPath <> '' then begin
     _SearchPath := RemoveDoublePathEntries(_SearchPath);
     _SearchPath := ReplaceTag(_SearchPath);
@@ -1550,20 +1566,6 @@ begin
     _CompilerSwitches := _CompilerSwitches + ' ' + '-R' + _SearchPath;
   end;
 
-  if FDelphiVersion >= 12 then begin   // Delphi 2009
-    if ((lowercase(ExtractFileExt(FProjectFilename))='.dpk') or
-        (lowercase(ExtractFileExt(FProjectFilename))='.dpr')) then begin
-      if SameText(FConfigToCompile, sRelease) then begin
-        _Conditionals:=ProjectSettings.StringValue('Application/ReleaseCompilerSwitches');
-        if _Conditionals <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + _Conditionals;
-      end
-      else if SameText (FConfigToCompile, sDebug) then begin
-        _Conditionals:=ProjectSettings.StringValue('Application/DebugCompilerSwitches');
-      end
-      else _Conditionals:='';
-      if _Conditionals <> '' then _CompilerSwitches := _CompilerSwitches + ' ' + _Conditionals;
-    end;
-  end;
   if (FDelphiVersion >= 11) and (FNameSpaces = '')  then begin  // Delphi 2007
     FNameSpaces := 'Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win';
   end;
@@ -1571,7 +1573,7 @@ begin
   trace(5, 'CompilePackage: Compiler switch --> %s.', [_CompilerSwitches]);
   trace(5, 'Length= %d.', [length(_CompilerSwitches)]);
   WriteLog('Compiling Project <%s>. Please wait...', [FProjectFilename]);
-  WriteLog('  Platform: %s / Config: %s', [FPlatformToCompile, FConfigToCompile]);
+  WriteLog('  Platform: %s / Config: %s', [FPlatformToCompile, FBuildMode]);
   WriteLog('  Output Target <%s>.',[FProjectOutputPath + OutputFileName(FProjectFilename, FProjectType)]);
   Screen.Cursor := crHourGlass;
   FPlatformConfigCompiled := CompileProject(FDelphiCompilerFile,
@@ -1583,17 +1585,18 @@ begin
                                             ExtractFilePath(ReadProjectFilenameFromDProj(FProjectFilename)),
                                             FNameSpaces,
                                             FProjectType,
+                                            FCommandLineSilent,
                                             _Output,
                                             FDelphiVersion);
   FProjectCompiled := FProjectCompiled and FPlatformConfigCompiled;
   if FPlatformConfigCompiled then begin
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Compiled ok!');
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + GetCurrentPackageVersion);
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + 'Compiled ok!');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + GetCurrentPackageVersion);
     trace(2,'Successfully compiled Project <%s>.', [FProjectFilename]);
   end
   else begin
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed!');
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + 'Failed!');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + 'Failed');
     if (not IsSilentMode) and
        (ApplicationSettings.BoolValue('Application/AutomaticSearchFiles')) then SearchFileCompilerOutput(_Output);
   end;
@@ -1694,7 +1697,7 @@ begin
   _OutputPath := '';
   if FDPTSearchPath  <> '' then _SearchPath := GetGlobalSearchPath; // the search path settings defined in DPT Options-Dialog.
   if _SearchPath <> '' then begin // global search path is defined. It will override project specific search paths, so add project specific search path
-    if FSearchPath <> '' then  _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FProjectFilename), FSearchPath, FDelphiVersion, FPlatformToCompile, FConfigToCompile); // the search path settings defined in the .cfg/.dproj file of the current project.
+    if FProjectSearchPath <> '' then  _SearchPath := _SearchPath + MakeAbsolutePath(ExtractfilePath(FProjectFilename), FProjectSearchPath, FDelphiVersion, FPlatformToCompile, FBuildMode); // the search path settings defined in the .cfg/.dproj file of the current project.
     _SearchPath := RemoveDoublePathEntries(_SearchPath);
     _SearchPath := ReplaceTag(_SearchPath);
     _SearchPath := '"' + _SearchPath + '"';
@@ -1708,14 +1711,14 @@ begin
   if FDCUOutputPath <> '' then _OutputPath := _OutputPath + ';DCC_DcuOutput=' + ReplaceTag(FDCUOutputPath); // then take it from the dpt
 
   WriteLog('Compiling Project <%s>. Please wait...', [FProjectFilename]);
-  WriteLog('  Platform: %s / Config: %s', [FPlatformToCompile, FConfigToCompile]);
+  WriteLog('  Platform: %s / Config: %s', [FPlatformToCompile, FBuildMode]);
   WriteLog('  Output Target <%s>.',[FProjectOutputPath + OutputFileName(FProjectFilename, FProjectType)]);
 
 
   _commandLine := '"' + FProjectFilename + '" /t:build' +
-                                           ' /p:config="' + FConfigToCompile +'"'+
+                                           ' /p:config="' + FBuildMode +'"'+
                                            ' /p:platform="' + FPlatformToCompile+'"';
-   if SameText(FConfigToCompile,'release') then _commandLine :=_commandLine+' /p:target="Deploy"';
+   if SameText(FBuildMode,'release') then _commandLine :=_commandLine+' /p:target="Deploy"';
 
   if _SearchPath <> '' then begin
     _commandLine := _commandLine + ' /p:UnitSearchPath=' + _SearchPath +
@@ -1750,13 +1753,13 @@ begin
 
   FProjectCompiled := FProjectCompiled and FPlatformConfigCompiled;
   if FPlatformConfigCompiled then begin
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Compiled ok!');
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + GetCurrentPackageVersion);
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + 'Compiled ok!');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + GetCurrentPackageVersion);
     trace(2,'Successfully compiled Project <%s>.', [FProjectFilename]);
   end
   else begin
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed!');
-    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FConfigToCompile + ProjectDataDelimiter + 'Failed');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).CompileResultsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + 'Failed!');
+    TProjectData(FBPGProjectList.Objects[FCurrentProjectNo]).VersionsList.Add(FPlatformToCompile + '/' + FBuildMode + ProjectDataDelimiter + 'Failed');
     if (not IsSilentMode) and (ApplicationSettings.BoolValue('Application/AutomaticSearchFiles')) then SearchFileCompilerOutput(_Output);
   end;
 
@@ -1953,7 +1956,7 @@ end;
 ----------------------------------------------------------------------------}
 function TDMMain.ReplaceTag(_filename: string): string;
 begin
-  result := uDPTPathFilenameConvert.ReplaceTag(_filename, FDelphiVersion,FPlatformToCompile, FConfigToCompile);
+  result := uDPTPathFilenameConvert.ReplaceTag(_filename, FDelphiVersion,FPlatformToCompile, FBuildMode);
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1970,6 +1973,47 @@ begin
   _SourceCodeEditorParams:=StringReplace(_SourceCodeEditorParams, '%FILENAME%', '"'+_filename+'"',[]);
   _SourceCodeEditorParams:=StringReplace(_SourceCodeEditorParams, '%LINENO%', inttostr(_lineNo),[]);
   result:=_SourceCodeEditorParams;
+end;
+
+{-----------------------------------------------------------------------------
+  Procedure: PrepareConditions
+  Author:    herzogs2
+  Date:      13-Nov-2017
+  Arguments: None
+  Result:    string
+  Description: this method gets the conditional defines from the projects
+               cfg/dproj-file and will add/replace the word's DEBUG/RELEASE
+               depending on the setting of field "buildmode" in dpt User-Interface.
+-----------------------------------------------------------------------------}
+function TDMMain.PrepareConditions:string;
+var
+_pos:integer;
+//_BuildMode:string;   // build mode as defined from dpt.
+_ProjectConditions:string; // conditional defines as read from cfg/dproj
+_Condition:string;
+_Conditions:TStringList;
+begin
+  result:='';
+  _Conditions:=TStringList.Create;
+  _Conditions.Delimiter:=';';
+  try
+    _ProjectConditions:=uppercase(FConditions);
+    _pos:=Pos('-D',_ProjectConditions);
+    if _pos>0 then Delete(_ProjectConditions,1,2);
+    while _ProjectConditions<>'' do begin
+      _Condition:=trim(GetField(';',_ProjectConditions));
+      if _Condition='' then continue;
+      if _Condition=FBuildMode then continue;
+      if (FBuildMode='DEBUG') and     // they exclude each other
+         (_Condition='RELEASE') then continue;
+      if (FBuildMode='RELEASE') and   // they exclude each other
+         (_Condition='DEBUG') then continue;
+      if _Conditions.IndexOf(_Condition)=-1 then _Conditions.Add(_Condition);
+    end;
+    result:='-D'+FBuildMode+';'+_Conditions.DelimitedText;
+  finally
+    _Conditions.Free;
+  end;
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1992,21 +2036,21 @@ _file:TStrings;
 begin
   _changed:=false;
   if FDelphiVersion<=7 then begin
-    while pos('BDS',FSearchPath)>0 do begin
-      FSearchPath:=StringReplace(FSearchPath,'BDS','DELPHI',[]);
+    while pos('BDS',FProjectSearchPath)>0 do begin
+      FProjectSearchPath:=StringReplace(FProjectSearchPath,'BDS','DELPHI',[]);
       _changed:=true;
     end;
   end
   else begin
-    while pos('DELPHI',FSearchPath)>0 do begin
-      FSearchPath:=StringReplace(FSearchPath,'DELPHI','BDS',[]);
+    while pos('DELPHI',FProjectSearchPath)>0 do begin
+      FProjectSearchPath:=StringReplace(FProjectSearchPath,'DELPHI','BDS',[]);
       _changed:=true;
     end;
   end;
   if not _changed then exit;
   _file:=TStringList.Create;
   try
-    _temp:=FSearchPath;
+    _temp:=FProjectSearchPath;
     while length(_temp)>0 do begin
       _line:=trim(GetField(';',_temp));
       if _line<>'' then _file.Add(_line+';');
@@ -2099,10 +2143,10 @@ begin
                                FProjectType,
                                FDelphiVersion,
                                FPlatformToCompile,
-                               FConfigToCompile,
+                               FBuildMode,
                                _ChangedFiles);
 
-  for i:=0 to _ChangedFiles.count-1 do ConfirmChanges(_ChangedFiles[i], False);
+  for i:=0 to _ChangedFiles.count-1 do ConfirmChanges(_ChangedFiles[i], False,_ForceWrite);
 
 // try to update dpk/dproj files.
   if FProjectType = tp_bpl then begin // it is a package
@@ -2112,14 +2156,14 @@ begin
                    FPackageSuffix,
                    IsSilentMode,
                    _NewFilename); // then prepare a new file.
-      ConfirmChanges(_NewFilename, False);
+      ConfirmChanges(_NewFilename,False,_ForceWrite);
     end;
 
 
     if FDelphiVersion>=11 then begin
       _DProjFilename:=ChangeFileExt(FProjectFilename,'.dproj');
       if fileexists(_DProjFilename) then WriteDprojFile(_DProjFilename,FPackageSuffix,IsSilentMode,_NewFilename);
-      ConfirmChanges(_NewFilename, False);
+      ConfirmChanges(_NewFilename,False,_ForceWrite);
     end;
   end;
 end;
@@ -2132,8 +2176,9 @@ end;
   Result:    None
   Description: present the changed file in the diff-tool and ask the user
                if he want's to save the changes.
+               If <_ForceWrite> is set to <true>, then ignore the setting <'Application/ChangeFiles'>.
 -----------------------------------------------------------------------------}
-procedure TDMMain.ConfirmChanges(_ChangedFile:string;const _Revert:Boolean);
+procedure TDMMain.ConfirmChanges(_ChangedFile:string;const _Revert:Boolean;const _ForceWrite:boolean);
 resourcestring
 cSaveChanges='Save changes to file <%s> ?';
 cDPTSuggestsSomeChanges='DelphiPackageTool suggest''s some changes. Do you want to review them in the Diff-Tool ?';
@@ -2146,7 +2191,9 @@ begin
   _answer:=0;
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
-  if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;
+  if not _ForceWrite then begin
+    if not ProjectSettings.BoolValue('Application/ChangeFiles') then exit;
+  end;
   if assigned(CommandLineAction) then exit;    // the app runs with command-line params, then do not change files.
   _OldFilename:=copy(_ChangedFile,1,length(_ChangedFile)-4);
 
@@ -2301,7 +2348,7 @@ cCompileNOTOK='Failed';
 var
   _ProjectIndex: Integer;
   _PlatformIndex: Integer;
-  _ConfigIndex: Integer;
+//  _ConfigIndex: Integer;
   _TmpStr: string;
   _DelimiterPos: Integer;
 begin
@@ -2315,33 +2362,25 @@ begin
 
     FProjectCompiled := true;
     for _PlatformIndex := 0 to FPlatformsToCompileList.Count - 1 do begin
-      for _ConfigIndex := 0 to FConfigsToCompileList.Count - 1 do begin
-        FPlatformToCompile :=FPlatformsToCompileList[_PlatformIndex];
-        FBPLOutputPath     :=GetDelphiPackageDir(FDelphiVersion,FPlatformToCompile);
-        FConfigToCompile   :=FConfigsToCompileList[_ConfigIndex];
+      FPlatformToCompile :=FPlatformsToCompileList[_PlatformIndex];
+      FBPLOutputPath     :=GetDelphiPackageDir(FDelphiVersion,FPlatformToCompile);
+      FireCurrentProjectChanged;
+      CompileAndInstallCurrentPackage;
 
-//        if (FProjectFilename = '') or (FPlatformToCompile = '') or (FConfigToCompile = '') then begin // project file or platform or config not found
-//          FProjectCompiled:=false;
-//          continue;
-//        end;
-        FireCurrentProjectChanged;
-        CompileAndInstallCurrentPackage;
-
-        if (not FPlatformConfigCompiled) and
-           ApplicationSettings.BoolValue('Application/StopOnFailure') then begin
-          WriteLog('Aborted by Program because of Compile Problem and setting "Stop on Failure" is <ON>.', []);
-          FAbortCompileFailure:=true;
-          Break;
-        end;
-
-        if FAbortCompileUser then begin
-          WriteLog('Aborted by User.', []);
-          Break;
-        end;
-        
-        Application.ProcessMessages;
-        if Application.Terminated then break;
+      if (not FPlatformConfigCompiled) and
+         ApplicationSettings.BoolValue('Application/StopOnFailure') then begin
+        WriteLog('Aborted by Program because of Compile Problem and setting "Stop on Failure" is <ON>.', []);
+        FAbortCompileFailure:=true;
+        Break;
       end;
+
+      if FAbortCompileUser then begin
+        WriteLog('Aborted by User.', []);
+        Break;
+      end;
+
+      Application.ProcessMessages;
+      if Application.Terminated then break;
     end;
 
     if FProjectCompiled then begin
@@ -2396,7 +2435,7 @@ begin
     TProjectData(FBPGProjectList.Objects[i]).BPLOutputPath  := FBPLOutputPath;
     TProjectData(FBPGProjectList.Objects[i]).DCPOutputPath  := FDCPOutputPath;
     TProjectData(FBPGProjectList.Objects[i]).DCUOutputPath  := FDCUOutputPath;
-    TProjectData(FBPGProjectList.Objects[i]).ProjectSearchPath := FSearchPath;
+    TProjectData(FBPGProjectList.Objects[i]).ProjectSearchPath := FProjectSearchPath;
     TProjectData(FBPGProjectList.Objects[i]).Description    := FPackageDescription;
     TProjectData(FBPGProjectList.Objects[i]).DPTSearchPath  := FDPTSearchPath;
     TProjectData(FBPGProjectList.Objects[i]).ProjectType    := FProjectType;
@@ -2418,11 +2457,11 @@ resourcestring
 begin
   FProjectFilename:='';
   FConfigFilename := '';
-  FConfigToCompile := '';
+  FBuildMode:='';
   FPlatformToCompile := '';
   FCompilerSwitches := '';
   FConditions := '';
-  FSearchPath := '';
+  FProjectSearchPath := '';
   FBPLFilename := '';
   FProjectOutputPath := '';
   FBPLOutputPath := '';
@@ -2627,7 +2666,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TDMMain.actRevertChangesExecute(Sender: TObject);
 begin
-  ConfirmChanges(cModifiedFileExtentions,true);
+  ConfirmChanges(cModifiedFileExtentions,true,true);
 end;
 
 {-----------------------------------------------------------------------------

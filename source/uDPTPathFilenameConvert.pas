@@ -162,7 +162,7 @@ begin
   if (pos('\\',_path)=1) or               // looks like the filename contains already a absolute path.
      (pos(':\',_path)>0) then begin
     result:=IncludeTrailingPathDelimiter(_path);
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+    trace(6,'Leave method <AbsolutePath> with filename <%s>.',[result]);
     exit;
   end;
 
@@ -171,7 +171,7 @@ begin
       _path:=IncludeTrailingPathDelimiter(_path);
     end;
     result:=ExtractFileDrive(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+    trace(6,'Leave method <AbsolutePath> with filename <%s>.',[result]);
     exit;
   end;
 
@@ -181,7 +181,7 @@ begin
       _path:=IncludeTrailingPathDelimiter(_path);
     end;
     result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+    trace(6,'Leave method <AbsolutePath> with filename <%s>.',[result]);
     exit;
   end;
 
@@ -192,7 +192,7 @@ begin
       if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
     end;
     result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-    trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+    trace(6,'Leave method <AbsolutePath> with filename <%s>.',[result]);
     exit;
   end;
 
@@ -216,7 +216,7 @@ begin
     if (pos('\',_path)=1) then Delete(_path,1,1); // remove leading path delimiter
   end;
   result:=IncludeTrailingPathDelimiter(_basepath)+_path;
-  trace(5,'Leave method <AbsolutePath> with filename <%s>.',[result]);
+  trace(6,'Leave method <AbsolutePath> with filename <%s>.',[result]);
 end;
 
 {-----------------------------------------------------------------------------

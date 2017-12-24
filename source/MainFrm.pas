@@ -151,8 +151,6 @@ type
     mmoLogFile: TMemo;
     mmoTrace: TMemo;
     gbxPlatform: TGroupBox;
-    gbxConfig: TGroupBox;
-    clbConfig: TCheckListBox;
     clbPlatform: TCheckListBox;
     edtDCUPath: TEdit;
     btnSelectDcuPath: TButton;
@@ -162,6 +160,8 @@ type
     actShowProjectOptions: TAction;
     ProjectOptions2: TMenuItem;
     edtPackageBPGFile: TEdit;
+    lbxAvailableBuildModes: TListBox;
+    lblBuildMode: TLabel;
     procedure FormShow(Sender: TObject);
     procedure actOpenProjectExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -220,6 +220,7 @@ type
     procedure edtPackageBPLDirectoryExit(Sender: TObject);
     procedure stgFilesMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure lbxAvailableBuildModesExit(Sender: TObject);
   private
     FExternalEditorFilename:string;
     FExternalEditorLineNo:Integer;
@@ -238,7 +239,7 @@ type
     procedure PrepareRecentFiles;
     procedure SetDelphiVersionCombobox(const _DelphiVersion:integer);
     procedure SetPlatformCheckListBox(const _Platforms: string);
-    procedure SetConfigCheckListBox(const _Configs: string);
+    procedure SetBuildModeList(const _AvailableBuildModes: string;const _BuildMode:string);
     procedure FillProjectGrid;
     function  ExtractFilenameFromLog:string;
     procedure StgFilesShowCellHint(X, Y: Integer);
@@ -328,7 +329,7 @@ begin
   pgcInfo.ActivePage:=tabInfo;
   cbxDelphiVersions.Items.Assign(DMMain.InstalledDelphiVersionList);
   SetPlatformCheckListBox('');
-  SetConfigCheckListBox('');
+  SetBuildModeList('','');
   ApplicationSettingstoGUI;
   ProjectSettingstoGUI;
   PrepareGrid;
@@ -813,10 +814,21 @@ begin
   if not DMMain.ProjectSettings.IsLoaded then exit;
   DMMain.ProjectSettings.SetInteger('Application/DelphiVersion', DMMain.DelphiVersion);
   DMMain.ProjectSettings.SetString('Application/Platform', DMMain.CurrentBPGPlatformList.Commatext);
-  DMMain.ProjectSettings.SetString('Application/Config', DMMain.CurrentBPGConfigList.Commatext);
+  DMMain.ProjectSettings.SetString('Application/AvailableBuildModes', DMMain.CurrentBPGConfigList.Commatext);
+  if lbxAvailableBuildModes.ItemIndex<>-1 then DMMain.ProjectSettings.SetString('Application/BuildMode',lbxAvailableBuildModes.Items[lbxAvailableBuildModes.ItemIndex])
+                                          else DMMain.ProjectSettings.SetString('Application/BuildMode','Debug');
   DMMain.ProjectSettings.SetPath('Application/OutputPath',edtOutputDirectory.Text);
   DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',edtPackageOutputDir.Text);
   DMMain.ProjectSettings.SetPath('Application/DCUOutputPath',edtDcuPath.Text);
+end;
+
+procedure TFrmMain.lbxAvailableBuildModesExit(Sender: TObject);
+var
+_BuildMode:string;
+begin
+  if lbxAvailableBuildModes.ItemIndex>-1 then _BuildMode:=lbxAvailableBuildModes.Items[lbxAvailableBuildModes.ItemIndex]
+                                         else _BuildMode:='Debug';
+  DMMain.ProjectSettings.SetString('Application/BuildMode',_BuildMode)
 end;
 
 {-----------------------------------------------------------------------------
@@ -835,7 +847,7 @@ begin
   if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath') <> ''     then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath');
   SetDelphiVersionCombobox(DMMain.ProjectSettings.IntegerValue('Application/DelphiVersion'));
   SetPlatformCheckListBox(DMMain.ProjectSettings.StringValue('Application/Platform'));
-  SetConfigCheckListBox(DMMain.ProjectSettings.StringValue('Application/Config'));
+  SetBuildModeList(DMMain.ProjectSettings.StringValue('Application/AvailableBuildModes'),DMMain.ProjectSettings.StringValue('Application/BuildMode'));
 end;
 
 {-----------------------------------------------------------------------------
@@ -1090,7 +1102,8 @@ resourcestring
 cFileNotFoundTagGerman='nicht gefunden';
 cFileNotFoundTagEnglish='not found';
 begin
-  _filename:='*'+lowercase(_filename)+'*';
+  _filename:=lowercase(_filename);
+  if ExtractFileExt(_filename)='' then _filename:=_filename+'*.*';
   if (Pos(cFileNotFoundTagGerman,_compilerOutput)>0) or  //TODO we need a better way to find out if the compilation was successfull.
      (Pos(cFileNotFoundTagEnglish,_compilerOutput)>0) then ShowSelectPathDialog(DMMain.SearchPath,_filename,true) else
   if (Pos('.dpr',_filename)>0) or
@@ -1218,7 +1231,7 @@ cCouldNotCleanupRegistry='Could not delete some keys from the registery. You mig
 var
 _NoOfDeletedKeys:integer;
 begin
-  if not VerifyRegistry(DMMain.DelphiVersion,_NoOfDeletedKeys,DMMain.PlatformToCompile, DMMain.ConfigToCompile) then begin
+  if not VerifyRegistry(DMMain.DelphiVersion,_NoOfDeletedKeys,DMMain.PlatformToCompile, DMMain.BuildMode) then begin
     Application.MessageBox(pchar(cCouldNotCleanupRegistry),pchar(cError),MB_ICONINFORMATION);
     exit;
   end;
@@ -1677,7 +1690,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.DoWriteTrace(_level: byte; _msg: String;_params: array of Const);
 begin
-  if (DMMain.ApplicationSettings.BoolValue('Application/Trace')) or
+  if (DMMain.ApplicationSettings.BoolValue('Application/Trace') and (_level<=5)) or
      (_level<=3) then mmoTrace.Lines.insert(0,datetimetostr(now)+': '+format(_msg,_params))
 end;
 
@@ -1704,26 +1717,21 @@ begin
 end;
 
 {*-----------------------------------------------------------------------------
-  Procedure: SetConfigCheckListBox
+  Procedure: SetBuildModeList
   Author:    muem
   Date:      29-Oct-2012
   Arguments: const _Config: string
   Result:    None
   Description: update the config checklistbox.
 -----------------------------------------------------------------------------}
-procedure TFrmMain.SetConfigCheckListBox(const _Configs: string);
+procedure TFrmMain.SetBuildModeList(const _AvailableBuildModes: string;const _BuildMode:string);
 var
-  _i:Integer;
-  _itemIndex:Integer;
+_itemindex:integer;
 begin
-  DMMain.CurrentBPGConfigList.CommaText := _Configs;
-  clbConfig.Items.Assign(DMMain.BPGConfigList);
-
-  for _i := 0 to clbConfig.Items.Count-1 do begin
-    // check/uncheck check boxes
-    _itemIndex:=DMMain.CurrentBPGConfigList.IndexOf(clbConfig.Items[_i]);
-    clbConfig.Checked[_i] := (_itemIndex>=0);
-  end;
+  DMMain.CurrentBPGConfigList.CommaText := _AvailableBuildModes;
+  lbxAvailableBuildModes.Items.Assign(DMMain.BPGConfigList);
+  _itemindex:=lbxAvailableBuildModes.Items.IndexOf(_BuildMode);
+  if _itemindex>-1 then lbxAvailableBuildModes.ItemIndex:=_itemindex;
 end;
 
 
@@ -1733,13 +1741,8 @@ begin
 end;
 
 procedure TFrmMain.clbConfigClickCheck(Sender: TObject);
-var
-  _i:Integer;
 begin
   DMMain.CurrentBPGConfigList.Clear;
-  for _i := 0 to clbConfig.Count-1 do begin
-    if clbConfig.ItemEnabled[_i] and clbConfig.Checked[_i] then DMMain.CurrentBPGConfigList.Add(clbConfig.Items[_i]);
-  end;
   GUItoProjectSettings;
 end;
 
@@ -1809,7 +1812,6 @@ procedure TFrmMain.UpdateGUI(_NewState: TApplicationState);
 begin
   actShowDOFFile.Visible:=(DMMain.DelphiVersion<8);
   gbxPlatform.Visible:=(DMMain.DelphiVersion>=15);
-  gbxConfig.Visible:=(DMMain.DelphiVersion>=12);
   actShowBPGEditor.Enabled:=(DMMain.BPGFilename<>'');
   actShowProjectOptions.Enabled:=(DMMain.BPGFilename<>'');
   actCloseProject.Enabled:=(DMMain.BPGFilename<>'');
