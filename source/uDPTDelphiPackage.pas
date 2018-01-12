@@ -24,7 +24,7 @@ function  GetDelphiPackageDir(const _DelphiVersion:integer;const _PlatformToComp
 function  SetDelphiPackageDir(const _DelphiVersion:integer;_PackageDir:string;const _silent:boolean;const _PlatformToCompile: string):boolean; // write the package dir (bpl-folder) <_PackageDir> for Delphi Version <_DelphiVersion>.
 function  InstallPackage(_PackageName, _PackageDirectory, _PackageDescription, _PackageLibSuffix: string; _DelphiVersion: Integer;const _IsSilentMode:boolean; out msg: string): Boolean; // add package into the regitstry.
 function  UninstallPackage(_PackageName, _PackageDirectory, _PackageLibSuffix: string; _DelphiVersion: Integer): Boolean;  // remove package from regeistry.
-function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType;const _IsSilent:boolean; out Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
+function  CompileProject(_Compiler, _CompilerSwitches, _ProjectName, _TargetPath, _DCUPath, _DCPPath, _WorkPath, _NameSpaces: string; _ProjectType: TProjectType;const _Silent:boolean; out Output: string; const _DelphiVersion: Integer): Boolean; // compile the package
 function  VerifyRegistry(const _DelphiVersion:integer;out NoOfRemovedKeys:integer; const _CurrentPlatform,_CurrentConfig: string):boolean; // scan through the registry items of "Known Packages" and "Disabled Packages" and check if the referenced files really exists. If not then remove the registry key.
 procedure ReadPackageListfromFile(_filename:string;var lst:TListBox);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the listbox <lst>.
 procedure ReadPackageListfromFile(_filename:string;var lst:TStringList);overload;  //read packages&projects from the goup-file <_filename> (.bpg or .bdsgroup or .groupproj) into the stringlist <lst>.
@@ -75,7 +75,7 @@ function  AddTag(_filename: string;_DelphiVersion:integer): string;
 function  GetIDEEnvironmentPath(const _DelphiVersion:integer): string; // read the environments-path for delphi version <_DelphiVersion>.
 function  SetIDEEnvironmentPath(const _DelphiVersion:integer;_IDEEnvironmentPath:string;const _silent:boolean):boolean; //set IDE Environment Path <_IDEEnvironmentPath> for version <_DelphiVersion>.
 function  IsPathInIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean; // checks if the path <_path> is already in the IDE environment variable.
-function  AddIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean; // add the path <_path> to the IDE Environment Variable.
+function  AddIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string;const _silent:boolean): boolean; // add the path <_path> to the IDE Environment Variable.
 function  VerifyIDEEnvrionmentsPath(const _DelphiVersion:integer;const _silent:boolean;out DeletedPathEntries:integer):boolean; // remove in-existent folders from the IDE Environments Path. Returns the number of deleted entries in <DeletedPathEntries>.
 function  GetIDEEnvironmentPathList(const _DelphiVersion:integer): TStrings;
 
@@ -3675,7 +3675,7 @@ function CompileProject(_Compiler,
                         _WorkPath,
                         _NameSpaces:string;
                         _ProjectType: TProjectType;
-                        const _IsSilent:boolean;
+                        const _Silent:boolean;
                         out Output: string;
                         const _DelphiVersion: Integer): Boolean; // compile the package
 var
@@ -3695,22 +3695,22 @@ begin
     exit;
   end;
 
-  if not CheckDirectory(_WorkPath,_IsSilent) then begin
+  if not CheckDirectory(_WorkPath,_Silent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the work path <%s>.', [_WorkPath]);
     Exit;
   end;
 
-  if not CheckDirectory(_TargetPath,_IsSilent) then begin
+  if not CheckDirectory(_TargetPath,_Silent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the target path <%s>.', [_TargetPath]);
     Exit;
   end;
 
-  if not CheckDirectory(_DCUPath,_IsSilent) then begin
+  if not CheckDirectory(_DCUPath,_Silent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the dcu path <%s>.', [_DCUPath]);
     Exit;
   end;
 
-  if not CheckDirectory(_DCPPath,_IsSilent) then begin
+  if not CheckDirectory(_DCPPath,_Silent) then begin
     trace(1, 'Problem in CompileProject: Problem, could not find the dcp path <%s>.', [_DCPPath]);
     Exit;
   end;
@@ -4412,7 +4412,7 @@ end;
   Description: set the IDE Environment Path to the value created
                by the content of <_list>.
 -----------------------------------------------------------------------------}
-function SetIDEEnvironmentPathList(const _DelphiVersion:integer;const _list: TStrings): boolean;
+function SetIDEEnvironmentPathList(const _DelphiVersion:integer;const _list: TStrings;const _silent:boolean): boolean;
 var
   i: integer;
   _path: string;
@@ -4424,7 +4424,7 @@ begin
     if IsLastChar('\', _entry) then Delete(_entry, length(_entry), 1);
     _path := _path + _entry + ';';
   end;
-  result := SetIDEEnvironmentPath(_DelphiVersion,_path, false);
+  result := SetIDEEnvironmentPath(_DelphiVersion,_path,_Silent);
 end;
 
 {-----------------------------------------------------------------------------
@@ -4435,7 +4435,7 @@ end;
   Result:    boolean
   Description: add the path <_path> to the IDE Envrionment Path.
 -----------------------------------------------------------------------------}
-function AddIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string): boolean;
+function AddIDEEnvironmentPath(const _DelphiVersion:integer;const _path: string;const _silent:boolean): boolean;
 var
 _PathList: TStrings;
 begin
@@ -4446,7 +4446,7 @@ begin
     if _pathList.IndexOf(lowercase(_path)) > -1 then exit;
     _pathList.Add(lowercase(_path));
     trace(1, 'Added the directory <%s> to the IDE Environments Variable.', [_path]);
-    result := SetIDEEnvironmentPathList(_DelphiVersion,_pathList);
+    result := SetIDEEnvironmentPathList(_DelphiVersion,_pathList,_silent);
   finally
     _pathList.free;
   end;

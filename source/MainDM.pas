@@ -393,7 +393,6 @@ end;
 procedure TDMMain.LoadCurrentProject;
 resourcestring
   cCouldNotFindDCUOutputPath = 'Could not find the DCU Output Path <%s>. Do you want to edit this path ?';
-  cCouldNotFindDCPOutputPath = 'Could not find the DCP Output Path <%s>. Do you want to edit this path ?';
   cCouldNotFindBPLOutputPath = 'Could not find the BPL Output Path <%s>. Do you want to edit this path ?';
 begin
   FConfigFilename  :=GetConfigFilename(FProjectFilename, FDelphiVersion);
@@ -418,9 +417,11 @@ begin
   FDCUOutputPath := IncludeTrailingPathDelimiter(FDCUOutputPath);
   if not IsSilentMode then begin
     if (FDCUOutputPath <> '') and (not DirectoryExists(FDCUOutputPath)) then begin
-      if Application.MessageBox(pchar(Format(cCouldNotFindDCUOutputPath, [FDCUOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
+      if not IsSilentMode then begin
+        if Application.MessageBox(pchar(Format(cCouldNotFindDCUOutputPath, [FDCUOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
+      end;
     end;
-    CheckDirectory(FDCUOutputPath,FCommandLineSilent);
+    CheckDirectory(FDCUOutputPath,IsSilentMode);
   end;
   trace(5, 'DCUOutputPath=%s', [FDCUOutputPath]);
 
@@ -438,9 +439,11 @@ begin
       FBPLOutputPath := IncludeTrailingPathDelimiter(FBPLOutputPath);
       if not IsSilentMode then begin
         if (FBPLOutputPath <> '') and (not DirectoryExists(FBPLOutputPath)) then begin
-          if Application.MessageBox(pchar(Format(cCouldNotFindBPLOutputPath, [FBPLOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
+          if not IsSilentMode then begin
+            if Application.MessageBox(pchar(Format(cCouldNotFindBPLOutputPath, [FBPLOutputPath])), pchar(cConfirm), MB_ICONQUESTION or MB_YesNo) = IdYes then ShowFile(FConfigFilename, 0);
+          end;
         end;
-        CheckDirectory(FBPLOutputPath,FCommandLineSilent);
+        CheckDirectory(FBPLOutputPath,IsSilentMode);
       end;
       trace(5, 'BPLOutputPath=%s', [FBPLOutputPath]);
 
@@ -688,14 +691,15 @@ resourcestring
   cRegisterBDSGroupProj = 'Do you want to register file type (*.groupproj) with the Delphi Package Tool ?';
 
 var
-  _tmp: string;
-  _filename: string;
-  _Config: string;
-  _Platform: string;
-  i: integer;
+i: integer;
+_ParamStr: string;
+_filename: string;
+_Config: string;
+_Platform: string;
 begin
   _Config := '';
   _Platform := '';
+  FCommandLineSilent:=(pos(cSilent,lowercase(GetCommandLine))>0);
   ApplicationState := tas_init;
   FDelphiVersion := LatestIDEVersion;
   FBPLOutputPath := '';
@@ -748,27 +752,20 @@ begin
 
   case ParamCount of
     0: OpenBPG(ApplicationSettings.FileValue('Application/ProjectGroupFile'));
-
-    1:begin
-        _tmp := lowercase(trim(Paramstr(1)));
-        trace(3,'Parameter is <%s>.',[_tmp]);
-        if Pos(cCleanupBplDir, _tmp) = 1 then CommandLineAction := actCleanUpProjectBPLDir else // command to be executed.
-        if Pos(cCleanupAll, _tmp) = 1    then CommandLineAction := actCleanUpAll // command to be executed.
-        else OpenBPG(_tmp);
-      end;
     else begin
       for i := 1 to ParamCount do begin
-        _tmp := lowercase(Paramstr(i));
-        trace(2,'Parameter <%d> is <%s>.',[i,_tmp]);
-        if Pos(cProject, _tmp) = 1 then begin // project file (either bpg,dpk,dpr)
-          Delete(_tmp, 1, Length(cProject)); //e.g. -p"C:\Projects\Packages\Owncomponents.bpl"
-          if pos('"',_tmp)=1 then delete(_tmp,1,1); // remove the leading char <">.
-          if pos('"',_tmp)>0 then _tmp:=copy(_tmp,1,pos('"',_tmp)); //copy until the occurence of the char <">.
-          _filename := lowercase(_tmp);
+        _ParamStr := lowercase(Paramstr(i));
+        trace(2,'Parameter <%d> is <%s>.',[i,_ParamStr]);
+        if Pos(cProject, _ParamStr) = 1 then begin // project file (either bpg,dpk,dpr)
+          Delete(_ParamStr, 1, Length(cProject)); //e.g. -p"C:\Projects\Packages\Owncomponents.bpl"
+          if pos('"',_ParamStr)=1 then delete(_ParamStr,1,1); // remove the leading char <">.
+          if pos('"',_ParamStr)>0 then _ParamStr:=copy(_ParamStr,1,pos('"',_ParamStr)); //copy until the occurence of the char <">.
+          _filename := lowercase(_ParamStr);
           _filename := AbsoluteFilename(extractFilepath(application.ExeName),_filename);
           OpenBPG(_filename);
-        end;
-        if Pos(cRebuild, _tmp) = 1 then begin // command to be executed.
+          break;
+        end else
+        if Pos(cRebuild, _ParamStr) = 1 then begin
           if (Pos('.bpg', _filename) > 0) or
              (Pos('.bdsgroup',_filename)>0) or
              (Pos('.groupproj',_filename)>0) then CommandLineAction := actRecompileAllPackages;
@@ -778,38 +775,48 @@ begin
             SetCurrentProject(_filename);
             CommandLineAction := actReCompile;
           end;
+          break;
+        end else
+        if Pos(cCleanupBplDir, _ParamStr) = 1 then begin
+          CommandLineAction := actCleanUpProjectBPLDir;
+          break;
+        end else
+        if Pos(cCleanupAll, _ParamStr) = 1    then begin
+          CommandLineAction := actCleanUpAll; // command to be executed.
+          break;
+        end else begin
+          OpenBPG(_ParamStr);
+          break;
         end;
       end;
     end;
 
-    if Pos(cConfig, _tmp) = 1 then begin // configuration to build (e.g. debug,release)
-      Delete(_tmp, 1, Length(cConfig)); //e.g. -nRelease
-      _Config := _tmp;
+    if Pos(cConfig, _ParamStr) = 1 then begin // configuration to build (e.g. debug,release)
+      Delete(_ParamStr, 1, Length(cConfig)); //e.g. -nRelease
+      _Config := _ParamStr;
     end;
 
-    if Pos(cPlatform, _tmp) = 1 then begin // platform to build (e.g. Win32,Win64)
-      Delete(_tmp, 1, Length(cPlatform)); //e.g. -aWin32
-      _Platform := _tmp;
+    if Pos(cPlatform, _ParamStr) = 1 then begin // platform to build (e.g. Win32,Win64)
+      Delete(_ParamStr, 1, Length(cPlatform)); //e.g. -aWin32
+      _Platform := _ParamStr;
     end;
 
-    if Pos(cInstall, _tmp) = 1 then begin // command to be executed.
+    if Pos(cInstall, _ParamStr) = 1 then begin // command to be executed.
       if (Pos('.dpk', _filename) > 0) or
          (Pos('.dproj', _filename) > 0) then CommandLineAction := actInstallPackage;
     end;
 
-    if Pos(cUninstall, _tmp) = 1 then begin // command to be executed.
+    if Pos(cUninstall, _ParamStr) = 1 then begin // command to be executed.
       if (Pos('.dpk', _filename) > 0) or
          (Pos('.dproj', _filename) > 0) then CommandLineAction := actUninstallPackage;
     end;
 
-    if Pos(cProjIniFile, _tmp) = 1 then begin // project ini-file
-      Delete(_tmp, 1, Length(cProjIniFile)); //e.g. -OC:\Projects\Packages\Owncomponents.ini
-      FApplicationIniFilename := AbsoluteFilename(extractFilepath(Application.exename),_tmp);
+    if Pos(cProjIniFile, _ParamStr) = 1 then begin // project ini-file
+      Delete(_ParamStr, 1, Length(cProjIniFile)); //e.g. -OC:\Projects\Packages\Owncomponents.ini
+      FApplicationIniFilename := AbsoluteFilename(extractFilepath(Application.exename),_ParamStr);
       InitializeAppSettings; // load application settings.
       CommandLineAction := actRecompileAllPackages;
     end;
-
-    FCommandLineSilent := (_tmp = cSilent);
   end;
 
   if _Config <> '' then CurrentBPGConfigList.CommaText := _Config;
@@ -821,7 +828,6 @@ begin
     if MessageBox(0,pchar(cRegisterBDSGroup),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)      = IdYes then RegisterFileType('bdsgroup' ,Application.ExeName,'DelphiPackageTool File-Type BDSGroup');
     if MessageBox(0,pchar(cRegisterBDSGroupProj),pchar(cConfirm), MB_ICONQUESTION or MB_YESNO)  = IdYes then RegisterFileType('groupproj',Application.ExeName,'DelphiPackageTool File-Type GROUPPROJ');
   end;
-
 end;
 
 {*-----------------------------------------------------------------------------
@@ -1339,7 +1345,7 @@ begin
     exit;
   end;
   UnInstallPackage(FProjectFilename, FProjectOutputPath,FPackageSuffix,FDelphiVersion);
-  InstallPackage(FProjectFilename, FProjectOutputPath,FPackageDescription,FPackageSuffix,FDelphiVersion,FCommandLineSilent,_message);
+  InstallPackage(FProjectFilename, FProjectOutputPath,FPackageDescription,FPackageSuffix,FDelphiVersion,IsSilentMode,_message);
   WriteLog('Installed Package <%s>.',[FProjectFilename]);
   TProjectData(BPGProjectList.Objects[FCurrentProjectNo]).IDEInstall:=_message;
   if assigned(FOnPackageInstalledEvent) then FOnPackageInstalledEvent(self,FProjectFilename,_message,FCurrentProjectNo);
@@ -1348,8 +1354,10 @@ begin
   if not IsSilentMode then begin
     if Application.MessageBox(pchar(format(cPathIsNotInEnv,[FProjectOutputPath])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)<>IDYes then exit;
   end;
-  if not AddIDEEnvironmentPath(FDelphiVersion,FProjectOutputPath) then begin
-    Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FProjectOutputPath])),pchar(cInformation),MB_OK);
+  if not AddIDEEnvironmentPath(FDelphiVersion,FProjectOutputPath,IsSilentMode) then begin
+    if not IsSilentMode then begin
+      Application.MessageBox(pchar(format(cCouldNotAddEnvPath,[FProjectOutputPath])),pchar(cInformation),MB_OK);
+    end;
     exit;
   end;
   result:=true;
@@ -1585,7 +1593,7 @@ begin
                                             ExtractFilePath(ReadProjectFilenameFromDProj(FProjectFilename)),
                                             FNameSpaces,
                                             FProjectType,
-                                            FCommandLineSilent,
+                                            IsSilentMode,
                                             _Output,
                                             FDelphiVersion);
   FProjectCompiled := FProjectCompiled and FPlatformConfigCompiled;
@@ -2202,17 +2210,15 @@ begin
 
   if not IsSilentMode and
      ApplicationSettings.BoolValue('Application/DisplayFilesInDiffTool') and
-     IsDiffToolAvailable  then _answer:=Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO);
+     IsDiffToolAvailable  then begin
+    _answer:=Application.MessageBox(pchar(_msg),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO);
 
-  if _answer=ID_Yes then begin
-    if _Revert then CompareFiles(_ChangedFile,_OldFilename)
-               else CompareFiles(_OldFilename,_ChangedFile);
-  end;
-
-  if not IsSilentMode then begin
+    if _answer=ID_Yes then begin
+      if _Revert then CompareFiles(_ChangedFile,_OldFilename)
+                 else CompareFiles(_OldFilename,_ChangedFile);
+    end;
     if Application.MessageBox(pchar(format(cSaveChanges,[_OldFilename])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)<>IDYes then exit;
   end;
-
   if not RemoveReadOnlyFlag(_OldFilename,IsSilentMode) then exit;
   if not CopyFile(pchar(_ChangedFile),pchar(_OldFilename),false) then WriteLog('Problem to change file <%s>.',[_OldFilename])
                                                                  else WriteLog('Changed the file ''%s''',[_OldFilename]);

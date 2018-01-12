@@ -71,6 +71,13 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.69  ( 12.01.2018 )
+-SH: fixed regression from 1.9.2.68
+     clean-up.
+	 
+1.9.2.68  ( 12.01.2018 )
+-SH: changes for command-line parameter "-silent".
+
 1.9.2.67  ( 24.12.2017 )
 -SH: reduced complexity. Only configurations "debug" and "release" will be supported by DPT.
      added two new project-settings "DebugCompilerSwitches" and "ReleaseCompilerSwitches".
