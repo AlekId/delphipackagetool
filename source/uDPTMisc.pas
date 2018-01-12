@@ -62,7 +62,7 @@ function GetSystemPath(SystemPath: TSystemPath): string;
 function AllFilesOfDrive(_path,_mask:string;_FileList:TStrings;var AbortScan:Boolean):boolean; // search all file with mask <_mask> from Path <_path>
 function GetFileSize(const _filename: string; var filesize:Int64): boolean; // read the size of a file.
 function CreateDirectory(const _path:string):boolean;
-function CheckDirectory(const _path:string;const _isSilent:boolean):boolean;
+function CheckDirectory(const _path:string;const _Silent:boolean):boolean;
 function RemoveReadOnlyFlag(const _filename:string;const _silent:boolean):boolean;
 function ShellExecute_AndWait(Operation, FileName, Parameter, Directory: string;Show: Word; bWait: Boolean; var ExitCode: LongWord): LongWord;
 procedure ShowFolder(strFolder: string);
@@ -276,7 +276,7 @@ end;
   Description: check if the directory with name <_name> exists. If not then
   it asks if the directory shall be created.
 -----------------------------------------------------------------------------}
-function  CheckDirectory(const _path:string;const _isSilent:boolean):boolean;
+function  CheckDirectory(const _path:string;const _Silent:boolean):boolean;
 resourcestring
 cConfirm='Confirm';
 cAskToCreateFolder='Could not find the directory <%s>. Create it ?';
@@ -290,15 +290,17 @@ begin
     result:=true;
     exit;
   end;
-  if Application.MessageBox(pchar(format(cAskToCreateFolder,[_path])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+  if not _Silent then begin
+    if Application.MessageBox(pchar(format(cAskToCreateFolder,[_path])),pchar(cConfirm),MB_ICONQUESTION or MB_YESNO)=IDNo then exit;
+  end;
   try
     if not ForceDirectories(_path) then begin
-      trace(1,'Problem to create directory <%s>. Please check settings and user rights.',[_path]);
+      trace(1,'uDPTMisc.CheckDirectory: Problem to create directory <%s>. Please check settings and user rights.',[_path]);
       exit;
     end;
     result:=true;
   except
-    on e:exception do trace(1,'Problem to create directory <%s>. Please check settings and user rights. <%s>.',[_path,e.message]);
+    on e:exception do trace(1,'uDPTMisc.CheckDirectory: Problem to create directory <%s>. Please check settings and user rights. <%s>.',[_path,e.message]);
   end;
 end;
 
