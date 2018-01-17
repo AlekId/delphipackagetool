@@ -71,6 +71,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 History:
 ********
+1.9.2.70  ( 17.01.2018 )
+-SH: do not show gui if command line parameter "-silent" is set.
+
 1.9.2.69  ( 12.01.2018 )
 -SH: fixed regression from 1.9.2.68
      clean-up.

@@ -763,7 +763,6 @@ begin
           _filename := lowercase(_ParamStr);
           _filename := AbsoluteFilename(extractFilepath(application.ExeName),_filename);
           OpenBPG(_filename);
-          break;
         end else
         if Pos(cRebuild, _ParamStr) = 1 then begin
           if (Pos('.bpg', _filename) > 0) or
