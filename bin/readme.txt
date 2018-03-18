@@ -70,7 +70,11 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 
 
 History:
+
 ********
+1.9.2.71  ( 18.03.2018 )
+-SH: improvement in "BackupAll".
+
 1.9.2.70  ( 17.01.2018 )
 -SH: do not show gui if command line parameter "-silent" is set.
 
