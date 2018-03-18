@@ -704,6 +704,7 @@ _filename:string;
 _filepath:string;
 _pos:integer;
 _workPath:string;
+_ProjectPath:string;
 begin
   result:=THashedStringList.create;
   result.Sorted:=true;
@@ -755,11 +756,18 @@ begin
       _ext:=GetField('(',_ext);
       if _ext='' then continue;   // if the line does not contain a fileextension, then continue
       if _ExtensionsOfInterest.IndexOf(_ext)=-1 then continue; // if the fileextension is not in the list of interesting fileextensions then continue.
+      if (_ext='.dproj') or (_ext='.dpr') or (_ext='.dpk') then _ProjectPath:=ExtractFilePath(_line);
       _pos:=pos('(',_line);
       if _pos>0 then _filename:=copy(_line,1,_pos-1)
                 else _filename:=_line;
-      _filename:=AbsoluteFilename(_BasePath,_filename);  // create an absolute filename
-      if not fileexists(_filename) then continue;        // check if the file exists
+
+      if not fileexists(_filename) then begin  // check if the file exists
+        _filename:=AbsoluteFilename(_BasePath,_filename);  // create an absolute filename
+        if not fileexists(_filename) then begin
+          _filename:=_ProjectPath+_filename;
+          if not fileexists(_filename) then continue;
+        end;
+      end;
       if result.indexof(_filename)=-1 then begin         // only add the file to the list, if it is not already in the list.
         result.add(_filename);
         trace(5,'Added file <%s> to backup list.',[_filename]);
@@ -769,10 +777,10 @@ begin
     end;
 
     for i:=0 to _FoldersToScan.count-1 do begin
-      _TempFilesList.Clear;
       _workPath:=_FoldersToScan[i];
       for k:=0 to _ExtensionsOfInterest.count-1 do begin  // now check all other fileextensions
         trace(5,'Searching for files in path <%s> for files <%s>.',[_workPath,'*'+_ExtensionsOfInterest[k]]);
+        _TempFilesList.Clear;
         AllFilesOfPath(_workPath,'*'+_ExtensionsOfInterest[k],_TempFilesList);
         Application.ProcessMessages;
         for l:=0 to _TempFilesList.count-1 do begin
