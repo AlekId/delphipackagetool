@@ -874,6 +874,12 @@ begin
       if fileexists(_filename) then _FileList.add(_filename);
       _filename:=changefileext(_filename,'.dof');
       if fileexists(_filename) then _FileList.add(_filename);
+      _filename:=changefileext(_filename,'.dpr');
+      if fileexists(_filename) then _FileList.add(_filename);
+      _filename:=changefileext(_filename,'.dproj');
+      if fileexists(_filename) then _FileList.add(_filename);
+      _filename:=changefileext(_filename,'.dpk');
+      if fileexists(_filename) then _FileList.add(_filename);
     end;
   end;
 
