@@ -15,7 +15,7 @@ function RelativeFilename(const _basepath,_filename:string;const _DelphiVersion:
 function RelativePath(_basepath,_path:string;const _DelphiVersion:integer;const _ReplaceTags:boolean=true):string; // converts the path <_path> into a realtive pathname.
 function RelativePaths(_basepath,_paths:string;const _DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // converts a list of paths to relative paths.
 function MakeAbsolutePath(_basePath,_path:string;_DelphiVersion:integer; const _CurrentPlatform, _CurrentConfig: string):string; // <_path> is a semicolon seperated path-list which will be converted in to absolut path-list.
-function  ReplaceTag(_filename:string;_DelphiVersion:integer=0;const _CurrentPlatform:string='';const _CurrentConfig:string=''):string;
+function ReplaceTag(_filename:string;_DelphiVersion:integer=0;const _CurrentPlatform:string='';const _CurrentConfig:string=''):string;
 
 implementation
 
@@ -24,6 +24,7 @@ uses
   uDPTMisc,
   uDPTDelphiPackage,
   SysUtils,
+  System.IOUtils,
   Classes;
 
   {-----------------------------------------------------------------------------
@@ -72,7 +73,6 @@ begin
   Result := _filename;
 end;
 
-
 {-----------------------------------------------------------------------------
   Procedure: AbsoluteFilename
   Author:    Sami
@@ -85,7 +85,6 @@ function AbsoluteFilename(_basepath,_filename: string): string;
 var
 _pos:integer;
 _len:integer;
-_relativepath:string;
 begin
   trace(5,'Enter method <AbsoluteFilename> with basepath <%s> and filename <%s>.',[_basepath,_filename]);
   _filename:=ReplaceTag(_filename);
@@ -104,43 +103,7 @@ begin
     exit;
   end;
 
-  _relativepath:=extractFilepath(_filename);
-  _filename:=extractFilename(_filename);
-
-
-  _pos:=Pos('.\',_relativepath);
-  if _pos=1 then begin
-    delete(_relativepath,1,2);
-    result:=_basepath+_relativepath+_filename;
-    trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-    exit;
-  end;
-  _pos:=Pos('..\',_relativepath);
-  if (_pos=0) then begin
-    if (pos('\\',_relativepath)>0) or
-       (pos(':\',_relativepath)>0) then begin
-      result:=_relativepath+_filename;
-      trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-      exit;
-    end else begin
-      result:=_basepath+_relativepath+_filename;
-      trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
-      exit;
-    end;
-  end;
-
-  while _pos>0 do begin
-    Delete(_relativepath,1,_pos+2);
-    _pos:=LastPos(_basepath,'\');
-    _len:=length(_basepath);
-    if _pos=_len then delete(_basepath,_pos,1);
-    _pos:=LastPos(_basepath,'\');
-    _len:=length(_basepath);
-    if _pos>0 then delete(_basepath,_pos,_len);
-    _pos:=Pos('..\',_basepath);
-  end;
-  _basepath:=IncludeTrailingPathDelimiter(_basepath);
-  result:=_basepath+_relativepath+_filename;
+  result:=ExpandFileName(TPath.combine(_basepath,_filename));
   trace(5,'Leave method <AbsoluteFilename> with filename <%s>.',[result]);
 end;
 
