@@ -549,7 +549,7 @@ begin
   ProjectSettings.GetPathValue('Application/LastUsedBackupPath','','Defines last used Backup Path.',true,false,false);
   ProjectSettings.GetStringValue('Application/Platform','','The platform used. e.g Win32,Win64.',true,false,false);
   ProjectSettings.GetStringValue('Application/AvailableBuildModes','DEBUG,RELEASE','The available build-modes used. e.g debug,release.',true,false,false);
-  ProjectSettings.GetStringValue('Application/BuildMode','DEBUG','The build-modes used for this project group.',true,false,false);
+  ProjectSettings.GetStringValue('Application/BuildMode','','The build-modes used for this project group.',true,false,false);
   ProjectSettings.GetStringValue('Application/DebugCompilerSwitches','','Compiler switches used for debug config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetStringValue('Application/ReleaseCompilerSwitches','','Compiler switches used for release config, if there is no *.cfg or *.dproj',true,false,false);
   ProjectSettings.GetBoolValue('Application/AutoBackup',false,'If set to true, the DelphiPackageTool will create backup zip-file after compiling all projects.',true,false,false);
@@ -2373,7 +2373,7 @@ begin
 
     FProjectCompiled := true;
     for _PlatformIndex := 0 to FPlatformsToCompileList.Count - 1 do begin
-      FPlatformToCompile :=FPlatformsToCompileList[_PlatformIndex];
+      if FPlatformsToCompileList[_PlatformIndex]<>'' then FPlatformToCompile :=FPlatformsToCompileList[_PlatformIndex];
       FBPLOutputPath     :=GetDelphiPackageDir(FDelphiVersion,FPlatformToCompile);
       FireCurrentProjectChanged;
       CompileAndInstallCurrentPackage;

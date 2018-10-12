@@ -72,6 +72,10 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 History:
 
 ********
+1.9.2.72  ( 12.10.2018 )
+-SH: Set default build-mode when creating the ini-file to '' <empty> instead of <debug>.
+-SH: If no checkbox is marked in group "platform", then it will take the platform from the .dproj file.
+
 1.9.2.71  ( 18.03.2018 )
 -SH: improvement in "BackupAll".
 
