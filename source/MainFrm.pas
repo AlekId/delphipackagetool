@@ -816,7 +816,7 @@ begin
   DMMain.ProjectSettings.SetString('Application/Platform', DMMain.CurrentBPGPlatformList.Commatext);
   DMMain.ProjectSettings.SetString('Application/AvailableBuildModes', DMMain.CurrentBPGConfigList.Commatext);
   if lbxAvailableBuildModes.ItemIndex<>-1 then DMMain.ProjectSettings.SetString('Application/BuildMode',lbxAvailableBuildModes.Items[lbxAvailableBuildModes.ItemIndex])
-                                          else DMMain.ProjectSettings.SetString('Application/BuildMode','Debug');
+                                          else DMMain.ProjectSettings.SetString('Application/BuildMode','');
   DMMain.ProjectSettings.SetPath('Application/OutputPath',edtOutputDirectory.Text);
   DMMain.ProjectSettings.SetPath('Application/PackageOutputPath',edtPackageOutputDir.Text);
   DMMain.ProjectSettings.SetPath('Application/DCUOutputPath',edtDcuPath.Text);
@@ -827,7 +827,7 @@ var
 _BuildMode:string;
 begin
   if lbxAvailableBuildModes.ItemIndex>-1 then _BuildMode:=lbxAvailableBuildModes.Items[lbxAvailableBuildModes.ItemIndex]
-                                         else _BuildMode:='Debug';
+                                         else _BuildMode:='';
   DMMain.ProjectSettings.SetString('Application/BuildMode',_BuildMode)
 end;
 
