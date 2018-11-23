@@ -2201,7 +2201,6 @@ _OldFilename:string;
 _msg:string;
 _answer:integer;
 begin
-  _answer:=0;
   if _ChangedFile='' then exit;
   if not fileexists(_ChangedFile) then exit;
   if not _ForceWrite then begin

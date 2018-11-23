@@ -277,10 +277,6 @@ object FrmMain: TFrmMain
     TabOrder = 3
     object tabInfo: TTabSheet
       Caption = 'Information'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object mmoLogFile: TMemo
         Left = 0
         Top = 0

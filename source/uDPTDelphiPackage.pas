@@ -1252,6 +1252,8 @@ end;
                    files to be deleted.
 -----------------------------------------------------------------------------}
 function CleanUpPackageByEnvPaths(const _DelphiVersion:integer;const _silent:boolean):boolean;
+resourcestring
+cNothingToDelete='No packages found to clean. All fine!';
 var
 i,j:integer;
 _EnvPaths:TStrings;
@@ -1275,7 +1277,10 @@ begin
       AllFilesOfPath(_path,'*.dcp',_FilesOfPath);
       for j:=0 to _FilesOfPath.Count-1 do _FilesToDisplay.add(_path+_FilesOfPath[j]);
     end;
-    if _FilesToDisplay.count=0 then exit; // no files found, no need to show the dialog.
+    if _FilesToDisplay.count=0 then begin // no files found, no need to show the dialog.
+      Application.MessageBox(pchar(cNothingToDelete),pchar(cConfirm),MB_OK);
+      exit;
+    end;
     if not SelectFilesDlg('Please select files to be deleted.','Delete selected files',_FilesToDisplay,_Silent,_FilesToDelete) then exit;
     if _FilesToDelete.Count=0 then exit; // now file marked for deletion
     for i:=0 to _FilesToDelete.Count-1 do begin
@@ -3213,8 +3218,14 @@ begin
     ChangeSetting('<DCC_DcpOutput>',_DCPOutputPath);
     ChangeSetting('<DCC_ObjOutput>',_DCUOutputPath);
     ChangeSetting('<DCC_HppOutput>',_DCUOutputPath);
-    if not _FileChanged then exit;
-    if not BackupFile(_dprojFilename,'.dproj_old','',false) then exit;
+    if not _FileChanged then begin
+      trace(5,'WriteDProjSettings: Nothing changed. Leave method here.',[]);
+      exit;
+    end;
+    if not BackupFile(_dprojFilename,'.dproj_old','',false) then begin
+      trace(2,'Warning in WriteDProjSettings: Could not backup file <%s>.',[_dprojFilename]);
+      exit;
+    end;
     _dprojFilename:=changefileext(_dprojFilename,'.dproj_new');
     try
       _DProjFile.SaveToFile(_dprojFilename);
@@ -3394,7 +3405,7 @@ begin
         end;
         FBatchFile.Add(_RegFileName);
       except
-        On E:Exception do Showmessage(format('Could not save file <%s> because <%s>.', [_RegFileName, E.Message]));
+        on e:exception do ShowmessageFmt('Could not save file <%s> because <%s>.', [_RegFileName, E.Message]);
       end;
     end;
   finally
@@ -3466,7 +3477,7 @@ begin
       if gCreateBatchFile then _RegFile.SaveToFile(ExtractFilePath(FBatchFilename) + _RegFileName);
       FBatchFile.Add(_RegFileName);
     except
-      On E:Exception do Showmessage(format('Could not save file <%s> because <%s>.', [_RegFileName, E.Message]));
+      on e:exception do ShowmessageFmt('Could not save file <%s> because <%s>.', [_RegFileName, E.Message]);
     end;
   finally
     if Assigned(_RegFile) then FreeAndNil(_RegFile);
@@ -3692,13 +3703,13 @@ _returnValue: Cardinal;
 begin
   Result := False;
   if not fileexists(_Compiler) then begin
-    ShowMessage(Format('Could not find the Delphi Compiler file <%s>. Please check settings.', [_Compiler]));
+    ShowMessageFmt('Could not find the Delphi Compiler file <%s>. Please check settings.', [_Compiler]);
     trace(1, 'Problem in CompileProject: Problem, could not find the Delphi Compiler file <%s>.', [_Compiler]);
     Exit;
   end;
 
   if not FileExists(_ProjectName) then begin
-    ShowMessage(Format('Could not find the Project file <%s>. Please check if your BPG-File is still ok.', [_ProjectName]));
+    ShowMessageFmt('Could not find the Project file <%s>. Please check if your BPG-File is still ok.', [_ProjectName]);
     trace(1, 'Problem in CompileProject: Problem, could not find the Project file <%s>.', [_ProjectName]);
     exit;
   end;

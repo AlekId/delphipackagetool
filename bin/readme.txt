@@ -72,8 +72,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 History:
 
 ********
-1.9.2.73  ( 07.11.2018 )
--SH: More changes for the default build-mode. Set to '' <empty> instead of <debug>.
+1.9.2.74  ( 23.11.2018 )
+-SH: added support for Delphi 10.3 Rio.
+-SH: some clean-up.
 
 1.9.2.72  ( 12.10.2018 )
 -SH: Set default build-mode when creating the ini-file to '' <empty> instead of <debug>.
