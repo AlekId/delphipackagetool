@@ -82,9 +82,6 @@ end;
   Description: make the relative filename <_filename> into an absolute filename with path <_basepath>.
 -----------------------------------------------------------------------------}
 function AbsoluteFilename(_basepath,_filename: string): string;
-var
-_pos:integer;
-_len:integer;
 begin
   trace(5,'Enter method <AbsoluteFilename> with basepath <%s> and filename <%s>.',[_basepath,_filename]);
   _filename:=ReplaceTag(_filename);
@@ -248,7 +245,7 @@ begin
       _path:=RelativePath(_basepath,_path,_DelphiVersion);
       if _path<>'' then result:=result+_path+';';
     end
-    else trace(2,'RelativePaths: The path <%s> does not exist. Removed!',[_absolutepath]);
+    else trace(5,'RelativePaths: The path <%s> does not exist. Removed!',[_absolutepath]);
     _path:=Getfield(';',_paths);
   end;
   result:=RemoveDoublePathEntries(result);

@@ -1,9 +1,9 @@
 object FrmRemovePackage: TFrmRemovePackage
   Left = 241
   Top = 323
-  Width = 774
-  Height = 195
   Caption = 'Remove Packages Dialog'
+  ClientHeight = 171
+  ClientWidth = 758
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,31 +16,34 @@ object FrmRemovePackage: TFrmRemovePackage
   TextHeight = 13
   object pnlBottom: TPanel
     Left = 0
-    Top = 127
-    Width = 766
+    Top = 130
+    Width = 758
     Height = 41
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 115
     DesignSize = (
-      766
+      758
       41)
     object btnOk: TBitBtn
-      Left = 541
+      Left = 533
       Top = 8
       Width = 85
       Height = 25
       Anchors = [akRight, akBottom]
-      TabOrder = 0
       Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 0
     end
     object btnCancel: TBitBtn
       Left = 664
       Top = 8
-      Width = 85
+      Width = 77
       Height = 25
       Anchors = [akLeft, akRight, akBottom]
-      TabOrder = 1
       Kind = bkCancel
+      NumGlyphs = 2
+      TabOrder = 1
     end
     object cbxDeleteBPLAndDCPFiles: TCheckBox
       Left = 32
@@ -56,10 +59,11 @@ object FrmRemovePackage: TFrmRemovePackage
   object pnlClient: TPanel
     Left = 0
     Top = 0
-    Width = 766
-    Height = 127
+    Width = 758
+    Height = 130
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 115
     object lblInfo: TLabel
       Left = 32
       Top = 104

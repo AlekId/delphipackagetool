@@ -12,6 +12,7 @@ InfoBeforeFile=..\Bin\readme.txt
 InfoAfterFile=
 Compression=lzma
 SolidCompression=yes
+OutputBaseFilename=setup
 
 [Tasks]
 ; NOTE: The following entry contains English phrases ("Create a desktop icon" and "Additional icons"). You are free to translate them into another language if required.
