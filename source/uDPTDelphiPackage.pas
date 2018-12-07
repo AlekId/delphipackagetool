@@ -3369,7 +3369,7 @@ begin
                              else _BplFilename := LowerCase(_PackageDirectory + ExtractFilenameOnly(_PackageName) + '.bpl');
 
   if not fileexists(_BplFilename) then begin
-    trace(3, 'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.', [_PackageName]);
+    trace(3, 'InstallPackage: The file <%s> does not exist. DPT will not add it to the registry.', [_BplFilename]);
     Exit;
   end;
 

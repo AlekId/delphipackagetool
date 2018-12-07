@@ -1846,6 +1846,7 @@ begin
   result:=false;
   if not DMMain.OpenBPG(_filename) then exit;
   ProjectSettingsToGUI;
+  PrepareRecentFiles;
 end;
 
 procedure TFrmMain.edtPackageBPLDirectoryExit(Sender: TObject);
