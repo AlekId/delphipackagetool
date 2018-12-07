@@ -455,7 +455,7 @@ begin
   end;
 
   FProjectOutputPath := IncludeTrailingPathDelimiter(FProjectOutputPath);
-  FPackageSuffix := GetLibSuffix;
+//  FPackageSuffix := GetLibSuffix;
   FProjectOutputFilename := OutputFilename(FProjectFilename, FProjectType, FPackageSuffix);
   if FProjectType = tp_bpl then FBPLFilename := FBPLOutputPath + FProjectOutputFilename;
   trace(1, 'ProjectFileName=%s', [FProjectFilename]);
@@ -2721,23 +2721,25 @@ var
 i:integer;
 _tmp:string;
 _settingName:string;
+_HistoryList:TStringList;
+_Item:string;
 begin
   ApplicationSettings.SetString('Application/LastUsedInputFile', _BPGfilename);
-  _settingName:=ApplicationSettings.FindStringValueName('Application/FileHistory/',_BPGfilename);
-  if _settingName='' then begin   // check if the file is not already in the history list.
-    for i:=10 downto 2 do begin
-      _tmp:=ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i-1]));
-      ApplicationSettings.SetString(format('Application/FileHistory/Item%d',[i]),_tmp);
+  _HistoryList:=TStringList.Create;
+  _HistoryList.Duplicates:=dupIgnore;
+  try
+    for i:=1 to 10 do begin
+      _Item:=trim(ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i])));
+      if _Item='' then continue;
+      if sametext(_BPGfilename,_item) then continue;
+      _HistoryList.Add(_Item);
     end;
-  end
-  else begin // the file is already in the recent file list.
-    ApplicationSettings.SetString('','');
-    for i:=50 downto 2 do begin
-      _tmp:=ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i-1]));
-      ApplicationSettings.SetString(format('Application/FileHistory/Item%d',[i]),_tmp);
-    end;
+    _HistoryList.Insert(0,_BPGfilename);
+    for i:=_HistoryList.Count to 10 do  _HistoryList.Add('');
+    for i:=0 to 9 do ApplicationSettings.SetString(format('Application/FileHistory/Item%d',[i+1]),_HistoryList[i]);
+  finally
+    _HistoryList.Free;
   end;
-  ApplicationSettings.SetString('Application/FileHistory/Item1',_BPGfilename);
 end;
 
 
