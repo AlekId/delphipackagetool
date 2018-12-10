@@ -2719,8 +2719,6 @@ end;
 procedure TDMMain.SetLastUsedBPGFile(_BPGfilename: string);
 var
 i:integer;
-_tmp:string;
-_settingName:string;
 _HistoryList:TStringList;
 _Item:string;
 begin
