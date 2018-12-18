@@ -126,7 +126,7 @@ type
     FCurrentBPGConfigList: TStringList;
     FPlatformsToCompileList: TStringList;
     FConfigsToCompileList: TStringList;
-    function  GetLibSuffix: string;
+//    function  GetLibSuffix: string;
     procedure WriteLog(_msg: string;const _params:array of const);
     procedure DeleteLog;
     procedure FireDelphiVersionChanged;
@@ -517,14 +517,14 @@ end;
   Result:    string
   Description: returns the current lib-suffix.
 -----------------------------------------------------------------------------}
-function TDMMain.GetLibSuffix: string;
-begin
-  result:='';
-  if FProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
-  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FDelphiVersion].PackageVersion else
-  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBNoneTag) then result:=''
-  else result:=ProjectSettings.StringValue('Application/LibSuffix');
-end;
+//function TDMMain.GetLibSuffix: string;
+//begin
+//  result:='';
+//  if FProjectType<>tp_bpl then exit; // only suffix for bpl-files is needed.
+//  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBAutomaticTag) then result:=DelphiVersions[FDelphiVersion].PackageVersion else
+//  if lowercase(ProjectSettings.StringValue('Application/LibSuffix'))=lowercase(cLIBNoneTag) then result:=''
+//  else result:=ProjectSettings.StringValue('Application/LibSuffix');
+//end;
 
 {*-----------------------------------------------------------------------------
   Procedure: InitProjectSettings
@@ -1060,7 +1060,6 @@ begin
   ApplicationSettings.GetBoolValue('Application/DisplayFilesInDiffTool',true,'If set to true, the DelphiPackageTool does show the changed files in the external Diff-Tool.',true,false,false);
   ApplicationSettings.GetStringValue('Application/LastUsedSearchPath','C:\','Specifies the last used search path.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/AutomaticSearchFiles', true, 'If the compilation aborts because a file was not found and this is set to True then the search dialog opens automatically.', true,false,false);
-  ApplicationSettings.GetStringValue('Application/LastUsedInputFile','','Last used project name.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/SaveLogToFile',false,'If set to true, the log output will be save to a file.',true,false,false);
   ApplicationSettings.GetBoolValue('Application/trace',false,'The application will trace all steps.',true,false,false);
   ApplicationSettings.GetPathValue('Application/LastLogOutputPath','','Last used path to store the log file.',true,false,false);
@@ -2722,7 +2721,7 @@ i:integer;
 _HistoryList:TStringList;
 _Item:string;
 begin
-  ApplicationSettings.SetString('Application/LastUsedInputFile', _BPGfilename);
+  ApplicationSettings.SetString('Application/ProjectGroupFile', _BPGfilename);
   _HistoryList:=TStringList.Create;
   _HistoryList.Duplicates:=dupIgnore;
   try

@@ -298,7 +298,7 @@ resourcestring
 cPleaseSelectProjectGroup='Please select a Package Group File <%s>.';
 cFilter='Delphi Group Files|%s';
 begin
-  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile'));
+  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/ProjectGroupFile'));
   OpenDialog1.Title := format(cPleaseSelectProjectGroup,[cProjectGroupExtensions]);
   OpenDialog1.DefaultExt := DMMain.ApplicationSettings.StringValue('Application/LastUsedExtension');
   OpenDialog1.Filter := format(cFilter,[cProjectGroupFilter]);
@@ -774,6 +774,7 @@ begin
   cbxSilentMode.checked   := DMMain.ApplicationSettings.BoolValue('Application/SilentMode');
   cbxStopOnFailure.checked:= DMMain.ApplicationSettings.BoolValue('Application/StopOnFailure');
   cbxStartDelphi.checked  := DMMain.ApplicationSettings.BoolValue('Application/StartDelphiOnClose');
+  edtPackageBPGFile.Text  := DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile');
   PrepareRecentFiles;
 end;
 
@@ -841,7 +842,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.ProjectSettingstoGUI;
 begin
-  edtPackageBPGFile.Text:=DMMain.BPGFilename;
   if DMMain.ProjectSettings.PathValue('Application/OutputPath') <> ''        then edtOutputDirectory.Text:= DMMain.ProjectSettings.PathValue('Application/OutputPath');
   if DMMain.ProjectSettings.PathValue('Application/PackageOutputPath') <> '' then edtPackageOutputDir.Text:= DMMain.ProjectSettings.PathValue('Application/PackageOutputPath');
   if DMMain.ProjectSettings.PathValue('Application/DCUOutputPath') <> ''     then edtDcuPath.Text:= DMMain.ProjectSettings.PathValue('Application/DCUOutputPath');
@@ -897,7 +897,7 @@ var
 _bpgFilename:string;
 begin
   SaveDialog1.Title:=cPleaseDefineFilename;
-  SaveDialog1.InitialDir  := DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile');
+  SaveDialog1.InitialDir  :=  ExtractFilePath(DMMain.ApplicationSettings.FileValue('Application/ProjectGroupFile'));
   SaveDialog1.FileName    := 'NewPackageGroup';
   case DMMain.DelphiVersion of
     1,2,3,4,5,6,7:begin
@@ -1185,8 +1185,6 @@ begin
     _existingMenuitem:=mitOpenFile.Items[1];
     _existingMenuitem.Free;
   end;
-// empty the file combobox.
-  edtPackageBPGFile.Clear;
 // reload the new items.
   for i:=1 to 10 do begin // load recent used file history
     _filename:=DMMain.ApplicationSettings.StringValue(format('Application/FileHistory/Item%d',[i]));
@@ -1209,7 +1207,7 @@ end;
 -----------------------------------------------------------------------------}
 procedure TFrmMain.mitRecentFilesClick(Sender: TObject);
 begin
-  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/LastUsedInputFile'));
+  OpenDialog1.InitialDir:=ExtractFilePath(DMMain.ApplicationSettings.StringValue('Application/ProjectGroupFile'));
   if not OpenDialog1.Execute then exit;
   OpenProjectGroup(OpenDialog1.filename);
 end;
@@ -1424,6 +1422,7 @@ end;
 procedure TFrmMain.DoProjectGroupOpen(Sender: TObject);
 begin
   ClearLog;
+  edtPackageBPGFile.Text:=DMMain.BPGFilename;
 end;
 
 {*-----------------------------------------------------------------------------
