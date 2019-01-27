@@ -22,7 +22,9 @@ uses
   ProjectOptionsFrm in 'ProjectOptionsFrm.pas' {FrmProjectOptions},
   uDPTDblList in 'uDPTDblList.pas',
   uDPTDelphiPackage in 'uDPTDelphiPackage.pas',
-  SelectFilesFrm in 'SelectFilesFrm.pas' {FrmSelectFiles};
+  SelectFilesFrm in 'SelectFilesFrm.pas' {FrmSelectFiles},
+  Vcl.Themes,
+  Vcl.Styles;
 
 {$R *.res}
 
@@ -34,6 +36,7 @@ begin
   _CreateMainForm:=true;
   _ShowOptionsDialog:=false;
   Application.Initialize;
+  TStyleManager.TrySetStyle('Windows10');
   Application.Title := 'Delphi Package Tool (DPT)';
   Application.HintHidePause:=10000;
   Application.CreateForm(TDMMain, DMMain);

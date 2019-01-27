@@ -1218,25 +1218,29 @@ end;
   Date:      23-Okt-2006
   Arguments: Sender: TObject
   Result:    None
-  Description: check the registry "known packages" if the refrenced file
-               really exists. If not then delete the registry key.
+  Description: 1.) check the registry "known packages" if the referenced file
+                   really exists. If not then delete the registry key.
+               2.) check the IDE environment variables and remove in-existent
+                   path's.
 -----------------------------------------------------------------------------}
 procedure TFrmMain.actVerifyRegistryExecute(Sender: TObject);
 resourcestring
 cDeletedWrongKeys='Removed some wrong Registry-Keys.';
 cRegistryIsOk='Registry-Entries are ok. Nothing has been changed.';
-cCouldNotCleanupRegistry='Could not delete some keys from the registery. You might need to run this action with admin-rights.';
+cCouldNotCleanupRegistry='Could not delete some keys from the registry. You might need to run this action with admin-rights.';
 var
 _NoOfDeletedKeys:integer;
+_NoOfRemovedEnvironmentPaths:integer;
 begin
   if not VerifyRegistry(DMMain.DelphiVersion,_NoOfDeletedKeys,DMMain.PlatformToCompile, DMMain.BuildMode) then begin
     Application.MessageBox(pchar(cCouldNotCleanupRegistry),pchar(cError),MB_ICONINFORMATION);
     exit;
   end;
+  VerifyIDEEnvrionmentsPath(DMMain.DelphiVersion,DMMain.IsSilentMode,_NoOfRemovedEnvironmentPaths);
 
-  if _NoOfDeletedKeys>0 then Application.MessageBox(pchar(cDeletedWrongKeys),pchar(cInformation),MB_ICONINFORMATION or MB_OK)
-                        else Application.MessageBox(pchar(cRegistryIsOk),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
-
+  if (_NoOfDeletedKeys>0) or
+     (_NoOfRemovedEnvironmentPaths>0) then Application.MessageBox(pchar(cDeletedWrongKeys),pchar(cInformation),MB_ICONINFORMATION or MB_OK)
+                                      else Application.MessageBox(pchar(cRegistryIsOk),pchar(cInformation),MB_ICONINFORMATION or MB_OK);
 end;
 
 {-----------------------------------------------------------------------------
