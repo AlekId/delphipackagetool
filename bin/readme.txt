@@ -72,6 +72,9 @@ IMPORTANT: Packages can only be re-compiled and re-installed if the Delphi IDE i
 History:
 
 ********
+1.9.2.77  ( 26.01.2019 )
+-SH: The menu item "Tools"-->"Verify Registry" does now also check the path's in IDE Environments Variable. If the path does not exist, it will be removed.
+
 1.9.2.76  ( 18.12.2018 )
 -SH: fix about last opened project group-file.
 
